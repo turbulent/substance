@@ -1,0 +1,4 @@
+build
+dist
+substance.egg-info
+*.pyc
