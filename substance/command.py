@@ -7,7 +7,11 @@ from getpass import getpass
 class Command:
   options = {}
   args = []
-  
+  core = None
+
+  def __init__(self, core=None):
+    self.core = core
+
   def help(self) :
     """Returns the help description for this particular command"""
     pass

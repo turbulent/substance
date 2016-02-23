@@ -15,3 +15,11 @@ class Testcom(Command):
     logging.debug("Input: %s" % self.input)
     logging.debug("Options: %s" % self.options)
     logging.debug("Args: %s" % self.args)
+
+    try:
+      self.core.assertPaths()
+    except Exception as err:
+      self.exitError(err)
+      
+    logging.debug("Config: %s" % self.core.getConfig())
+ 

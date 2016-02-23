@@ -5,6 +5,7 @@ import re
 import yaml
 from importlib import import_module
 from optparse import OptionParser
+from substance.core import Core
 from substance.command import Command
 
 class Substance(Command):
@@ -19,11 +20,9 @@ class Substance(Command):
   def getShellOptions(self, optparser):
     Command.getShellOptions(self, optparser)
 
-    optparser.add_option("-a", dest="allc", help="Operate on all defined containers", action="store_true", default=False)
     optparser.add_option("-f", dest="configFile", help="Override default config file")
     optparser.add_option("-d", dest="debug", help="Activate debugging output", default=False, action="store_true")
-    optparser.add_option("-t", dest="term", help="Allocate a pseudo-TTY", default=False, action="store_true")
-    optparser.add_option("-i", dest="interactive", help="Keep STDIN open even if not attached", default=False, action="store_true")
+
     return optparser
 
   def getUsage(self):
@@ -36,25 +35,43 @@ Usage: substance COMMAND [options] [CONTAINERS..]
 substance - Local dockerized development environment.
 
 Options:
-  -f            Alternate config file location. defaults to containers.yml
-  -a		Operate on all defined containers.
-  -d		Activate debugging logs
-  -t		Allocate a pseudo-TTY
-  -i		Keep STDIN open even if not attached
+  -f    Alternate config file location. defaults to containers.yml
+  -d    Activate debugging logs
 
 Commands:
-  create        Create the specified container(s)
-  start         Start the specified container(s)
-  stop          Stop the specified container(s)
-  remove        Remove the specified container(s). Stop if needed.
 
-  restart       Stop and then Start a container.
-  recreate      Remove and then Start a container.
+  # Engine List & Create
+  substance ls
+  substance init mybox
+  substabce create mybox 
 
-  exec          Exec a command on a container
-  status        Output container status
-  stats         Output live docker container stats
+  # Engine Control
+  substance up mybox
+  substance stop mybox
+  substance destroy mybox
+
+  # Task Control
+  substance task mybox load /projects/myproject/containers.yml
+  substance task mybox status -a
+  substance task mybox start -a
+  substance task mybox stop -a
+  substance task mybox remove -a
+  substance task mybox recreate -a
+
+  substance enter mybox myboxweb
+  
+  substance env mybox
+
+  #Porcelain
+  substance spawn -c client -p project 
+  substance make mybox mytask
+  substance watch mybox mytask
+  substance test mybox mytask
+  substance exec mybox mytask "make.sh"
  
+  # Logs
+  substance logs mybox taskname
+
 """
     return helpUsage
 
@@ -62,7 +79,6 @@ Commands:
 
     self.setupLogging()
     self.setupEnv()
-
 
     if not len(self.args) > 0:
       self.exitHelp("Please provide a command.")
@@ -73,6 +89,8 @@ Commands:
     self.cmdString = self.args[0]
 
     try:
+      core = Core()
+
       moduleName = 'substance.'+self.cmdString
       className = self.cmdString.title()
 
@@ -80,7 +98,7 @@ Commands:
 
       module_ = import_module(moduleName)
       class_ = getattr(module_, className)
-      self.command = class_()
+      self.command = class_(core=core)
     except ImportError, err:
       logging.debug("%s" % err)
       self.exitError("Unrecognized command %s" % self.cmdString)

@@ -18,7 +18,7 @@ class Shell:
     logging.info('... proceeding')
     return True
 
-  def exec(self, cmd):
+  def shell(self, cmd):
     logging.debug("COMMAND: %s" % cmd)
     try:
       out = check_output(cmd, shell=True)
@@ -35,4 +35,3 @@ class Shell:
     except KeyboardInterrupt:
       logging.info("CTRL-C Received...Exiting.")
       return 1 
-
