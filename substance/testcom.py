@@ -22,4 +22,11 @@ class Testcom(Command):
       self.exitError(err)
       
     logging.debug("Config: %s" % self.core.getConfig())
- 
+
+    engines = self.core.getEngines()
+    logging.debug("Engines: %s" % engines)
+    for name in engines:
+      engine = self.core.getEngine(name)
+      logging.debug( "Engine %s: %s" % (engine.getName(), engine))
+      config = engine.readConfig()
+      logging.debug("  Config: %s" % (config) )

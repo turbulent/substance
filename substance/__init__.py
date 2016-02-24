@@ -110,7 +110,6 @@ Commands:
       self.exitError("Error running command %s: %s" % (self.cmdString, err), code=2)
 
   def execute(self, args=None) :
-
     args.pop(0)
 
     parsed = []

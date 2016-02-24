@@ -5,12 +5,8 @@ from subprocess import call, Popen, check_output, CalledProcessError
 
 class Shell:
 
-  def __init__(self, assumeYes=False):
-    self.assumeYes = assumeYes
-
-  def printConfirm(msg):
-    if self.assmeYes:
-      return True
+  @staticmethod
+  def printConfirm(msg, assumeYes=False):
     logging.info(msg)
     res = raw_input('Proceed? [N/y] ')
     if not res.lower().startswith('y'):
@@ -18,7 +14,8 @@ class Shell:
     logging.info('... proceeding')
     return True
 
-  def shell(self, cmd):
+  @staticmethod
+  def shellCommand(self, cmd):
     logging.debug("COMMAND: %s" % cmd)
     try:
       out = check_output(cmd, shell=True)
@@ -26,7 +23,8 @@ class Shell:
     except CalledProcessError as err:
       return ( err.returncode, err.output )
   
-  def proc(self, cmd):
+  @staticmethod
+  def procCommand(self, cmd):
     try:
       logging.debug("COMMAND: %s" % cmd)
       proc = Popen(cmd, shell=False)
