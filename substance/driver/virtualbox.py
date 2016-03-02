@@ -145,13 +145,6 @@ class VirtualBoxDriver(Driver):
     except VirtualBoxError as err:
       raise SubstanceDriverError("Failed to fetch machines list from Virtual Box: %s" % err.errorLabel)
 
-  def getVMState(self, uuid):
-    '''
-    Retrieve the virtual machine state
-    '''
-    machInfo = self.getMachineInfo(uuid)
-    return machInfo.get('VMState', 'Unknown')
-
   def getMachineState(self, uuid):
     vboxState = self.getVMState(uuid)
     mapping = {
@@ -195,6 +188,13 @@ class VirtualBoxDriver(Driver):
   def isStopped(self, uuid):
     if self.getMachineState(uuid) is not EngineStates.RUNNING:
       return True
+
+  def getVMState(self, uuid):
+    '''
+    Retrieve the virtual machine state
+    '''
+    machInfo = self.getMachineInfo(uuid)
+    return machInfo.get('VMState', 'Unknown')
 
   def vboxManager(self, cmd, params):
     '''

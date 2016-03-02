@@ -162,20 +162,32 @@ class Engine:
     driver = self.getDriver()
     machID = self.getDriverID()
 
-    if not machID:
-      raise EngineNotProvisioned("Engine \"%s\" is currently not provisioned.")
+    if not self.isProvisioned():
+      logging.warning("Engine \"%s\" is not provisioned." % self.name)
+      return
 
     if self.isRunning():
       driver.terminateMachine(machID)
 
-    return driver.deleteMachine(machID)
+    driver.deleteMachine(machID)
 
+  def suspend(self):
+    if not self.isProvisioned():
+      logging.warning("Engine \"%s\" is not provisioned." % self.name)
+      return
+
+    self.getDriver().suspendMachine(self.getDriverID())
+    #XXX Insert wait for suspension
+       
   def stop(self, force=False):
     if self.isRunning():
       driver = self.getDriver()
       if force:
         driver.terminateMachine(self.getDriverID())
+        logging.info("Engine \"%s\" has been terminated." % self.name)
       else:
         driver.haltMachine(self.getDriverID())
-
-    # XXX insert wait for verification
+        logging.info("Engine \"%s\" has been stopped." % self.name)
+      # XXX insert wait for stopped state
+    else:
+      logging.info("Engine \"%s\" is not running." % self.name) 

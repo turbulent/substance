@@ -9,10 +9,9 @@ from substance.engine import EngineProfile
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.exceptions import ( SubstanceError, EngineNotFoundError, EngineNotProvisioned, SubstanceDriverError )
 
-class Stop(Command):
+class Suspend(Command):
 
   def getShellOptions(self, optparser):
-    optparser.add_option("-f","--force", dest="force", help="Force power off",action="store_true")
     return optparser
  
   def main(self):
@@ -21,14 +20,10 @@ class Stop(Command):
 
     try:
       engine = self.core.getEngine(name)
-
-      if self.options.force and not self.core.getConfigKey('assumeYes') and not Shell.printConfirm("You are about to force stop engine \"%s\"." % name):
-        self.exitOK("User cancelled.")
-   
       engine.readConfig() 
-      engine.stop(force=self.options.force) 
-
+      engine.suspend()
+      logging.info("Engine \"%s\" has been suspended." % name)
     except SubstanceError as err:
       self.exitError(err.errorLabel)
     except Exception as err:
-      self.exitError("Failed to stop engine \"%s\": %s" % (name, err))
+      self.exitError("Failed to suspend engine \"%s\": %s" % (name, err))
