@@ -4,7 +4,7 @@ from substance.command import Command
 from substance.shell import Shell
 from substance.engine import EngineProfile
 from substance.driver.virtualbox import VirtualBoxDriver
-from substance.exceptions import ( EngineNotFoundError, SubstanceDriverError )
+from substance.exceptions import ( EngineNotFoundError, EngineNotProvisioned, SubstanceDriverError )
 
 class Delete(Command):
 
@@ -20,14 +20,17 @@ class Delete(Command):
 
       if not self.core.getConfigKey('assumeYes') and not Shell.printConfirm("You are about to delete engine \"%s\"." % name):
         self.exitOK("User cancelled.")
-    
+   
+      engine.readConfig() 
       engine.deprovision() 
 
       logging.info("Engine \"%s\" has been deprovisioned.")
+
     except EngineNotFoundError:
-      logging.info("Engine \"%s\" does not exist" % name) 
-    except SubstanceDriverError:
-      logging.info("No VM is currently launched for engine \"%s\"" % name)
-      pass
+      self.exitError("Engine \"%s\" does not exist" % name) 
+    except EngineNotProvisioned:
+      self.exitError("No VM is currently provisioned for engine \"%s\"" % name)
+    except SubstanceDriverError as err:
+      self.exitError("Failed to deprovision engine \"%s\" : %s" % (name, err.errorLabel))
     except Exception as err:
-      logging.error("Failed to deprovision engine VM \"%s\": %s" % (name, err))
+      self.exitError("Failed to deprovision engine VM \"%s\": %s" % (name, err))

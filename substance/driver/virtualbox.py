@@ -15,7 +15,7 @@ class VirtualBoxDriver:
 
   def importMachine(self, name, ovfFile, engineProfile=None):
     '''
-    Import a machine file
+    Import a machine file. Return driver identifier of created virtual machine.
     '''
 
     # Dry run to find the information in the OVF and replace it with flags.
@@ -52,43 +52,98 @@ class VirtualBoxDriver:
     except VirtualBoxError as err:
       raise SubstanceDriverError("Failed to import machine \"%s\": %s" % (name, err.errorLabel))
 
-  def destroyMachine(self, name):
+    return self.getMachineID(name)
+
+  def destroyMachine(self, uuid):
     '''
-    Destroy the machine.
+    Destroy the machine by driver identifier.
     '''
     try:
-      self.vboxManager("unregistervm", "--delete %s" % (name))
+      self.vboxManager("unregistervm", "--delete \"%s\"" % (uuid))
     except VirtualBoxError as err:
-      raise SubstanceDriverError("Failed to destroy machine \"%s\": %s" % (name, err.errorLabel))
+      raise SubstanceDriverError("Failed to destroy machine \"%s\": %s" % (uuid, err.errorLabel))
 
-  def startMachine(self, name):
+  def startMachine(self, uuid):
     '''
-    Start the machine.
+    Start the machine by driver identifier.
     '''
     try:
-      self.vboxManager("startvm", "--type headless \"%s\"" % (name))
+      self.vboxManager("startvm", "--type headless \"%s\"" % (uuid))
     except VirtualBoxError as err:
-      raise SubstanceDriverError("Failed to start macine \"%s\": %s" % (name, errorLabel))
+      raise SubstanceDriverError("Failed to start machine \"%s\": %s" % (uuid, errorLabel))
 
-  def getMachineInfo(self, name):
+    return True
+
+  def suspendMachine(self, uuid):
+    '''
+    Suspend the machine.
+    '''
+    try:
+      self.vboxManager("controlvm", "\"%s\" savestate" % uuid)
+    except VirtualBoxError as err:
+      raise SubstanceDriverError("Failed to suspend machine \"%s\": %s" % (uuid, err.errorLabel))
+
+  def haltMachine(self, uuid):
+    '''
+    Halt the machine.
+    '''
+    try:
+      self.vboxManager("controlvm", "\"%s\" acpipowerbutton" % uuid)
+    except VirtualBoxError as err:
+      raise SubstanceDriverError("Failed to halt machine \"%s\": %s" % (uuid, err.errorLabel))
+
+  def terminateMachine(self, uuid):
+    '''
+    Terminate the machine forcefully.
+    '''
+    try:
+      self.vboxManager("controlvm", "\"%s\" poweroff" % uuid)
+    except VirtualBoxError as err:
+      raise SubstanceDriverError("Failed to halt machine \"%s\": %s" % (uuid, err.errorLabel))
+      
+  def getMachineInfo(self, uuid):
     '''
     Retrieve the machine info from the driver.
     '''
     try:
-      ret = self.vboxManager("showvminfo", "--machinereadable \"%s\"" % name)
+      ret = self.vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid)
       machInfo = ret.get('stdout', '')
     except VirtualBoxError as err:
-      raise SubstanceDriverError("Failed to fetch machine \"%s\" info: %s" % (name, err.errorLabel))
+      raise SubstanceDriverError("Failed to fetch machine \"%s\" info: %s" % (uuid, err.errorLabel))
 
     return self.parseMachineInfo(machInfo)
+
+  def getMachines(self):
+    '''
+    Retrive the list of machines and their driver identifiers.
+    '''
+    try:
+      machines = []
+      ret = self.vboxManager("list", "vms")
+      matcher = re.compile(r'"([^"]+)" {([^}]+)}')
+
+      for line in ret.get('stdout', '').split("\n"):
+        parts = matcher.match(line)
+        if parts:
+          machines.append({'name':parts.group(1), 'id':parts.group(2)})
+      return machines
+
+    except VirtualBoxError as err:
+      raise SubstanceDriverError("Failed to fetch machines list from Virtual Box: %s" % err.errorLabel)
 
   def getMachineID(self, name):
     '''
     Retrieve the driver specific machine ID.
     '''
-    machInfo = self.getMachineInfo(name)
-    return machInfo.get('UUID', None)
-
+    try:
+      ret = self.vboxManager("list", "vms")
+      matcher = re.compile('^"' + name + '" {([^}]+)}')
+      parts = matcher.search(ret.get('stdout',''))
+      if parts:
+        return parts.group(1)
+    except VirtualBoxError as err:
+      raise SubstanceDriverError("Failed to fetch machines list from Virtual Box: %s" % err.errorLabel)
+ 
   def vboxManager(self, cmd, params):
     '''
     Invoke the VirtualBoxManager

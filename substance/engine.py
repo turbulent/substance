@@ -5,7 +5,7 @@ import sys
 import os
 import logging
 import yaml
-from substance.exceptions import ( FileSystemError, ConfigSyntaxError )
+from substance.exceptions import ( FileSystemError, ConfigSyntaxError, EngineNotProvisioned )
 from substance.driver.virtualbox import VirtualBoxDriver
 
 class EngineProfile:
@@ -105,7 +105,11 @@ class Engine:
 
     driver.importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile())
     driver.startMachine(self.name)
+    
  
   def deprovision(self):
     driver = self.getDriver()
-    driver.destroyMachine(self.config.id)  
+    if not self.config['id']:
+      raise EngineNotProvisioned()
+  
+    return driver.destroyMachine(self.config['id'])  

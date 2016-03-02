@@ -28,6 +28,11 @@ class EngineNotFoundError(SubstanceError):
   Raised when a specified engine was not found
   '''
 
+class EngineNotProvisioned(SubstanceError):
+  '''
+  Engine VM is not provided. (ex. does not exist)
+  '''
+
 class SubstanceDriverError(SubstanceError):
   '''
   Driver-specific raised error
