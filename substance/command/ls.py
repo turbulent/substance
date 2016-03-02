@@ -14,7 +14,7 @@ class Ls(Command):
   def main(self):
    
     table = []
-    headers = ["NAME", "ACTIVE", "STATE", "URL", "ERRORS"]
+    headers = ["NAME", "PROVISIONED", "STATE", "URL", "ERRORS"]
 
     try:
       self.core.assertPaths()
@@ -26,7 +26,9 @@ class Ls(Command):
     for name in engines:
       engine = self.core.getEngine(name)
       config = engine.readConfig()
-      table.append([engine.getName(), "-", "-", engine.getDockerURL(), ""])
-
+      state = engine.state() 
+      state = state if state else "-"
+      prov = "yes" if engine.isProvisioned() else "no"
+      table.append([engine.getName(), prov, state , engine.getDockerURL(), ""])
 
     logging.info(tabulate(table, headers=headers, tablefmt="plain"))

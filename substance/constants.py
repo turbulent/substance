@@ -20,5 +20,6 @@ class Constants(object):
 EngineStates = Constants(
   RUNNING="running",
   STOPPED="stopped",
+  SUSPENDED="suspended",
   UNKNOWN="unknown"
 ) 

@@ -149,7 +149,7 @@ class VirtualBoxDriver(Driver):
     vboxState = self.getVMState(uuid)
     mapping = {
       "powered off": EngineStates.STOPPED,
-      "saved": EngineStates.STOPPED,
+      "saved": EngineStates.SUSPENDED,
       "aborted": EngineStates.STOPPED,
       "paused": EngineStates.STOPPED,
       "stuck": EngineStates.STOPPED,
@@ -187,6 +187,10 @@ class VirtualBoxDriver(Driver):
 
   def isStopped(self, uuid):
     if self.getMachineState(uuid) is not EngineStates.RUNNING:
+      return True
+
+  def isSuspended(self, uuid):
+    if self.getMachineState(uuid) is EngineStates.SUSPENDED:
       return True
 
   def getVMState(self, uuid):

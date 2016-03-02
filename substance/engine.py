@@ -124,11 +124,14 @@ class Engine:
   def isRunning(self):
     if not self.isProvisioned():
       return False
-
-    state = self.getDriver().getMachineState(self.getDriverID())
+    state = self.state() 
     return True if state is EngineStates.RUNNING else False
     
- 
+  def state(self):
+    if not self.isProvisioned():
+      return 
+    return self.getDriver().getMachineState(self.getDriverID())
+       
   def launch(self):
 
     # 1. Check that we know about a provisioned machined for this engine. Provision if not.
@@ -170,6 +173,7 @@ class Engine:
       driver.terminateMachine(machID)
 
     driver.deleteMachine(machID)
+    logging.info("Engine \"%s\" has been deprovisioned." % self.name)
 
   def suspend(self):
     if not self.isProvisioned():

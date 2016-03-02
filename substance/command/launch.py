@@ -7,11 +7,7 @@ from substance.command import Command
 from substance.shell import Shell
 from substance.engine import EngineProfile
 from substance.driver.virtualbox import VirtualBoxDriver
-from substance.exceptions import ( 
-  EngineNotFoundError, 
-  EngineAlreadyRunning, 
-  SubstanceDriverError 
-)
+from substance.exceptions import ( SubstanceError )
 
 class Launch(Command):
 
@@ -27,9 +23,7 @@ class Launch(Command):
       engine.readConfig()
       engine.launch()
 
-    except EngineNotFoundError as err:
+    except SubstanceError as err:
       self.exitError(err.errorLabel)
-    except EngineAlreadyRunning as err:
-      self.exitOK(err.errorLabel)
     except Exception as err:
-      self.exitError("Failed to launch engine VM \"%s\": %s" % (name, err))
+      self.exitError("Failed to launch engine \"%s\": %s" % (name, err))
