@@ -176,7 +176,13 @@ class Engine:
       logging.warning("Engine \"%s\" is not provisioned." % self.name)
       return
 
+    if not self.isRunning():
+      logging.warning("Engine \"%s\" is not running." % self.name)
+      return
+
     self.getDriver().suspendMachine(self.getDriverID())
+    logging.info("Engine \"%s\" has been suspended." % self.name)
+
     #XXX Insert wait for suspension
        
   def stop(self, force=False):
@@ -190,4 +196,4 @@ class Engine:
         logging.info("Engine \"%s\" has been stopped." % self.name)
       # XXX insert wait for stopped state
     else:
-      logging.info("Engine \"%s\" is not running." % self.name) 
+      logging.warning("Engine \"%s\" is not running." % self.name) 

@@ -22,7 +22,6 @@ class Suspend(Command):
       engine = self.core.getEngine(name)
       engine.readConfig() 
       engine.suspend()
-      logging.info("Engine \"%s\" has been suspended." % name)
     except SubstanceError as err:
       self.exitError(err.errorLabel)
     except Exception as err:
