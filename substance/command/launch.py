@@ -1,10 +1,17 @@
+# -*- coding: utf-8 -*-
+# $Id$
+
 import logging
 import sys
 from substance.command import Command
 from substance.shell import Shell
 from substance.engine import EngineProfile
 from substance.driver.virtualbox import VirtualBoxDriver
-from substance.exceptions import ( EngineNotFoundError, SubstanceDriverError )
+from substance.exceptions import ( 
+  EngineNotFoundError, 
+  EngineAlreadyRunning, 
+  SubstanceDriverError 
+)
 
 class Launch(Command):
 
@@ -20,8 +27,9 @@ class Launch(Command):
       engine.readConfig()
       engine.launch()
 
-      logging.info("The VM of engine \"%s\" has been launched." % name)
-    except EngineNotFoundError:
-      logging.info("Engine \"%s\" does not exist" % name) 
+    except EngineNotFoundError as err:
+      self.exitError(err.errorLabel)
+    except EngineAlreadyRunning as err:
+      self.exitOK(err.errorLabel)
     except Exception as err:
-      logging.error("Failed to launch engine VM \"%s\": %s" % (name, err))
+      self.exitError("Failed to launch engine VM \"%s\": %s" % (name, err))

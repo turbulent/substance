@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+# $Id$
 
 class SubstanceError(Exception):
   '''
   Base class to all substance exceptions
   '''
   errorLabel = ""
-  def __init(self, message=''):
+  def __init__(self, message=''):
     super(SubstanceError, self).__init__(message)
     self.errorLabel = message
 
@@ -31,6 +33,11 @@ class EngineNotFoundError(SubstanceError):
 class EngineNotProvisioned(SubstanceError):
   '''
   Engine VM is not provided. (ex. does not exist)
+  '''
+
+class EngineAlreadyRunning(SubstanceError):
+  '''
+  Engine VM is already running.
   '''
 
 class SubstanceDriverError(SubstanceError):

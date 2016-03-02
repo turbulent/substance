@@ -39,20 +39,20 @@ Usage: substance COMMAND [options] [CONTAINERS..]
 substance - Local dockerized development environment.
 
 Options:
-  -f    Alternate config file location. defaults to containers.yml
+  -f    Alternate config file location
   -d    Activate debugging logs
 
 Commands:
 
-  # Engine List & Create
+  # Engine List, Init and Delete
   substance ls
   substance init mybox
-  substabce create mybox 
+  substance delete mybox
 
   # Engine Control
-  substance up mybox
+  substance launch mybox
   substance stop mybox
-  substance destroy mybox
+  substance deprovision mybox
 
   # Task Control
   substance task mybox load /projects/myproject/containers.yml

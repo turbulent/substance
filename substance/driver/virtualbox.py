@@ -1,12 +1,12 @@
 import os
 import re
 import logging
+from substance.driver import Driver
 from substance.shell import Shell
 from substance.exceptions import ( SubstanceDriverError, VirtualBoxError )
-import ConfigParser
-import StringIO
+from substance.constants import ( EngineStates )
 
-class VirtualBoxDriver:
+class VirtualBoxDriver(Driver):
   '''
   Substance VirtualBox driver class. Interface to virtual box manager.
   '''
@@ -54,9 +54,9 @@ class VirtualBoxDriver:
 
     return self.getMachineID(name)
 
-  def destroyMachine(self, uuid):
+  def deleteMachine(self, uuid):
     '''
-    Destroy the machine by driver identifier.
+    Delete the machine by driver identifier.
     '''
     try:
       self.vboxManager("unregistervm", "--delete \"%s\"" % (uuid))
@@ -70,7 +70,7 @@ class VirtualBoxDriver:
     try:
       self.vboxManager("startvm", "--type headless \"%s\"" % (uuid))
     except VirtualBoxError as err:
-      raise SubstanceDriverError("Failed to start machine \"%s\": %s" % (uuid, errorLabel))
+      raise SubstanceDriverError("Failed to start machine \"%s\": %s" % (uuid, err.errorLabel))
 
     return True
 
@@ -113,6 +113,7 @@ class VirtualBoxDriver:
 
     return self.parseMachineInfo(machInfo)
 
+    
   def getMachines(self):
     '''
     Retrive the list of machines and their driver identifiers.
@@ -137,13 +138,64 @@ class VirtualBoxDriver:
     '''
     try:
       ret = self.vboxManager("list", "vms")
-      matcher = re.compile('^"' + name + '" {([^}]+)}')
-      parts = matcher.search(ret.get('stdout',''))
+      parts = re.search(r'"' + re.escape(name) + '" {([^}]+)}', ret.get('stdout',''), re.M)
       if parts:
+        logging.debug("Machine ID for %s : %s" % (name, parts.group(1)))
         return parts.group(1)
     except VirtualBoxError as err:
       raise SubstanceDriverError("Failed to fetch machines list from Virtual Box: %s" % err.errorLabel)
- 
+
+  def getVMState(self, uuid):
+    '''
+    Retrieve the virtual machine state
+    '''
+    machInfo = self.getMachineInfo(uuid)
+    return machInfo.get('VMState', 'Unknown')
+
+  def getMachineState(self, uuid):
+    vboxState = self.getVMState(uuid)
+    mapping = {
+      "powered off": EngineStates.STOPPED,
+      "saved": EngineStates.STOPPED,
+      "aborted": EngineStates.STOPPED,
+      "paused": EngineStates.STOPPED,
+      "stuck": EngineStates.STOPPED,
+      "restoring": EngineStates.STOPPED,
+      "snapshotting": EngineStates.STOPPED,
+      "setting up": EngineStates.STOPPED,
+      "online snapshotting": EngineStates.STOPPED,
+      "restoring snapshot": EngineStates.STOPPED,
+      "deleting snapshot": EngineStates.STOPPED,
+      "running": EngineStates.RUNNING,
+      "starting": EngineStates.RUNNING,
+      "stopping" : EngineStates.RUNNING,
+      "saving": EngineStates.RUNNING,
+      "live snapshotting": EngineStates.RUNNING
+    }
+    state = mapping.get(vboxState, EngineStates.UNKNOWN)
+    logging.debug("Machine state: %s : %s" % (vboxState, state))
+    return state
+
+  def exists(self, uuid):
+    '''
+    Check in the driver that the specified identifier exists.
+    '''
+    try:
+      ret = self.vboxManager("list", "vms")
+      parts = re.search(r'"([^"]+)" {'+re.escape(uuid)+'}', ret.get('stdout',''), re.M)
+      if parts:
+        return True
+    except VirtualBoxError as err:
+      raise SubstanceDriverError("Failed to fetch machines list from Virtual Box: %s" % err.errorLabel)
+
+  def isRunning(self, uuid):
+    if self.getMachineState(uuid) is EngineStates.RUNNING:
+      return True
+
+  def isStopped(self, uuid):
+    if self.getMachineState(uuid) is not EngineStates.RUNNING:
+      return True
+
   def vboxManager(self, cmd, params):
     '''
     Invoke the VirtualBoxManager
@@ -162,7 +214,7 @@ class VirtualBoxDriver:
     for line in lines:
       try:
         var, value = line.split("=", 1)
-        value = value.strip()
+        value = value.strip('"')
         machDict[var] = value 
       except ValueError as err:
         pass

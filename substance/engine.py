@@ -5,8 +5,14 @@ import sys
 import os
 import logging
 import yaml
-from substance.exceptions import ( FileSystemError, ConfigSyntaxError, EngineNotProvisioned )
 from substance.driver.virtualbox import VirtualBoxDriver
+from substance.constants import ( EngineStates )
+from substance.exceptions import ( 
+  FileSystemError, 
+  ConfigSyntaxError, 
+  EngineNotProvisioned ,
+  EngineAlreadyRunning
+)
 
 class EngineProfile:
   cpus = None
@@ -15,7 +21,7 @@ class EngineProfile:
   def __init__(self, cpus=2, memory=1024):
     self.cpus = cpus
     self.memory = memory
- 
+
 class Engine:
 
   config = None
@@ -84,8 +90,9 @@ class Engine:
     self.saveConfig( self.defaultConfig )
 
   def saveConfig(self, config=None):
-    config = config or self.config
+    config = config if config  else self.config
     try:
+      logging.debug("saveConfig: %s" % (config))
       with open(self.configFile, "w") as fileh:
         fileh.write(yaml.dump( config, default_flow_style=False))
     except Exception as err:
@@ -100,16 +107,75 @@ class Engine:
     profile = self.config.get('profile', {})
     return EngineProfile(**profile)
 
-  def launch(self):
-    driver = self.getDriver()
+  def getDriverID(self):
+    return self.config.get('id', None)
 
-    driver.importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile())
-    driver.startMachine(self.name)
+  def isProvisioned(self):
+    '''
+    Check that this engine has an attached provisioned Virtual Machine.
+    '''
+    machineID = self.getDriverID()
+    if not machineID:
+      return False
+  
+    if self.getDriver().exists(machineID):
+      return True
+
+  def isRunning(self):
+    if not self.isProvisioned():
+      return False
+
+    state = self.getDriver().getMachineState(self.getDriverID())
+    return True if state is EngineStates.RUNNING else False
     
+ 
+  def launch(self):
+
+    # 1. Check that we know about a provisioned machined for this engine. Provision if not.
+    # 2. Validate that the machine we know about is still provisioned. Provision if not.
+    # 3. Check the machine state, boot accordingly
+    # 4. Setup guest networking
+    # 4. Fetch the guest IP from the machine and store it in the machine state.
+
+    if not self.isProvisioned():
+      self.provision()
+
+    self.start()
+ 
+  def start(self):
+    if self.isRunning():
+      raise EngineAlreadyRunning("Engine \"%s\" is already running" % self.name)
+
+    logging.info("Booting engine VM")  
+    self.getDriver().startMachine(self.getDriverID())
+
+    # XXX insert wait for verification
+
+  def provision(self):
+    logging.info("Provisioning engine \"%s\" with driver \"%s\"" % (self.name, self.config['driver']))
+
+    machineID = self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile())
+    self.config['id'] = machineID
+    self.saveConfig()
  
   def deprovision(self):
     driver = self.getDriver()
-    if not self.config['id']:
-      raise EngineNotProvisioned()
-  
-    return driver.destroyMachine(self.config['id'])  
+    machID = self.getDriverID()
+
+    if not machID:
+      raise EngineNotProvisioned("Engine \"%s\" is currently not provisioned.")
+
+    if self.isRunning():
+      driver.terminateMachine(machID)
+
+    return driver.deleteMachine(machID)
+
+  def stop(self, force=False):
+    if self.isRunning():
+      driver = self.getDriver()
+      if force:
+        driver.terminateMachine(self.getDriverID())
+      else:
+        driver.haltMachine(self.getDriverID())
+
+    # XXX insert wait for verification

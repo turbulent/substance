@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# $Id$
+
 import logging
 from substance.command import Command
 from substance.shell import Shell

@@ -89,7 +89,7 @@ class Core:
     self.assertPaths()
     enginePath = os.path.join(self.enginesPath, name)
     if not os.path.isdir(enginePath):
-      raise EngineNotFoundError("Engine %s does not exist." % name)
+      raise EngineNotFoundError("Engine \"%s\" does not exist." % name)
 
     return Engine(name, enginePath)
      
@@ -97,7 +97,7 @@ class Core:
     self.assertPaths()
     enginePath = os.path.join(self.enginesPath, name)
     if os.path.isdir(enginePath):
-      raise EngineExistsError("Engine %s already exists." % name)
+      raise EngineExistsError("Engine \"%s\" already exists." % name)
    
     Shell.makeDirectory(enginePath)
 
@@ -110,7 +110,7 @@ class Core:
     self.assertPaths()
     enginePath = os.path.join(self.enginesPath, name)
     if not os.path.isdir(enginePath):
-      raise EngineNotFoundError("Engine %s does not exist." % name)
+      raise EngineNotFoundError("Engine \"%s\" does not exist." % name)
     Shell.nukeDirectory(enginePath) 
 
   def validDriver(self, driver):

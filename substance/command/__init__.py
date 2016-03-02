@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# $Id$
+
 import sys
 import os
 import logging
