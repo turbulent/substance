@@ -53,4 +53,4 @@ class VmNotFound(SubstanceDriverError):
 class VirtualBoxError(SubstanceDriverError):
   '''
   Virtual box driver raised error
-  ''' 
+  '''

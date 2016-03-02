@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# $Id$
-
 import sys
 import traceback
 import logging
@@ -12,12 +9,18 @@ from substance.core import Core
 from substance.command import Command
 
 class Substance(Command):
+  """Substance CLI command"""
+
+  cmdString = None
+  command = None
+  input = None
+  commandInput = None
 
   def setupLogging(self):
-    log_level = logging.DEBUG if self.options.debug else logging.INFO 
+    log_level = logging.DEBUG if self.options.debug else logging.INFO
     logging.basicConfig(format='%(message)s', level=log_level)
 
-  def setupEnv(self): 
+  def setupEnv(self):
     """Setup the Environment """
 
   def getShellOptions(self, optparser):
@@ -33,6 +36,7 @@ class Substance(Command):
     return "substance [options] COMMAND [command-options]"
 
   def getHelp(self):
+    """Retrieve the help string for this command"""
     helpUsage = """
 Usage: substance COMMAND [options] [CONTAINERS..]
 
@@ -89,7 +93,7 @@ Commands:
 
     if self.getOption('help'):
       return self.exitHelp()
-  
+
     self.cmdString = self.args[0]
 
     try:
@@ -102,13 +106,13 @@ Commands:
       moduleName = 'substance.command.'+self.cmdString
       className = self.cmdString.title()
 
-      logging.debug("Import %s\nClassName: %s" % (moduleName, className))
+      logging.debug("Import %s\nClassName: %s", moduleName, className)
 
       module_ = import_module(moduleName)
       class_ = getattr(module_, className)
       self.command = class_(core=core)
     except ImportError, err:
-      logging.debug("%s" % err)
+      logging.debug("%s", err)
       self.exitError("Unrecognized command %s" % self.cmdString)
 
     try:
@@ -117,30 +121,30 @@ Commands:
       logging.error(traceback.format_exc())
       self.exitError("Error running command %s: %s" % (self.cmdString, err), code=2)
 
-  def execute(self, args=None) :
+  def execute(self, args=None):
     args.pop(0)
 
     parsed = []
-    extra_args = []
+    extraArgs = []
     i = 0
     for arg in args:
       if i >= 1:
-        extra_args.append(arg)
+        extraArgs.append(arg)
         continue
-  
-      if (arg[0] == '-' or arg[0:2] == '--'):
+
+      if arg[0] == '-' or arg[0:2] == '--':
         parsed.append(arg)
       else:
         parsed.append(arg)
-        i+=1
-  
+        i += 1
+
     #print("Top Level Input: %s" % parsed)
-    #print("Command Input: %s" % extra_args)
+    #print("Command Input: %s" % extraArgs)
 
     self.input = parsed
-    self.commandInput = extra_args
+    self.commandInput = extraArgs
 
-    (self.options,self.args) = self.parseShellInput()
+    (self.options, self.args) = self.parseShellInput()
     self.main()
 
 def main():

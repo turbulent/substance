@@ -1,23 +1,19 @@
-# -*- coding: utf-8 -*-
-# $Id$
-
-import sys
 import os
 import logging
 import yaml
 from substance.shell import Shell
 from substance.engine import Engine
+from substance.utils import readYAML
 from substance.exceptions import (
   FileSystemError,
   EngineNotFoundError,
-  EngineExistsError,
-  ConfigSyntaxError
+  EngineExistsError
 )
 
-class Core:
+class Core(object):
 
   config = None
-  defaultConfig = { "default": True }
+  defaultConfig = {"default": True}
 
   def __init__(self, configFile=None, basePath=None):
     self.basePath = os.path.abspath(basePath) if basePath else os.path.expanduser('~/.substance')
@@ -35,7 +31,7 @@ class Core:
 
   def getEnginesPath(self):
     return self.enginesPath
- 
+
   def getConfigFile(self):
     return self.configFile
 
@@ -43,7 +39,7 @@ class Core:
     if not self.config:
       self.readConfigFile()
     self.config[key] = value
-    
+
   def getConfigKey(self, key):
     if not self.config:
       self.readConfigFile()
@@ -55,29 +51,19 @@ class Core:
     return self.config
 
   def saveConfig(self, config=None):
-    config = config or self.config 
+    config = config or self.config
     try:
       with open(self.configFile, "w") as fileh:
-        fileh.write(yaml.dump( config, default_flow_style=False))
+        fileh.write(yaml.dump(config, default_flow_style=False))
     except Exception as err:
-      raise FileSystemError("Failed to write configuration to %s : %s" % (self.configFile, err)) 
+      raise FileSystemError("Failed to write configuration to %s : %s" % (self.configFile, err))
 
   def readConfigFile(self):
-    if os.path.isfile( self.configFile ):
-      try:
-        stream = open(self.configFile, "r")
-        self.config = yaml.load(stream)
-      except yaml.YAMLError, exc:
-        msg = "Syntax error in file %s"
-        if hasattr(exc, 'problem_mark'):
-            mark = exc.problem_mark
-            msg += " Error position: (%s:%s)" % (mark.line+1, mark.column+1)
-        raise ConfigSyntaxError(msg)
-      except Exception as err:
-        raise FileSystemError("Failed to read configuration file %s : %s" % (self.configFile, err)) 
+    if os.path.isfile(self.configFile):
+      readYAML(self.configFile)
     else:
-      logging.info("Generating default substance configuration in %s" % self.configFile)
-      self.saveConfig( self.defaultConfig )
+      logging.info("Generating default substance configuration in %s", self.configFile)
+      self.saveConfig(self.defaultConfig)
     return self.config
 
   def getEngines(self):
@@ -92,27 +78,27 @@ class Core:
       raise EngineNotFoundError("Engine \"%s\" does not exist." % name)
 
     return Engine(name, enginePath)
-     
+
   def createEngine(self, name, config=None, profile=None):
     self.assertPaths()
     enginePath = os.path.join(self.enginesPath, name)
     if os.path.isdir(enginePath):
       raise EngineExistsError("Engine \"%s\" already exists." % name)
-   
+
     Shell.makeDirectory(enginePath)
 
     newEngine = Engine(name, enginePath)
     newEngine.generateDefaultConfig(config=config, profile=profile)
 
     return newEngine
-  
+
   def removeEngine(self, name):
     self.assertPaths()
     enginePath = os.path.join(self.enginesPath, name)
     if not os.path.isdir(enginePath):
       raise EngineNotFoundError("Engine \"%s\" does not exist." % name)
-    Shell.nukeDirectory(enginePath) 
+    Shell.nukeDirectory(enginePath)
 
   def validDriver(self, driver):
     if driver is "VirtualBox":
-      return true
+      return True

@@ -4,7 +4,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 version = '0.1'
-install_requires = ['setuptools', 'PyYAML', 'tabulate', 'python-vagrant', 'vboxapi']
+install_requires = ['setuptools', 'PyYAML', 'tabulate']
 
 setup(name='substance',
       version=version,

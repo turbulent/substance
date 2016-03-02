@@ -1,8 +1,9 @@
 
 class Constants(object):
 
-  class ConstError(TypeError): pass
- 
+  class ConstError(TypeError):
+    pass
+
   def __init__(self, **kwargs):
     for name, value in kwargs.items():
       super(Constants, self).__setattr__(name, value)
@@ -22,4 +23,4 @@ EngineStates = Constants(
   STOPPED="stopped",
   SUSPENDED="suspended",
   UNKNOWN="unknown"
-) 
+)

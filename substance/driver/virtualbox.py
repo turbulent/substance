@@ -1,10 +1,12 @@
-import os
 import re
 import logging
 from substance.driver import Driver
 from substance.shell import Shell
-from substance.exceptions import ( SubstanceDriverError, VirtualBoxError )
-from substance.constants import ( EngineStates )
+from substance.exceptions import (
+  SubstanceDriverError,
+  VirtualBoxError
+)
+from substance.constants import (EngineStates)
 
 class VirtualBoxDriver(Driver):
   '''
@@ -28,11 +30,11 @@ class VirtualBoxDriver(Driver):
 
     suggestedName = re.search(r'Suggested VM name "(.+?)"', ret.get('stdout'))
     if not suggestedName:
-      raise SubstanceDriverError("Invalid OVF: File contains no VM Name.");
+      raise SubstanceDriverError("Invalid OVF: File contains no VM Name")
     else:
       suggestedName = suggestedName.group(1)
 
-    logging.debug("OVF Suggested VM Name: %s" % suggestedName)
+    logging.debug("OVF Suggested VM Name: %s", suggestedName)
 
     profileParams = "--vsys 0 --vmname \"%s\"" % name
     if engineProfile:
@@ -44,9 +46,9 @@ class VirtualBoxDriver(Driver):
     for disk in diskScan.findall(ret.get('stdout')):
       diskPath = disk[1]
       diskPath = diskPath.rsplit(suggestedName, 1)
-      diskPath = name.join(diskPath) 
+      diskPath = name.join(diskPath)
       diskParams += "--unit %s --disk \"%s\"" % (disk[0], diskPath)
-    
+
     try:
       self.vboxManager("import", "%s %s %s" % (ovfFile, profileParams, diskParams))
     except VirtualBoxError as err:
@@ -100,7 +102,7 @@ class VirtualBoxDriver(Driver):
       self.vboxManager("controlvm", "\"%s\" poweroff" % uuid)
     except VirtualBoxError as err:
       raise SubstanceDriverError("Failed to halt machine \"%s\": %s" % (uuid, err.errorLabel))
-      
+
   def getMachineInfo(self, uuid):
     '''
     Retrieve the machine info from the driver.
@@ -113,7 +115,6 @@ class VirtualBoxDriver(Driver):
 
     return self.parseMachineInfo(machInfo)
 
-    
   def getMachines(self):
     '''
     Retrive the list of machines and their driver identifiers.
@@ -138,9 +139,9 @@ class VirtualBoxDriver(Driver):
     '''
     try:
       ret = self.vboxManager("list", "vms")
-      parts = re.search(r'"' + re.escape(name) + '" {([^}]+)}', ret.get('stdout',''), re.M)
+      parts = re.search(r'"' + re.escape(name) + '" {([^}]+)}', ret.get('stdout', ''), re.M)
       if parts:
-        logging.debug("Machine ID for %s : %s" % (name, parts.group(1)))
+        logging.debug("Machine ID for %s : %s", name, parts.group(1))
         return parts.group(1)
     except VirtualBoxError as err:
       raise SubstanceDriverError("Failed to fetch machines list from Virtual Box: %s" % err.errorLabel)
@@ -166,7 +167,7 @@ class VirtualBoxDriver(Driver):
       "live snapshotting": EngineStates.RUNNING
     }
     state = mapping.get(vboxState, EngineStates.UNKNOWN)
-    logging.debug("Machine state: %s : %s" % (vboxState, state))
+    logging.debug("Machine state: %s : %s", vboxState, state)
     return state
 
   def exists(self, uuid):
@@ -175,7 +176,7 @@ class VirtualBoxDriver(Driver):
     '''
     try:
       ret = self.vboxManager("list", "vms")
-      parts = re.search(r'"([^"]+)" {'+re.escape(uuid)+'}', ret.get('stdout',''), re.M)
+      parts = re.search(r'"([^"]+)" {'+re.escape(uuid)+'}', ret.get('stdout', ''), re.M)
       if parts:
         return True
     except VirtualBoxError as err:
@@ -219,7 +220,7 @@ class VirtualBoxDriver(Driver):
       try:
         var, value = line.split("=", 1)
         value = value.strip('"')
-        machDict[var] = value 
-      except ValueError as err:
+        machDict[var] = value
+      except ValueError:
         pass
     return machDict
