@@ -77,7 +77,7 @@ class Command:
   
   def exitOK(self, msg=None) :
     if msg:
-      self.write(msg)
+      logging.info(msg)
     sys.exit(0)
  
   def exitHelp(self, msg=None, code=1):

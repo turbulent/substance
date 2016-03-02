@@ -1,8 +1,15 @@
 import logging
+import sys
 from substance.command import Command
 from substance.shell import Shell
+from substance.engine import EngineProfile
+from substance.driver.virtualbox import VirtualBoxDriver
 
 class Testcom(Command):
+
+  vboxManager = None
+  vbox = None
+
   def getShellOptions(self, optparser):
     optparser.add_option("-v", dest="val", help="Single Val", default=False)
     optparser.add_option("--longval", dest="longval", help="Long Val", default=False)
@@ -30,3 +37,12 @@ class Testcom(Command):
       logging.debug( "Engine %s: %s" % (engine.getName(), engine))
       config = engine.readConfig()
       logging.debug("  Config: %s" % (config) )
+      
+    (code, ip) = Shell.command("VBoxManage guestproperty get panic-test '/VirtualBox/GuestInfo/Net/0/V4/IP'")
+    logging.info("IP: %s" %ip) 
+
+    name = self.args[0]
+   
+    vbox = VirtualBoxDriver(baseFolder=self.core.getEnginesPath())
+    uuid = vbox.getMachineID(name) 
+    logging.info("Machine UUID for %s: %s" % (name, uuid))

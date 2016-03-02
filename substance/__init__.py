@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# $Id$
+
 import sys
 import traceback
 import logging
@@ -22,6 +25,7 @@ class Substance(Command):
 
     optparser.add_option("-f", dest="configFile", help="Override default config file")
     optparser.add_option("-d", dest="debug", help="Activate debugging output", default=False, action="store_true")
+    optparser.add_option("-y", dest="assumeYes", help="Assume yes when prompted", default=False, action="store_true")
 
     return optparser
 
@@ -89,9 +93,13 @@ Commands:
     self.cmdString = self.args[0]
 
     try:
+
       core = Core()
 
-      moduleName = 'substance.'+self.cmdString
+      if self.options.assumeYes:
+        core.setConfigKey("assumeYes", True)
+
+      moduleName = 'substance.command.'+self.cmdString
       className = self.cmdString.title()
 
       logging.debug("Import %s\nClassName: %s" % (moduleName, className))
