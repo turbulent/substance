@@ -60,7 +60,7 @@ class Core(object):
 
   def readConfigFile(self):
     if os.path.isfile(self.configFile):
-      readYAML(self.configFile)
+      self.config = readYAML(self.configFile)
     else:
       logging.info("Generating default substance configuration in %s", self.configFile)
       self.saveConfig(self.defaultConfig)

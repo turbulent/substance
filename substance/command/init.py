@@ -1,9 +1,7 @@
-import logging
-import sys
+import os
 from substance.command import Command
-from substance.shell import Shell
 from substance.engine import EngineProfile
-from substance.exceptions import EngineExistsError
+from substance.exceptions import (SubstanceError)
 
 class Init(Command):
 
@@ -14,9 +12,8 @@ class Init(Command):
     optparser.add_option("--memory", type="int", dest="memory", help="Machine memory allocation")
     optparser.add_option("--cpus", type="int", dest="cpus", help="Machine vCPU allocation")
     return optparser
- 
-  def main(self):
 
+  def main(self):
     name = self.args[0]
     try:
       engineConfig = {}
@@ -28,7 +25,7 @@ class Init(Command):
       if self.options.projects:
         if not os.path.isdir(self.options.projects):
           return self.exitError("Projects path %s does not exist." % self.options.projects)
-       
+
       engineProfile = EngineProfile()
       if self.options.memory:
         engineProfile.memory = self.options.memory
@@ -36,5 +33,5 @@ class Init(Command):
         engineProfile.cpus = self.options.cpus
 
       self.core.createEngine(name, config=engineConfig, profile=engineProfile)
-    except EngineExistsError:
-      logging.info("Engine \"%s\" already exists." % name) 
+    except SubstanceError as err:
+      self.exitError(err.errorLabel)

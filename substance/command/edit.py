@@ -1,22 +1,11 @@
-# -*- coding: utf-8 -*-
-# $Id$
-
-import logging
 import os
-import sys
 from substance.command import Command
 from substance.shell import Shell
-from substance.engine import EngineProfile
-from substance.driver.virtualbox import VirtualBoxDriver
-from substance.exceptions import ( EngineNotFoundError, SubstanceDriverError )
+from substance.exceptions import (EngineNotFoundError)
 
 class Edit(Command):
 
-  def getShellOptions(self, optparser):
-    return optparser
- 
   def main(self):
-
     name = self.args[0]
 
     try:
@@ -26,4 +15,4 @@ class Edit(Command):
       Shell.call(cmd)
 
     except EngineNotFoundError:
-      logging.info("Engine \"%s\" does not exist" % name) 
+      self.exitError("Engine \"%s\" does not exist" % name)
