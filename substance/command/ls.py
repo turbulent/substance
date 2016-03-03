@@ -24,6 +24,8 @@ class Ls(Command):
       state = engine.state()
       state = state if state else "-"
       prov = "yes" if engine.isProvisioned() else "no"
-      table.append([engine.getName(), prov, state, engine.getDockerURL(), ""])
+      dockerURL = engine.getDockerURL()
+      dockerURL = dockerURL if dockerURL else "-"
+      table.append([engine.getName(), prov, state, dockerURL, ""])
 
     logging.info(tabulate(table, headers=headers, tablefmt="plain"))

@@ -19,7 +19,7 @@ class Delete(Command):
       if not self.core.getConfigKey('assumeYes') and not Shell.printConfirm("You are about to delete engine \"%s\"." % name):
         self.exitOK("User cancelled.")
 
-      if engine.isProvisioned():
+      if engine.isProvisioned(validate=True):
         engine.deprovision()
         logging.info("Engine \"%s\" has been deprovisioned.", name)
 

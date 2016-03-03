@@ -45,12 +45,11 @@ class SubstanceDriverError(SubstanceError):
   Driver-specific raised error
   '''
 
-class VmNotFound(SubstanceDriverError):
-  '''
-  Virtual machine was not found.
-  '''
-
 class VirtualBoxError(SubstanceDriverError):
   '''
   Virtual box driver raised error
   '''
+  code = None
+  def __init__(self, code=None, message=''):
+    super(VirtualBoxError, self).__init__(message)
+    self.code = code

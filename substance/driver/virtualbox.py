@@ -63,7 +63,7 @@ class VirtualBoxDriver(Driver):
     try:
       self.vboxManager("unregistervm", "--delete \"%s\"" % (uuid))
     except VirtualBoxError as err:
-      raise SubstanceDriverError("Failed to destroy machine \"%s\": %s" % (uuid, err.errorLabel))
+      raise SubstanceDriverError("Failed to delete machine \"%s\": %s" % (uuid, err.errorLabel))
 
   def startMachine(self, uuid):
     '''
@@ -146,30 +146,6 @@ class VirtualBoxDriver(Driver):
     except VirtualBoxError as err:
       raise SubstanceDriverError("Failed to fetch machines list from Virtual Box: %s" % err.errorLabel)
 
-  def getMachineState(self, uuid):
-    vboxState = self.getVMState(uuid)
-    mapping = {
-      "powered off": EngineStates.STOPPED,
-      "saved": EngineStates.SUSPENDED,
-      "aborted": EngineStates.STOPPED,
-      "paused": EngineStates.STOPPED,
-      "stuck": EngineStates.STOPPED,
-      "restoring": EngineStates.STOPPED,
-      "snapshotting": EngineStates.STOPPED,
-      "setting up": EngineStates.STOPPED,
-      "online snapshotting": EngineStates.STOPPED,
-      "restoring snapshot": EngineStates.STOPPED,
-      "deleting snapshot": EngineStates.STOPPED,
-      "running": EngineStates.RUNNING,
-      "starting": EngineStates.RUNNING,
-      "stopping" : EngineStates.RUNNING,
-      "saving": EngineStates.RUNNING,
-      "live snapshotting": EngineStates.RUNNING
-    }
-    state = mapping.get(vboxState, EngineStates.UNKNOWN)
-    logging.debug("Machine state: %s : %s", vboxState, state)
-    return state
-
   def exists(self, uuid):
     '''
     Check in the driver that the specified identifier exists.
@@ -194,12 +170,56 @@ class VirtualBoxDriver(Driver):
     if self.getMachineState(uuid) is EngineStates.SUSPENDED:
       return True
 
-  def getVMState(self, uuid):
+  def getInternalState(self, uuid):
     '''
-    Retrieve the virtual machine state
+    Retrieve the virtual box machine state
     '''
-    machInfo = self.getMachineInfo(uuid)
-    return machInfo.get('VMState', 'Unknown')
+    try:
+      ret = self.vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid)
+      machInfo = ret.get('stdout', '')
+      if re.search(r'^name="<inaccessible>"$', machInfo, re.M):
+        return 'inaccessible'
+      
+      stateMatch = re.search(r'^VMState="(.+?)"$', machInfo, re.M)
+      if stateMatch:
+        return stateMatch.group(1)
+
+    except VirtualBoxError as err:
+      if err.code == "VBOX_E_OBJECT_NOT_FOUND":
+        return "inexistent"
+      raise SubstanceDriverError("Failed to fetch machine \"%s\" info: %s" % (uuid, err.errorLabel))
+
+    return 'unknown'
+
+  def getMachineState(self, uuid):
+    '''
+    Retrieve the Substance machine state for this driver id
+    '''
+    vboxState = self.getInternalState(uuid)
+    mapping = {
+      "poweroff": EngineStates.STOPPED,
+      "saved": EngineStates.SUSPENDED,
+      "aborted": EngineStates.STOPPED,
+      "paused": EngineStates.STOPPED,
+      "stuck": EngineStates.STOPPED,
+      "restoring": EngineStates.STOPPED,
+      "snapshotting": EngineStates.STOPPED,
+      "setting up": EngineStates.STOPPED,
+      "online snapshotting": EngineStates.STOPPED,
+      "restoring snapshot": EngineStates.STOPPED,
+      "deleting snapshot": EngineStates.STOPPED,
+      "running": EngineStates.RUNNING,
+      "starting": EngineStates.RUNNING,
+      "stopping" : EngineStates.RUNNING,
+      "saving": EngineStates.RUNNING,
+      "live snapshotting": EngineStates.RUNNING,
+      "unknown": EngineStates.UNKNOWN,
+      "inaccessible": EngineStates.INEXISTENT,
+      "inexistent": EngineStates.INEXISTENT
+    }
+    state = mapping.get(vboxState, EngineStates.UNKNOWN)
+    logging.debug("Machine state: %s : %s", vboxState, state)
+    return state
 
   def vboxManager(self, cmd, params):
     '''
@@ -207,7 +227,11 @@ class VirtualBoxDriver(Driver):
     '''
     ret = Shell.procCommand("%s %s %s" % (self.VBOXMAN, cmd, params))
     if ret.get('returnCode'):
-      raise VirtualBoxError(ret.get('stderr'))
+      code = None
+      codeMatch = re.search(r'error: Details: code (VBOX_[A-Z_0-9]*)', ret.get('stderr'), re.M)
+      if codeMatch:
+        code = codeMatch.group(1)
+      raise VirtualBoxError(message=ret.get('stderr'), code=code)
     return ret
 
   def parseMachineInfo(self, machInfo):

@@ -22,5 +22,6 @@ EngineStates = Constants(
   RUNNING="running",
   STOPPED="stopped",
   SUSPENDED="suspended",
-  UNKNOWN="unknown"
+  UNKNOWN="unknown",
+  INEXISTENT="inexistent"
 )

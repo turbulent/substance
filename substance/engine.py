@@ -52,7 +52,8 @@ class Engine(object):
     return os.path.join(self.enginePath, fileName)
 
   def getDockerURL(self):
-    return "tcp://%s:%s" % (self.config.get('ip', 'INVALID'), self.config.get('docker_port', 2375))
+    if self.getDriverID():
+      return "tcp://%s:%s" % (self.config.get('ip', 'INVALID'), self.config.get('docker_port', 2375))
 
   def readConfig(self):
     if os.path.isfile(self.configFile):
@@ -97,16 +98,18 @@ class Engine(object):
   def getDriverID(self):
     return self.config.get('id', None)
 
-  def isProvisioned(self):
+  def isProvisioned(self, validate=False):
     '''
     Check that this engine has an attached provisioned Virtual Machine.
     '''
-    machineID = self.getDriverID()
-    if not machineID:
+    machID = self.getDriverID()
+    if not machID:
       return False
 
-    if self.getDriver().exists(machineID):
-      return True
+    if not validate: 
+      return True 
+
+    return True if self.getDriver().exists(machID) else False
 
   def isRunning(self):
     if not self.isProvisioned():
@@ -127,7 +130,7 @@ class Engine(object):
     # 4. Setup guest networking
     # 4. Fetch the guest IP from the machine and store it in the machine state.
 
-    if not self.isProvisioned():
+    if not self.isProvisioned(validate=True):
       self.provision()
 
     self.start()
@@ -160,6 +163,10 @@ class Engine(object):
       driver.terminateMachine(machID)
 
     driver.deleteMachine(machID)
+
+    self.config['id'] = None
+    self.saveConfig()
+
     logging.info("Engine \"%s\" has been deprovisioned.", self.name)
 
   def suspend(self):
