@@ -15,6 +15,7 @@ setup(name='substance',
       description='substance - local dockerized development environment',
       install_requires=install_requires,
       packages=['substance'],
+      test_suite='tests',
       entry_points={
         'console_scripts': [
           'substance = substance:main',
