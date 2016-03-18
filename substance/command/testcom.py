@@ -1,5 +1,6 @@
 import logging
 from substance.command import Command
+from substance.monads import *
 
 class Testcom(Command):
 
@@ -19,17 +20,3 @@ class Testcom(Command):
     logging.debug("Options: %s", self.options)
     logging.debug("Args: %s", self.args)
 
-    try:
-      self.core.assertPaths()
-    except Exception as err:
-      self.exitError(err)
-
-    logging.debug("Config: %s", self.core.getConfig())
-
-    engines = self.core.getEngines()
-    logging.debug("Engines: %s", engines)
-    for name in engines:
-      engine = self.core.getEngine(name)
-      logging.debug("Engine %s: %s", engine.getName(), engine)
-      config = engine.readConfig()
-      logging.debug("  Config: %s", config)

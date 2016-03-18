@@ -4,6 +4,13 @@ from substance.exceptions import (
   FileSystemError
 )
 
+def writeYAML(filename, data):
+  try:
+    with open(filename, "w") as fileh:
+      fileh.write(yaml.dump(data, default_flow_style=False))
+  except Exception as err:
+    raise FileSystemError("Failed to write to %s : %s" % (filename, err))
+
 def readYAML(filename):
   try:
     stream = open(filename, "r")

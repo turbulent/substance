@@ -10,6 +10,16 @@ class SubstanceError(Exception):
     super(SubstanceError, self).__init__(message)
     self.errorLabel = message
 
+class ShellCommandError(SubstanceError):
+  code = None
+  stdout = None
+  stderr = None
+  def __init__(self, code=None, message='', stdout='', stderr=''):
+    super(VirtualBoxError, self).__init__(message)
+    self.code = code
+    self.stdout = stdout
+    self.stderr = stderr
+ 
 class FileSystemError(SubstanceError):
   '''
   Raised when substance fails to read or write to the filesystem
@@ -35,9 +45,18 @@ class EngineNotProvisioned(SubstanceError):
   Engine VM is not provided. (ex. does not exist)
   '''
 
+class EngineAlreadyProvisioned(SubstanceError):
+  '''
+  Engine VM is already provided.
+  '''
+
 class EngineAlreadyRunning(SubstanceError):
   '''
   Engine VM is already running.
+  '''
+class EngineNotRunning(SubstanceError):
+  '''
+  Engine VM is not running.
   '''
 
 class SubstanceDriverError(SubstanceError):

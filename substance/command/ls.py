@@ -1,5 +1,7 @@
 import logging
-from substance.command import Command
+from substance.monads import *
+from substance.command import (Command)
+from substance.engine import (Engine)
 from tabulate import tabulate
 
 class Ls(Command):
@@ -8,24 +10,22 @@ class Ls(Command):
     return optparser
 
   def main(self):
+    self.core.assertPaths() \
+      .then(self.core.getEngines) \
+      .mapM(Try.compose(self.core.loadEngine, Engine.loadConfigFile, Engine.loadState)) \
+      .mapM(self.tabulateEngine) \
+      .bind(self.tabulateEngines) \
+      .catch(self.exitError) \
+      .bind(logging.info)
 
-    table = []
+  def tabulateEngine(self, engine):  
+    state = engine.state if engine.state else "-"
+    prov = "yes" if engine.isProvisioned() else "no"
+    dockerURL = engine.getDockerURL()
+    return OK([engine.getName(), prov, state, dockerURL, "-"])
+
+  def tabulateEngines(self, engines):
     headers = ["NAME", "PROVISIONED", "STATE", "URL", "ERRORS"]
-
-    try:
-      self.core.assertPaths()
-    except Exception as err:
-      self.exitError(err)
-
-    engines = self.core.getEngines()
-    for name in engines:
-      engine = self.core.getEngine(name)
-      engine.readConfig()
-      state = engine.state()
-      state = state if state else "-"
-      prov = "yes" if engine.isProvisioned() else "no"
-      dockerURL = engine.getDockerURL()
-      dockerURL = dockerURL if dockerURL else "-"
-      table.append([engine.getName(), prov, state, dockerURL, ""])
-
-    logging.info(tabulate(table, headers=headers, tablefmt="plain"))
+    table = tabulate(engines, headers=headers, tablefmt="plain")
+    return OK(table)
+ 

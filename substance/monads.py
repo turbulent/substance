@@ -1,3 +1,7 @@
+import logging
+import functools
+from functools import (wraps)
+from functools import partial
 
 class Monad(object):
 
@@ -7,9 +11,23 @@ class Monad(object):
   def map(self, mf):
     raise NotImplementedError
 
+  def __rshift__(self, f):
+    return self.bind(f)
+
+  def __ilshift__(self, f):
+    return self.bind(f)
+
 #----------- EITHER
 
 class Maybe(Monad):
+
+  @staticmethod
+  def of(value=None):
+    if(value is None):
+      return Nothing()
+    else:
+      return Just(value)
+
   def get(self):
     raise NotImplementedError
 
@@ -98,6 +116,7 @@ class Left(Either):
     if isinstance(other, self.__class__):
       return self.value == other.value
     return False
+ 
   
 class Right(Either):
   value = None
@@ -119,6 +138,10 @@ class Right(Either):
 
 class Try(Monad):
 
+  @staticmethod
+  def of(value):
+    return OK(value)
+
   def isFail(self):
     return isinstance(self, Fail)
     
@@ -131,6 +154,9 @@ class Try(Monad):
   def getOK(self):
     raise NotImplementedError
 
+  def getOrElse(self, default):
+    return default if self.isFail() else self.getOK()
+
   def bind(self, mf):
     if self.isFail():
       return self
@@ -141,16 +167,7 @@ class Try(Monad):
       return self
     return OK(f(self.getOK()))
 
-  def mapError(self, f):
-    if self.isOK():
-      return self
-    return Fail(f(self.getError()))
-    
-  def catch(self, f):
-    return self.then(None, f)  
-
-  def then(self, okF, failF=None):
-
+  def then(self, okF=None, failF=None):
     if self.isFail(): 
       if failF:
         r = failF(self.getError())
@@ -160,11 +177,72 @@ class Try(Monad):
       else:
         return self
     else:
-      r = okF()
-      if isinstance(r, Try):
-        return r
-      return OK(r)
-      
+      if okF:
+        r = okF()
+        if isinstance(r, Try):
+          return r
+        return OK(r)
+      else:
+        return self
+
+  def bindIfTrue(self, f):
+    return self.bindIf(f, lambda x: OK(False))
+
+  def bindIfFalse(self, f):
+    return self.bindIf(lambda x: OK(True), f)
+
+  def bindIf(self, fTrue, fFalse):
+    if self.isFailure():
+      return self
+    if self.getOK() == True:
+      return self.bind(fTrue)
+    else:
+      return self.bind(fFalse)
+
+  def mapM(self, mf):
+    def mapper(xs):
+      return mapM(self, mf, xs)
+    return self.bind(mapper)
+
+  def mapM_(self, mf):
+    def mapper(xs):
+      return mapM_(self, mf, xs)
+    return self.bind(mapper)
+
+  @staticmethod
+  def compose(*funcs):
+    def func(x):
+      return fold(lambda acc, f: acc.bind(f), funcs, Try.of(x))
+    return func
+
+  def sequence(self, monads):
+    ''' Fold a list of monads into a monad containing the list of values '''
+    return reduce(lambda acc, mv: unshiftM(monad, acc, mv), reversed(monads), monad.of([]))
+
+
+  def catch(self, f):
+    return self.then(None, f)  
+
+  @staticmethod
+  def attemptWrapper(f, expect=Exception):
+    @wraps(f)
+    def tryer(*args, **kwargs):
+      try:
+        return OK(f(*args, **kwargs))
+      except expect as e:
+        return Fail(e)
+    return tryer
+
+  @staticmethod 
+  def attempt(f, *args, **kwargs):
+    return Try.attemptWrapper(f)(*args, **kwargs)
+
+  @staticmethod 
+  def raiseError(self, err=Exception):
+    raise(err)
+
+  def join(self):
+    return self if self.isFail() else self.getOK()
  
 class OK(Try):
   value = None
@@ -177,6 +255,9 @@ class OK(Try):
   def __repr__(self):
         return "OK(%r)" % self.value
 
+  def __bool__(self):
+    return True
+ 
   def __eq__(self, other):
     if isinstance(other, self.__class__):
       return self.value == other.value
@@ -190,6 +271,9 @@ class Fail(Try):
   def getError(self):
     return self.value
 
+  def __bool__(self):
+    return False
+
   def __repr__(self):
         return "Fail(%r)" % self.value
 
@@ -197,3 +281,41 @@ class Fail(Try):
     if isinstance(other, self.__class__):
       return self.value == other.value
     return False
+
+def fold(f, xs, init=None):
+  return functools.reduce(f, xs, init)
+
+def compose(*funcs): 
+  def func(x):
+    return fold(lambda acc, f: f(acc), reversed(funcs), x)
+  return func
+
+def unshiftM(monad, monads, mv): 
+  ''' Append a monadic value to a list of monads '''
+  return monads.bind(lambda xs: mv.bind(lambda x: monad.of( [x] + xs)))
+
+def sequence(monad, monads):
+  ''' Fold a list of monads into a monad containing the list of values '''
+  return reduce(lambda acc, mv: unshiftM(monad, acc, mv), reversed(monads), monad.of([]))
+
+def mapM(monad, mf, xs):
+  ''' Map a monadic function over a list of values, lifting them into monadic context and convert the results to a monad containing a list of the values. '''
+  mapped = map(mf, xs)
+  sequenced = sequence(monad, mapped)
+  return sequenced
+
+def mapM_(monad, mf, xs):
+  ''' Map a monadic  action to a structure, evaluate from left to right and ignore results. '''
+  map(mf, xs)
+  return monad.of(xs)
+
+def defer(f, *args, **kwargs):
+  fargs = args
+  fkwargs = kwargs
+  return partial(f, *fargs, **fkwargs)
+
+def failWith(exception):
+  return (lambda x: Fail(exception))
+
+def chainSelf(self, *_, **__):
+  return self

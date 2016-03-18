@@ -18,6 +18,6 @@ setup(name='substance',
       test_suite='tests',
       entry_points={
         'console_scripts': [
-          'substance = substance:main',
+          'substance = substance:cli',
         ],
       })
