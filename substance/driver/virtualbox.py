@@ -37,7 +37,7 @@ class VirtualBoxDriver(Driver):
     else:
       suggestedName = suggestedName.group(1)
 
-    debug("OVF Suggested VM Name \"%s\"", name)
+    ddebug("OVF Suggested VM Name \"%s\"", name)
 
     importParams = ["--vsys 0 --vmname \"%s\"" % name]
     if engineProfile:
@@ -332,7 +332,7 @@ class VirtualBoxDriver(Driver):
       "inexistent": EngineStates.INEXISTENT
     }
     state = mapping.get(vboxState, EngineStates.UNKNOWN)
-    debug("Machine state: %s : %s", vboxState, state)
+    ddebug("Machine state: %s : %s", vboxState, state)
     return OK(state)
 
 #    vboxState = self.getInternalState(uuid)

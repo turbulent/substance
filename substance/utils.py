@@ -24,3 +24,5 @@ def readYAML(filename):
     raise ConfigSyntaxError(msg)
   except Exception as err:
     raise FileSystemError("Failed to read configuration file %s : %s" % (filename, err))
+
+

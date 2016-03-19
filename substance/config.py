@@ -2,8 +2,8 @@ import os
 import logging
 from substance.monads import *
 from substance.shell import Shell
-from substance.utils import (readYAML,writeYAML)
-from substance.exceptions import (FileSystemError)
+from substance.utils import (readYAML, writeYAML)
+from substance.exceptions import (FileSystemError, FileDoesNotExist)
 
 
 class Config(object):
@@ -15,7 +15,7 @@ class Config(object):
     self.configFile = configFile
 
   def getConfigFile(self):
-    return OK(self.configFile)
+    return self.configFile
 
   def set(self, key, value):
     self.config[key] = value
@@ -31,8 +31,9 @@ class Config(object):
     self.config = config
     return OK(self.config)
 
-  def saveConfig(self):
-    return Try.attempt(writeYAML, self.configFile, self.config)
+  def saveConfig(self, config=None):
+    config = self.config if not config else config
+    return Try.attempt(writeYAML, self.configFile, config)
 
   def readConfigFile(self):
     return Try.attempt(readYAML, self.configFile)
@@ -40,19 +41,6 @@ class Config(object):
   def loadConfigFile(self):
     if not os.path.exists(self.configFile):
       return Fail(FileDoesNotExist("File does not exist: %s" % self.configFile))
+    logging.debug("Loading config file: %s", self.configFile)
     return self.readConfigFile() >> self.setConfig
 
-  def generateDefaultConfigFile(self):
-    logging.info("Generating default substance configuration in %s", self.configFile)
-
-    if config:
-      for kkk, vvv in config.iteritems():
-        self.defaultConfig.set(kkk, vvv)
-    if profile:
-      self.defaultConfig.get('profile')['memory'] = profile.memory
-      self.defaultConfig.get('profile')['cpus'] = profile.cpus
-    self.defaultConfig["name"] = self.name
-
-    self.saveConfig(self.defaultConfig)
-
- 

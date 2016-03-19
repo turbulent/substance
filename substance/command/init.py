@@ -1,7 +1,8 @@
 import os
+from substance.logs import *
 from substance.command import Command
 from substance.engine import EngineProfile
-from substance.exceptions import (SubstanceError)
+from substance.exceptions import (InvalidOptionError)
 
 class Init(Command):
 
@@ -14,24 +15,39 @@ class Init(Command):
     return optparser
 
   def main(self):
-    name = self.args[0]
-    try:
-      engineConfig = {}
-      if self.options.driver:
-        if not self.core.validDriver(self.options.driver):
-          return self.exitError("Driver %s is not valid." % self.options.driver)
-        engineConfig.set('driver', self.options.driver)
 
-      if self.options.projects:
-        if not os.path.isdir(self.options.projects):
-          return self.exitError("Projects path %s does not exist." % self.options.projects)
+    name = self.getInputName()
+  
+    options = self.buildConfigFromArgs().bind(self.buildProfileFromArgs) \
+      .catch(self.exitError).getOK()
 
-      engineProfile = EngineProfile()
-      if self.options.memory:
-        engineProfile.memory = self.options.memory
-      if self.options.cpus:
-        engineProfile.cpus = self.options.cpus
+    self.core.initialize() \
+      .then(defer(self.core.createEngine, name, config=options['config'], profile=options['profile'])) \
+      .catch(self.exitError) \
+      .bind(dinfo("Engine \"%s\" has been created.", name))
 
-      self.core.createEngine(name, config=engineConfig, profile=engineProfile)
-    except SubstanceError as err:
-      self.exitError(err.errorLabel)
+  def buildConfigFromArgs(self, config={}):
+    opts = {}
+    if self.options.driver:
+      if not self.validateDriver(self.options.driver):
+        return Fail(InvalidOptionError("Driver %s is not valid." % self.options.driver))
+      opts['driver'] = self.options.driver
+
+    if self.options.projects:
+      if not os.path.isdir(self.options.projects):
+        return Fail(InvalidOptionError("Projects path %s does not exist." % self.options.projects))
+      opts['projectsPath'] = self.options.driver
+
+    config['config'] = opts
+    return OK(config)
+
+  def buildProfileFromArgs(self, config={}):
+    profile = EngineProfile()
+    if self.options.memory and self.validateInteger(self.options.memory):
+      profile.memory = self.options.memory
+    if self.options.cpus and self.validateInteger(self.options.cpus):
+      profile.cpus = self.options.cpus
+  
+    config['profile'] = profile
+    return OK(config)
+

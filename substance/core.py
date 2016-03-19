@@ -8,6 +8,7 @@ from substance.utils import (readYAML,writeYAML)
 from substance.config import (Config)
 from substance.exceptions import (
   FileSystemError,
+  FileDoesNotExist,
   EngineNotFoundError,
   EngineExistsError
 )
@@ -41,23 +42,20 @@ class Core(object):
     return OK([self.basePath, self.enginesPath]).mapM(Shell.makeDirectory)
 
   def assertConfig(self):
-    return self.config.loadConfigFile() \
-      .catch(lambda x: OK() if isinstance(x, FileDoesNotExist) else x) \
-      .bindIfFalse(self.assertDefaultConfig)
+    return self.config.loadConfigFile()  \
+      .catchError(FileDoesNotExist, self.makeDefaultConfig)
+    #  .catch(lambda x: self.makeDefaultConfig() if isinstance(x, FileDoesNotExist) else x) 
 
-  def assertDefaultConfig(self, data):
-    if data.isNothing():
-      logging.info("Generating default substance configuration in %s", self.config.getConfigFile())
-      for kkk, vvv in self.defaultConfig.iteritems():
-        self.config.set(kkk, vvv)
-      return self.config.saveConfig()
-    else:
-      return data.get()
+  def makeDefaultConfig(self, data=None):
+    logging.info("Generating default substance configuration in %s", self.config.getConfigFile())
+    for kkk, vvv in self.defaultConfig.iteritems():
+      self.config.set(kkk, vvv)
+    return self.config.saveConfig()
   
   #-- Engine library management
 
   def getEngines(self):
-    debug("getEngines()")
+    ddebug("getEngines()")
     dirs = [ d for d in os.listdir(self.enginesPath) if os.path.isdir(os.path.join(self.enginesPath, d))] 
     return OK(dirs)
 
@@ -72,8 +70,9 @@ class Core(object):
       return OK(Engine(name, enginePath))
 
   def createEngine(self, name, config=None, profile=None):
+    enginePath = os.path.join(self.enginesPath, name)
     newEngine = Engine(name, enginePath)
-    return newEngine.create()
+    return newEngine.create(config=config, profile=profile)
 
   def removeEngine(self, name):
     return self.loadEngine(name) \

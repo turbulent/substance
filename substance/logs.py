@@ -1,18 +1,25 @@
 import logging
 from substance.monads import *
 
-def debug(msg, *args, **kwargs):
-  return defer(logging.log, logging.DEBUG, msg, *args, **kwargs)
+def ddebug(msg, *args, **kwargs):
+  return dlog(logging.DEBUG, msg, *args, **kwargs)
 
-def info(msg, *args, **kwargs):
-  return defer(logging.log, logging.INFO, msg, *args, **kwargs)
+def dinfo(msg, *args, **kwargs):
+  return dlog(logging.INFO, msg, *args, **kwargs)
 
-def warning(msg, *args, **kwargs):
-  return defer(logging.log, logging.WARNING, msg, *args, **kwargs)
+def dwarning(msg, *args, **kwargs):
+  return dlog(logging.WARNING, msg, *args, **kwargs)
 
-def critical(msg, *args, **kwargs):
-  return defer(logging.log, logging.CRITICAL, msg, *args, **kwargs)
+def dcritical(msg, *args, **kwargs):
+  return dlog(logging.CRITICAL, msg, *args, **kwargs)
 
-def exception(msg, *args, **kwargs):
-  return defer(logging.log, logging.EXCEPTION, msg, *args, **kwargs)
+def dexception(msg, *args, **kwargs):
+  return dlog(logging.EXCEPTION, msg, *args, **kwargs)
 
+def dlog(level, msg, *args, **kwargs):
+  if args:
+    msg = msg % args
+  def deferredLog(*args, **kwargs):
+    logging.log(level, msg)
+    return OK(True)
+  return deferredLog

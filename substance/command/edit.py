@@ -1,4 +1,7 @@
 import os
+import logging
+from substance.logs import *
+from substance.monads import *
 from substance.command import Command
 from substance.shell import Shell
 from substance.exceptions import (EngineNotFoundError)
@@ -6,13 +9,14 @@ from substance.exceptions import (EngineNotFoundError)
 class Edit(Command):
 
   def main(self):
-    name = self.args[0]
 
-    try:
-      engine = self.core.getEngine(name)
+    name = self.getInputName()
+ 
+    self.core.loadEngine(name) \
+      .bind(self.editEngineConfig) \
+      .catch(self.exitError) 
 
-      cmd = os.environ.get('EDITOR', 'vi') + ' ' + engine.configFile
-      Shell.call(cmd)
 
-    except EngineNotFoundError:
-      self.exitError("Engine \"%s\" does not exist" % name)
+  def editEngineConfig(self, engine):
+    cmd = os.environ.get('EDITOR', 'vi') + ' ' + engine.config.getConfigFile()
+    return Shell.call(cmd) 

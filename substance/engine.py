@@ -3,9 +3,10 @@ import logging
 from substance.monads import *
 from substance.config import (Config)
 from substance.logs import *
+from substance.shell import Shell
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
-from substance.exceptions import (FileSystemError, EngineAlreadyRunning)
+from substance.exceptions import (FileSystemError, EngineAlreadyRunning, EngineExistsError)
 
 class EngineProfile(object):
   cpus = None
@@ -13,6 +14,9 @@ class EngineProfile(object):
   def __init__(self, cpus=2, memory=1024):
     self.cpus = cpus
     self.memory = memory
+
+  def __repr__(self):
+    return "%s" % {'cpus': self.cpus, 'memory': self.memory}
 
 class Engine(object):
 
@@ -67,7 +71,7 @@ class Engine(object):
     return self.config.loadConfigFile().map(self.chainSelf)
 
   def loadState(self):
-    debug("Engine load state %s" % self.name)
+    ddebug("Engine load state %s" % self.name)
     return self.fetchState().bind(self.setState).map(self.chainSelf)
 
   def setState(self, state):
@@ -79,16 +83,18 @@ class Engine(object):
       return Fail(EngineExistsError("Engine \"%s\" already exists." % self.name))
 
     return Shell.makeDirectory(self.enginePath) \
-      .bind(defer(self.makeDefaultConfig, config, profile)) \
-      .bind(self.saveConfig) \
-      .bind(info("Generated default substance configuration in %s", self.config.configFile)) 
+      .then(defer(self.makeDefaultConfig, config=config, profile=profile)) \
+      .bind(self.config.saveConfig) 
+      #.bind(info("Generated default substance configuration in %s", self.config.configFile)) 
  
   def remove(self):
     if not os.path.isdir(self.enginePath):
       return Fail(EngineExistsError("Engine \"%s\" does not exist." % self.name))
     return Shell.nukeDirectory(self.enginePath)
  
-  def makeDefaultConfig(self, config=None , profile=None, *more):
+  def makeDefaultConfig(self, config=None, profile=None):
+    logging.info("Generating default substance configuration in %s", self.config.configFile)
+
     default = self.defaultConfig.copy()
     default["name"] = self.name
 
@@ -167,7 +173,7 @@ class Engine(object):
     if self.isProvisioned():
       return OK()
 
-    info("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config['driver'])()
+    dinfo("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config['driver'])()
 
     return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile()) \
       .bind(Engine.setMachineID) \
@@ -219,9 +225,9 @@ class Engine(object):
       .bindIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) 
 
     if(force):
-      operation >> self.__terminate >> info("Engine \"%s\" has been terminated.", self.name)
+      operation >> self.__terminate >> dinfo("Engine \"%s\" has been terminated.", self.name)
     else:
-      operation >> self.__halt >> info("Engine \"%s\" has been halted.", self.name)
+      operation >> self.__halt >> dinfo("Engine \"%s\" has been halted.", self.name)
 
     # XXX insert wait for stopped state
     return operation

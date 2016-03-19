@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import logging
 from optparse import OptionParser
 from getpass import getpass
@@ -99,3 +100,28 @@ class Command(object):
     self.input = args
     (self.options, self.args) = self.parseShellInput()
     self.main()
+
+
+
+  #---- Validation
+
+  def getInputName(self):
+    name = self.args[0]
+    if not name or not self.validateEngineName(name):
+      return self.exitError("Invalid name specified. Please use only letters, numbers, dash or underscores.")
+    return name
+
+  def validateEngineName(self, name):
+    return bool(re.match(r'^[a-zA-Z0-9\-_]*$', name))
+
+  def validateDriver(self, driver):
+    return self.core.validDriver(driver)
+
+  def validateInteger(self, value):
+    try:
+      val = int(value)
+      return True
+    except ValueError:
+      return False
+
+

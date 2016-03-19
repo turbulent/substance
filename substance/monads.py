@@ -188,6 +188,12 @@ class Try(Monad):
   def catch(self, f):
     return self.then(None, f)  
 
+  def catchError(self, err, f):
+    def catcher(x):
+      if isinstance(x, err):
+        return f(self.getError())
+    return self.then(None, catcher)
+      
   def bindIfTrue(self, f):
     return self.bindIf(f, lambda x: OK(False))
 
@@ -195,9 +201,9 @@ class Try(Monad):
     return self.bindIf(lambda x: OK(True), f)
 
   def bindIf(self, fTrue, fFalse):
-    if self.isFailure():
+    if self.isFail():
       return self
-    if self.getOK() == True:
+    if self.getOK() is True:
       return self.bind(fTrue)
     else:
       return self.bind(fFalse)

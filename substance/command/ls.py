@@ -10,7 +10,7 @@ class Ls(Command):
     return optparser
 
   def main(self):
-    self.core.assertPaths() \
+    self.core.initialize() \
       .then(self.core.getEngines) \
       .mapM(self.core.loadEngine) \
       .mapM(Engine.loadConfigFile) \
