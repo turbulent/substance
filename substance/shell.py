@@ -73,6 +73,6 @@ class Shell(object):
     try:
       if path and path is not '/' and path is not 'C:\\':
         shutil.rmtree(path)
-      return OK()
+      return OK(None)
     except Exception as err:
       return Fail(ShellCommandError(code=1, message="Failed to rmtree: %s: %s" % (path,err)))

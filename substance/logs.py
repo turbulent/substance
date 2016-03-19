@@ -21,5 +21,5 @@ def dlog(level, msg, *args, **kwargs):
     msg = msg % args
   def deferredLog(*args, **kwargs):
     logging.log(level, msg)
-    return OK(True)
+    return OK(None)
   return deferredLog

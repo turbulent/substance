@@ -1,7 +1,10 @@
 import logging
+from substance.logs import *
+from substance.monads import *
 from substance.command import Command
+from substance.engine import Engine
 from substance.shell import Shell
-from substance.exceptions import (SubstanceError)
+from substance.exceptions import (SubstanceError, EngineNotProvisioned)
 
 class Delete(Command):
 
@@ -10,23 +13,14 @@ class Delete(Command):
 
   def main(self):
 
-    name = self.args[0]
+    name = self.getInputName()
 
-    try:
-      engine = self.core.getEngine(name)
-      engine.readConfig()
+    self.core.initialize() \
+      .then(defer(self.core.loadEngine, name)) \
+      .bind(Engine.loadConfigFile) \
+      .bind(Engine.deprovision) \
+      .catchError(EngineNotProvisioned, lambda e: OK(None)) \
+      .then(defer(self.core.removeEngine, name)) \
+      .then(dinfo("Engine \"%s\" has been deleted.", name)) \
+      .catch(self.exitError)
 
-      if not self.core.getConfigKey('assumeYes') and not Shell.printConfirm("You are about to delete engine \"%s\"." % name):
-        self.exitOK("User cancelled.")
-
-      if engine.isProvisioned(validate=True):
-        engine.deprovision()
-        logging.info("Engine \"%s\" has been deprovisioned.", name)
-
-      self.core.removeEngine(name)
-      logging.info("Engine \"%s\" has been deleted.", name)
-
-    except SubstanceError as err:
-      self.exitError(err.errorLabel)
-    except Exception as err:
-      self.exitError("Failed to deprovision engine VM \"%s\": %s" % (name, err))

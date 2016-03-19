@@ -44,31 +44,40 @@ class ConfigSyntaxError(SubstanceError):
   Raised when invalid syntax was found in a configuration file.
   '''
 
-class EngineExistsError(SubstanceError):
+class EngineError(SubstanceError):
+  '''
+  Engine error class
+  '''
+  engine = None
+  def __init__(self, message='', engine=None):
+    super(SubstanceError, self).__init__(message)
+    self.engine = engine
+
+class EngineExistsError(EngineError):
   '''
   Raised when an engine with the same name exists.
   '''
 
-class EngineNotFoundError(SubstanceError):
+class EngineNotFoundError(EngineError):
   '''
   Raised when a specified engine was not found
   '''
 
-class EngineNotProvisioned(SubstanceError):
+class EngineNotProvisioned(EngineError):
   '''
   Engine VM is not provided. (ex. does not exist)
   '''
 
-class EngineAlreadyProvisioned(SubstanceError):
+class EngineAlreadyProvisioned(EngineError):
   '''
   Engine VM is already provided.
   '''
 
-class EngineAlreadyRunning(SubstanceError):
+class EngineAlreadyRunning(EngineError):
   '''
   Engine VM is already running.
   '''
-class EngineNotRunning(SubstanceError):
+class EngineNotRunning(EngineError):
   '''
   Engine VM is not running.
   '''

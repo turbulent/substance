@@ -6,7 +6,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
-from substance.exceptions import (FileSystemError, EngineAlreadyRunning, EngineExistsError)
+from substance.exceptions import (FileSystemError, EngineAlreadyRunning, EngineExistsError, EngineNotProvisioned)
 
 class EngineProfile(object):
   cpus = None
@@ -84,17 +84,16 @@ class Engine(object):
 
     return Shell.makeDirectory(self.enginePath) \
       .then(defer(self.makeDefaultConfig, config=config, profile=profile)) \
-      .bind(self.config.saveConfig) 
-      #.bind(info("Generated default substance configuration in %s", self.config.configFile)) 
+      .bind(self.config.saveConfig) \
+      .bind(dinfo("Generated default substance configuration in %s", self.config.configFile)) \
+      .map(self.chainSelf)
  
   def remove(self):
     if not os.path.isdir(self.enginePath):
-      return Fail(EngineExistsError("Engine \"%s\" does not exist." % self.name))
+      return Fail(FileSystemError("Engine \"%s\" does not exist." % self.name))
     return Shell.nukeDirectory(self.enginePath)
  
   def makeDefaultConfig(self, config=None, profile=None):
-    logging.info("Generating default substance configuration in %s", self.config.configFile)
-
     default = self.defaultConfig.copy()
     default["name"] = self.name
 
@@ -128,45 +127,26 @@ class Engine(object):
     isRunningState = (lambda state: (state is EngineStates.RUNNING))
     return self.validateProvision().bindIfTrue(lambda x: self.fetchState().map(isRunningState))
 
-    #if not self.isProvisioned():
-    #  return False
-    #state = self.fetchState()
-    #return True if state is EngineStates.RUNNING else False
-
   def fetchState(self):
     if not self.isProvisioned():
       return OK(EngineStates.INEXISTENT)
     return self.getDriver().getMachineState(self.getDriverID())
    
-    #if not self.isProvisioned():
-    #  return Fail(EngineNotProvisioned("Engine %s is not provisioned." % self.name))
-    #return self.getDriver().getMachineState(self.getDriverID())
-
   def launch(self):
-
+    '''
     # 1. Check that we know about a provisioned machined for this engine. Provision if not.
     # 2. Validate that the machine we know about is still provisioned. Provision if not.
     # 3. Check the machine state, boot accordingly
     # 4. Setup guest networking
     # 4. Fetch the guest IP from the machine and store it in the machine state.
-
+    '''
     self.provision().bind(self.start())
-
-    #if not self.isProvisioned(validate=True):
-    #  self.provision()
-    #self.start()
 
   def start(self):
 
     return self.isRunning() \
       .bindIfTrue(failWith(EngineAlreadyRunning("Engine \"%s\" is already running" % self.name))) \
-      .bind(self.__start)
-
-    #if self.isRunning():
-    #  raise EngineAlreadyRunning("Engine \"%s\" is already running" % self.name)
-    #logging.info("Booting engine VM")
-    #return self.getDriver().startMachine(self.getDriverID())
-
+      .bind(self.__start) \
 
   def provision(self):
 
@@ -177,26 +157,24 @@ class Engine(object):
 
     return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile()) \
       .bind(Engine.setMachineID) \
-      .then(self.config.saveConfig)
-
-   # machineID = self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile())
-   # self.config['id'] = machineID
-   # self.saveConfig()
+      .then(self.config.saveConfig) \
+      .map(self.chainSelf)
 
   def deprovision(self):
 
     if not self.isProvisioned():  
-      return Fail(EngineNotProvisioned("Engine \"%s\" is not provisioned.", self.name))
+      return Fail(EngineNotProvisioned("Engine \"%s\" is not provisioned." % self.name, self))
 
     return self.isRunning() \
       .bindIfTrue(self.__terminate) \
       .bind(self.__delete) \
       .bind(self.clearProvision)  \
-      .then(info("Engine \"%s\" has been deprovisioned.", self.name))
+      .then(dinfo("Engine \"%s\" has been deprovisioned.", self.name)) \
+      .map(self.chainSelf)
 
   def clearProvision(self):
     self.config.set('id', None)
-    return self.saveConfig() 
+    return self.saveConfig().map(self.chainSelf)
 
   def suspend(self):
     if not self.isProvisioned():
@@ -204,21 +182,9 @@ class Engine(object):
        
     return self.isRunning() \
       .bindIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) \
-      .bind(self.__suspend) 
+      .bind(self.__suspend)  \
 
     #XXX Insert wait for suspension
-
-#    if not self.isProvisioned():
-#      logging.warning("Engine \"%s\" is not provisioned.", self.name)
-#      return
-#
-#    if not self.isRunning():
-#      logging.warning("Engine \"%s\" is not running.", self.name)
-#      return
-#
-#    self.getDriver().suspendMachine(self.getDriverID())
-#    logging.info("Engine \"%s\" has been suspended.", self.name)
-
 
   def stop(self, force=False):
     operation = self.isRunning() \
@@ -230,34 +196,22 @@ class Engine(object):
       operation >> self.__halt >> dinfo("Engine \"%s\" has been halted.", self.name)
 
     # XXX insert wait for stopped state
-    return operation
+    return operation.map(self.chainSelf)
      
-#    if self.isRunning():
-#      driver = self.getDriver()
-#      if force:
-#        driver.terminateMachine(self.getDriverID())
-#        logging.info("Engine \"%s\" has been terminated.", self.name)
-#      else:
-#        driver.haltMachine(self.getDriverID())
-#        logging.info("Engine \"%s\" has been stopped.", self.name)
-#      # XXX insert wait for stopped state
-#    else:
-#      logging.warning("Engine \"%s\" is not running.", self.name)
-
   def __start(self, *args):
-    return self.getDriver().startMachine(self.getDriverID())
+    return self.getDriver().startMachine(self.getDriverID()).map(self.chainSelf)
 
   def __suspend(self, *args):
-    return self.getDriver().suspendMachine(self.getDriverID())
+    return self.getDriver().suspendMachine(self.getDriverID()).map(self.chainSelf)
 
   def __terminate(self, *args):
-    return self.getDriver().terminateMachine(self.getDriverID())
+    return self.getDriver().terminateMachine(self.getDriverID()).map(self.chainSelf)
 
   def __halt(self, *args):
-    return self.getDriver().haltMachine(self.getDriverID())
+    return self.getDriver().haltMachine(self.getDriverID()).map(self.chainSelf)
 
   def __delete(self, *args):
-    return self.getDriver().deleteMachine(self.getDriverID())
+    return self.getDriver().deleteMachine(self.getDriverID()).map(self.chainSelf)
  
   chainSelf = chainSelf
 

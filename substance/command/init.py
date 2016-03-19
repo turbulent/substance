@@ -23,8 +23,8 @@ class Init(Command):
 
     self.core.initialize() \
       .then(defer(self.core.createEngine, name, config=options['config'], profile=options['profile'])) \
+      .bind(dinfo("Engine \"%s\" has been created", name)) \
       .catch(self.exitError) \
-      .bind(dinfo("Engine \"%s\" has been created.", name))
 
   def buildConfigFromArgs(self, config={}):
     opts = {}
