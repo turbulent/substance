@@ -185,6 +185,9 @@ class Try(Monad):
       else:
         return self
 
+  def catch(self, f):
+    return self.then(None, f)  
+
   def bindIfTrue(self, f):
     return self.bindIf(f, lambda x: OK(False))
 
@@ -220,9 +223,6 @@ class Try(Monad):
     return reduce(lambda acc, mv: unshiftM(monad, acc, mv), reversed(monads), monad.of([]))
 
 
-  def catch(self, f):
-    return self.then(None, f)  
-
   @staticmethod
   def attemptWrapper(f, expect=Exception):
     @wraps(f)
@@ -243,7 +243,7 @@ class Try(Monad):
 
   def join(self):
     return self if self.isFail() else self.getOK()
- 
+
 class OK(Try):
   value = None
   def __init__(self, value):

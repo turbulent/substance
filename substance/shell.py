@@ -4,7 +4,7 @@ import shutil
 import shlex
 import subprocess
 from subprocess import call, Popen, check_output, CalledProcessError
-from substance.exceptions import FileSystemError
+from substance.exceptions import (FileSystemError, ShellCommandError)
 from substance.monads import *
 
 # pylint: disable=W0232
@@ -25,7 +25,10 @@ class Shell(object):
     logging.debug("COMMAND: %s", cmd)
     try:
       returncode = call(cmd, shell=True)
-      return OK({"code": returncode, "stdout": None})
+      if returncode == 0:
+        return OK(None)
+      else:
+        return Fail(ShellCommandError(code=returncode))
     except CalledProcessError as err:
       return Fail(ShellCommandError(code=err.returncode, message=err.output, stdout=err.output))
 
@@ -34,7 +37,7 @@ class Shell(object):
     logging.debug("COMMAND: %s", cmd)
     try:
       out = check_output(cmd, shell=True)
-      return OK({"code":0, "stdout":out.strip()})
+      return OK(out.strip())
     except CalledProcessError as err:
       return Fail(ShellCommandError(code=err.returncode, message=err.output, stdout=err.output))
 
@@ -44,10 +47,13 @@ class Shell(object):
       logging.debug("COMMAND: %s", cmd)
       proc = Popen(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       pout, perr = proc.communicate()
-      return OK({"code": proc.returncode, "stdout":pout, "stderr":perr})
+      if proc.returncode == 0:
+        return OK({"stdout": pout, "stderr": perr})
+      else:
+        return Fail(ShellCommandError(code=proc.returncode, message=pout, stdout=pout, stderr=perr))
     except KeyboardInterrupt:
       logging.info("CTRL-C Received...Exiting.")
-      return Fail(ShellCommandError(code=1, message="User Interrupted"))
+      return Fail(UserInterruptError())
 
   @staticmethod
   def makeDirectory(path, mode=0750):

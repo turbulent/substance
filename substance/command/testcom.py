@@ -20,3 +20,4 @@ class Testcom(Command):
     logging.debug("Options: %s", self.options)
     logging.debug("Args: %s", self.args)
 
+    self.core.initialize() >> info("Core initialized").catch(self.exitError)

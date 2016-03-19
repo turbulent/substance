@@ -15,14 +15,23 @@ class ShellCommandError(SubstanceError):
   stdout = None
   stderr = None
   def __init__(self, code=None, message='', stdout='', stderr=''):
-    super(VirtualBoxError, self).__init__(message)
+    super(SubstanceError, self).__init__(message)
     self.code = code
     self.stdout = stdout
     self.stderr = stderr
+
+class UserInterruptError(SubstanceError):
+  '''
+  Raised when a shell command is interrupted by the user.
+  '''
  
 class FileSystemError(SubstanceError):
   '''
   Raised when substance fails to read or write to the filesystem
+  '''
+class FileDoesNotExist(SubstanceError):
+  '''
+  Raised when a file expected to be there does not exist.
   '''
 
 class ConfigSyntaxError(SubstanceError):

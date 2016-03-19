@@ -15,6 +15,7 @@ def readYAML(filename):
   try:
     stream = open(filename, "r")
     contents = yaml.load(stream)
+    return contents
   except yaml.YAMLError, exc:
     msg = "Syntax error in file %s"
     if hasattr(exc, 'problem_mark'):
@@ -23,4 +24,3 @@ def readYAML(filename):
     raise ConfigSyntaxError(msg)
   except Exception as err:
     raise FileSystemError("Failed to read configuration file %s : %s" % (filename, err))
-  return contents

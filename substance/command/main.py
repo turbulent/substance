@@ -104,7 +104,7 @@ Commands:
       moduleName = 'substance.command.'+self.cmdString
       className = self.cmdString.title()
 
-      logging.debug("Import %s\nClassName: %s", moduleName, className)
+      logging.debug("Import %s, ClassName: %s", moduleName, className)
 
       module_ = import_module(moduleName)
       class_ = getattr(module_, className)

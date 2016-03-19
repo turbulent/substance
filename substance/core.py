@@ -1,6 +1,7 @@
 import os
 import logging
 from substance.monads import *
+from substance.logs import *
 from substance.shell import Shell
 from substance.engine import Engine
 from substance.utils import (readYAML,writeYAML)
@@ -34,13 +35,15 @@ class Core(object):
     return self.enginesPath
 
   def initialize(self):
-    return self.assertPaths().bind(self.assertConfig)
+    return self.assertPaths().then(self.assertConfig)
 
   def assertPaths(self):
     return OK([self.basePath, self.enginesPath]).mapM(Shell.makeDirectory)
 
   def assertConfig(self):
-    return self.config.loadConfigFile().bind(self.assertDefaultConfig)
+    return self.config.loadConfigFile() \
+      .catch(lambda x: OK() if isinstance(x, FileDoesNotExist) else x) \
+      .bindIfFalse(self.assertDefaultConfig)
 
   def assertDefaultConfig(self, data):
     if data.isNothing():
@@ -54,6 +57,7 @@ class Core(object):
   #-- Engine library management
 
   def getEngines(self):
+    debug("getEngines()")
     dirs = [ d for d in os.listdir(self.enginesPath) if os.path.isdir(os.path.join(self.enginesPath, d))] 
     return OK(dirs)
 

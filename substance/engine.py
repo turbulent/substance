@@ -67,11 +67,12 @@ class Engine(object):
     return self.config.loadConfigFile().map(self.chainSelf)
 
   def loadState(self):
-    return self.fetchState().bind(setState).map(self.chainSelf)
+    debug("Engine load state %s" % self.name)
+    return self.fetchState().bind(self.setState).map(self.chainSelf)
 
   def setState(self, state):
     self.state = state
-    return OK()
+    return OK(None)
 
   def create(self, config=None, profile=None):
     if os.path.isdir(self.enginePath):
@@ -127,6 +128,8 @@ class Engine(object):
     #return True if state is EngineStates.RUNNING else False
 
   def fetchState(self):
+    if not self.isProvisioned():
+      return OK(EngineStates.INEXISTENT)
     return self.getDriver().getMachineState(self.getDriverID())
    
     #if not self.isProvisioned():

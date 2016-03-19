@@ -1,5 +1,5 @@
-import logging
 from substance.monads import *
+from substance.logs import *
 from substance.command import (Command)
 from substance.engine import (Engine)
 from tabulate import tabulate
@@ -12,7 +12,9 @@ class Ls(Command):
   def main(self):
     self.core.assertPaths() \
       .then(self.core.getEngines) \
-      .mapM(Try.compose(self.core.loadEngine, Engine.loadConfigFile, Engine.loadState)) \
+      .mapM(self.core.loadEngine) \
+      .mapM(Engine.loadConfigFile) \
+      .mapM(Engine.loadState) \
       .mapM(self.tabulateEngine) \
       .bind(self.tabulateEngines) \
       .catch(self.exitError) \
@@ -28,4 +30,4 @@ class Ls(Command):
     headers = ["NAME", "PROVISIONED", "STATE", "URL", "ERRORS"]
     table = tabulate(engines, headers=headers, tablefmt="plain")
     return OK(table)
- 
+

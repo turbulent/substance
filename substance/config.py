@@ -39,7 +39,7 @@ class Config(object):
 
   def loadConfigFile(self):
     if not os.path.exists(self.configFile):
-      return OK(Nothing())
+      return Fail(FileDoesNotExist("File does not exist: %s" % self.configFile))
     return self.readConfigFile() >> self.setConfig
 
   def generateDefaultConfigFile(self):
