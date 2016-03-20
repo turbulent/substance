@@ -67,6 +67,14 @@ class Engine(object):
   def getDriverID(self):
     return self.config.get('id', None)
 
+  def setDriverID(self, driverID):
+    self.config.set('id', driverID)
+    return OK(self)
+
+  def clearDriverID(self):
+    self.config.set('id', None)
+    return OK(self)
+
   def loadConfigFile(self):
     return self.config.loadConfigFile().map(self.chainSelf)
 
@@ -121,7 +129,7 @@ class Engine(object):
       return OK(False)
 
     machID = self.getDriverID()
-    return self.getDriver().exists(matchID)
+    return self.getDriver().exists(machID)
 
   def isRunning(self):
     isRunningState = (lambda state: (state is EngineStates.RUNNING))
@@ -140,7 +148,7 @@ class Engine(object):
     # 4. Setup guest networking
     # 4. Fetch the guest IP from the machine and store it in the machine state.
     '''
-    self.provision().bind(self.start())
+    return self.provision().then(self.start)
 
   def start(self):
 
@@ -151,12 +159,12 @@ class Engine(object):
   def provision(self):
 
     if self.isProvisioned():
-      return OK()
+      return OK(None)
 
-    dinfo("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config['driver'])()
+    logging.info("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config.get('driver'))
 
     return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile()) \
-      .bind(Engine.setMachineID) \
+      .bind(self.setDriverID) \
       .then(self.config.saveConfig) \
       .map(self.chainSelf)
 
@@ -165,16 +173,12 @@ class Engine(object):
     if not self.isProvisioned():  
       return Fail(EngineNotProvisioned("Engine \"%s\" is not provisioned." % self.name, self))
 
-    return self.isRunning() \
-      .bindIfTrue(self.__terminate) \
-      .bind(self.__delete) \
-      .bind(self.clearProvision)  \
+    return self.validateProvision() \
+      .bindIfTrue(Try.compose(self.__terminate, self.__delete)) \
+      .then(self.clearDriverID)  \
+      .then(self.config.saveConfig)  \
       .then(dinfo("Engine \"%s\" has been deprovisioned.", self.name)) \
       .map(self.chainSelf)
-
-  def clearProvision(self):
-    self.config.set('id', None)
-    return self.saveConfig().map(self.chainSelf)
 
   def suspend(self):
     if not self.isProvisioned():

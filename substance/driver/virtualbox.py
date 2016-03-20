@@ -23,11 +23,10 @@ class VirtualBoxDriver(Driver):
     '''
     return self.inspectOVF(ovfFile) \
       .bind(defer(self.makeImportParams, name=name, engineProfile=engineProfile)) \
-      .bind(defer(self.importOVF, name))
+      .bind(defer(self.importOVF, ovfFile=ovfFile, name=name))
 
   def inspectOVF(self, ovfFile):
     return self.vboxManager("import", "-n %s" % ovfFile) 
-    # OK({'stdout':...})
     
   def makeImportParams(self, inspection, name, engineProfile=None):
 
@@ -53,9 +52,10 @@ class VirtualBoxDriver(Driver):
 
     return OK(importParams)
 
-  def importOVF(self, importParams, name):
-    return self.vboxManager("import", "%s", importParams.join(" ")) \
-      .bind(defer(self.getMachineID, name))
+  def importOVF(self, importParams, name, ovfFile):
+    importParams.insert(0, ovfFile)
+    return self.vboxManager("import", " ".join(importParams)) \
+      .then(defer(self.getMachineID, name))
 
 #    try:
 #      self.vboxManager("import", "%s %s %s" % (ovfFile, profileParams, diskParams))
@@ -105,10 +105,13 @@ class VirtualBoxDriver(Driver):
     '''
     Delete the machine by driver identifier.
     '''
-    try:
-      self.vboxManager("unregistervm", "--delete \"%s\"" % (uuid))
-    except VirtualBoxError as err:
-      raise SubstanceDriverError("Failed to delete machine \"%s\": %s" % (uuid, err.errorLabel))
+    return self.vboxManager("unregistervm", "--delete \"%s\"" % (uuid)) \
+      .bind(lambda x: OK(uuid))
+
+#    try:
+#      self.vboxManager("unregistervm", "--delete \"%s\"" % (uuid))
+#    except VirtualBoxError as err:
+#      raise SubstanceDriverError("Failed to delete machine \"%s\": %s" % (uuid, err.errorLabel))
 
   def startMachine(self, uuid):
     '''
@@ -183,7 +186,7 @@ class VirtualBoxDriver(Driver):
 
   def parseMachinesList(self, vms):
       matcher = re.compile(r'"([^"]+)" {([^}]+)}')
-      machines = []
+      machines = {}
       for line in vms.split("\n"):
         parts = matcher.match(line)
         if parts:
@@ -228,7 +231,7 @@ class VirtualBoxDriver(Driver):
     return self.vboxManager("list", "vms") >> defer(self.parseMachinesForID, uuid=uuid)
 
   def parseMachinesForID(self, vms, uuid):
-    if re.search(r'"([^"]+)" {'+re.escape(uuid)+'}', ret.get('stdout', ''), re.M):
+    if re.search(r'"([^"]+)" {'+re.escape(uuid)+'}', vms, re.M):
       return OK(True)
     else:
       return OK(False)

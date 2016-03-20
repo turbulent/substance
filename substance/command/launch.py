@@ -1,3 +1,6 @@
+from substance.monads import *
+from substance.logs import *
+from substance.engine import Engine
 from substance.command import Command
 from substance.exceptions import (SubstanceError)
 
@@ -7,14 +10,12 @@ class Launch(Command):
     return optparser
 
   def main(self):
-    name = self.args[0]
 
-    try:
-      engine = self.core.getEngine(name)
-      engine.readConfig()
-      engine.launch()
+    name = self.getInputName()
 
-    except SubstanceError as err:
-      self.exitError(err.errorLabel)
-    except Exception as err:
-      self.exitError("Failed to launch engine \"%s\": %s" % (name, err))
+    self.core.initialize() \
+      .then(defer(self.core.loadEngine, name)) \
+      .bind(Engine.loadConfigFile) \
+      .bind(Engine.launch) \
+      .then(dinfo("Engine \"%s\" has been launched.", name)) \
+      .catch(self.exitError)
