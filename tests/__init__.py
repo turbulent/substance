@@ -141,12 +141,67 @@ class TestMonads(unittest.TestCase):
 
     self.assertEqual(OK(40), attemptCatchOK)
 
- 
-  #def testScoping(self):
-  #  x = []  
-  #  for i in range(1, 5):  
-  #    x.append(lambda z: "%d" % i + z)
-  # 
-  #  testList = [ x[d]("banza") for d in range(0,4) ] 
-  #  self.assertEqual(testList, ['1banza','2banza','3banza','4banza'])
+  def testTryThenIf(self):
+    valError = ValueError()
+    self.assertEqual(OK(10).thenIf(lambda *x: OK(20), lambda *x: Fail(valError)), Fail(valError))
+    self.assertEqual(OK(True).thenIf(lambda *x: OK(20), lambda *x: Fail(valError)), OK(20))
+    self.assertEqual(OK(False).thenIf(lambda *x: OK(20), lambda *x: Fail(valError)), Fail(valError))
+    self.assertEqual(Fail(valError).thenIf(lambda *x: OK(20), lambda *x: OK(20)), Fail(valError))
+    self.assertEqual(OK(True).thenIfTrue(lambda *x: OK(10)), OK(10))
+    self.assertEqual(OK(True).thenIfFalse(lambda *x: OK(10)), OK(True))
+    self.assertEqual(OK(False).thenIfTrue(lambda *x: OK(10)), OK(False))
+    self.assertEqual(OK(False).thenIfFalse(lambda *x: OK(10)), OK(10))
+
+  def testTryBindIf(self):
+    valError = ValueError()
+    self.assertEqual(OK(True).bindIf(lambda *x: OK(10), lambda *x: Fail(valError)), OK(10)) 
+    self.assertEqual(OK(False).bindIf(lambda *x: OK(10), lambda *x: Fail(valError)), Fail(valError)) 
+    self.assertEqual(OK(True).bindIfTrue(lambda *x: OK(10)), OK(10))
+    self.assertEqual(OK(True).bindIfFalse(lambda *x: OK(10)), OK(True))
+    self.assertEqual(OK(False).bindIfTrue(lambda *x: OK(10)), OK(False))
+    self.assertEqual(OK(False).bindIfFalse(lambda *x: OK(10)), OK(10))
+
+  def testTryCatchError(self):
+    valError = ValueError()
+    synError = SyntaxError()
+    self.assertEqual(OK(True).catchError(ValueError, lambda *x: OK(10)), OK(True))
+    self.assertEqual(OK(False).catchError(ValueError, lambda *x: OK(10)), OK(False))
+    self.assertEqual(Fail(synError).catchError(ValueError, lambda e: OK(10)), Fail(synError))
+    self.assertEqual(Fail(synError).catchError(SyntaxError, lambda e: OK(10)), OK(10))
+
+  def testFunctions(self):
+    self.assertEqual(defer(lambda x,y: x+y, 1, 2)(), 3)
+    self.assertEqual(defer(lambda x,y: x+y)(1, 2), 3)
+    valError = ValueError()
+    self.assertEqual(failWith(valError)(), Fail(valError))
+    self.assertEqual(failWith(valError)(1,2,3,4), Fail(valError))
+
+    def fa(x):
+      return x+2
+    def fb(x):
+      return x+1
+    def fc(acc, x):
+      return acc+x
+
+    self.assertEqual(compose(fa, fb)(1), fa(fb(1)))
+    self.assertEqual(fold(fc, [1,2,3,4], 0), 10)
+
+  def testMapM(self):
+    self.assertEqual(mapM(Try, lambda x: OK(x+x), [1,2,3,4]), OK([2,4,6,8]))
+
+    testList = []
+    self.assertEqual(mapM_(Try, lambda x: OK(testList.append(x+x)), [1,2,3,4]), OK([1,2,3,4]))
+    self.assertEqual([2,4,6,8], testList)
+
+    self.assertEqual(OK([1,2,3,4]).mapM(lambda x: OK(x+x)), OK([2, 4, 6, 8]))
+
+    testList = []
+    self.assertEqual(OK([1,2,3,4]).mapM_(lambda x: OK(testList.append(x+x))), OK([1,2,3,4]))
+    self.assertEqual([2,4,6,8], testList)
+
+  def testSequence(self):
+    self.assertEquals(sequence(Try, [OK(1),OK(2),OK(3),OK(4)]), OK([1,2,3,4]))
+
+  def testUnshiftM(self):
+    self.assertEquals(unshiftM(Try, OK([2,3]), OK(1)), OK([1,2,3]))
 

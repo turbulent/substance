@@ -311,7 +311,7 @@ def compose(*funcs):
   return func
 
 def unshiftM(monad, monads, mv): 
-  ''' Append a monadic value to a list of monads '''
+  ''' Prepend a monadic value to the list value of a monad '''
   return monads.bind(lambda xs: mv.bind(lambda x: monad.of( [x] + xs)))
 
 def sequence(monad, monads):
@@ -335,7 +335,7 @@ def defer(f, *args, **kwargs):
   return partial(f, *fargs, **fkwargs)
 
 def failWith(exception):
-  return (lambda x: Fail(exception))
+  return (lambda *x: Fail(exception))
 
 def chainSelf(self, *_, **__):
   return self
