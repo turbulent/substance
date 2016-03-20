@@ -139,7 +139,7 @@ class Engine(object):
 
   def isRunning(self):
     isRunningState = (lambda state: (state is EngineStates.RUNNING))
-    return self.validateProvision().bindIfTrue(lambda x: self.fetchState().map(isRunningState))
+    return self.fetchState().map(isRunningState)
 
   def fetchState(self):
     if not self.isProvisioned():
@@ -158,9 +158,10 @@ class Engine(object):
 
   def start(self):
 
-    return self.isRunning() \
-      .bindIfTrue(failWith(EngineAlreadyRunning("Engine \"%s\" is already running" % self.name))) \
-      .bind(self.__start) \
+    return self.validateProvision() \
+      .thenIfTrue(self.isRunning) \
+      .thenIfTrue(failWith(EngineAlreadyRunning("Engine \"%s\" is already running" % self.name))) \
+      .then(self.__start) \
 
   def provision(self):
 
@@ -180,7 +181,9 @@ class Engine(object):
       return Fail(EngineNotProvisioned("Engine \"%s\" is not provisioned." % self.name, self))
 
     return self.validateProvision() \
-      .bindIfTrue(Try.compose(self.__terminate, self.__delete)) \
+      .thenIfTrue(self.isRunning) \
+      .thenIfTrue(self.__terminate) \
+      .then(self.__delete) \
       .then(self.clearDriverID)  \
       .then(self.config.saveConfig)  \
       .then(dinfo("Engine \"%s\" has been deprovisioned.", self.name)) \
@@ -190,17 +193,19 @@ class Engine(object):
     if not self.isProvisioned():
       return Fail(EngineNotProvisioned("Engine \"%s\" is not provisioned." % self.name))   
        
-    return self.isRunning() \
-      .bindIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) \
-      .bind(self.__suspend) \
+    return self.validateProvision() \
+      .thenIfTrue(self.isRunning) \
+      .thenIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) \
+      .then(self.__suspend) \
       .then(dinfo("Engine \"%s\" has been suspended.", self.name)) \
       .map(chainSelf)
 
     #XXX Insert wait for suspension
 
   def stop(self, force=False):
-    operation = self.isRunning() \
-      .bindIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) 
+    operation = self.validateProvision() \
+      .thenIfTrue(self.isRunning) \
+      .thenIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) 
 
     if(force):
       operation >> self.__terminate >> dinfo("Engine \"%s\" has been terminated.", self.name)

@@ -225,7 +225,6 @@ class VirtualBoxDriver(Driver):
   def onVboxError(self, err):
     if isinstance(err, ShellCommandError):
       codeMatch = re.search(r'error: Details: code (VBOX_[A-Z_0-9]*)', err.stderr, re.M)
-      if codeMatch:
-        code = codeMatch.group(1)
+      code = codeMatch.group(1) if codeMatch else None
       return Fail(VirtualBoxError(message=err.stderr, code=code))
 
