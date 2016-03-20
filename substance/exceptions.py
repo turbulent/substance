@@ -44,6 +44,11 @@ class ConfigSyntaxError(SubstanceError):
   Raised when invalid syntax was found in a configuration file.
   '''
 
+class ConfigValidationError(SubstanceError):
+  '''
+  Raised when configuration does not validate.
+  '''
+
 class EngineError(SubstanceError):
   '''
   Engine error class

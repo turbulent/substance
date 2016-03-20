@@ -95,6 +95,8 @@ class Core(object):
  
   #-- Drivers
 
-  def validDriver(self, driver):
-    if driver is "VirtualBox":
+  @staticmethod
+  def validDriver(driver):
+    if driver == "VirtualBox":
       return True
+    return False

@@ -1,6 +1,7 @@
 import os
 import logging
 from collections import OrderedDict
+import substance.core
 from substance.monads import *
 from substance.config import (Config)
 from substance.logs import *
@@ -9,6 +10,7 @@ from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
 from substance.exceptions import (
   FileSystemError, 
+  ConfigValidationError,
   EngineAlreadyRunning, 
   EngineNotRunning,
   EngineExistsError, 
@@ -48,7 +50,17 @@ class Engine(object):
     defaults['projectsPath'] = '~/dev/projects'
     defaults['mounts'] = []
     return defaults
- 
+
+  def validateConfig(self):
+    if self.config.get('name', None) != self.name:
+      return Fail(ConfigValidationError("Invalid name property in configuration (got %s expected %s)" %(self.config.get('name'), self.name)))
+
+    driver = self.config.get('driver', None)
+    if not substance.core.Core.validDriver(driver):
+      return Fail(ConfigValidationError("Invalid driver property in configuration (%s is not supported)" % driver))
+
+    return OK(self.config.getConfig())
+
   def __init__(self, name, enginePath=None):
     self.name = name
     self.enginePath = enginePath
