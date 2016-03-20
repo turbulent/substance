@@ -26,9 +26,16 @@ class VirtualBoxDriver(Driver):
       .bind(defer(self.importOVF, ovfFile=ovfFile, name=name))
 
   def inspectOVF(self, ovfFile):
+    '''
+    Inspect an OVF file to extract it's examined output
+    '''
+
     return self.vboxManager("import", "-n %s" % ovfFile) 
     
   def makeImportParams(self, inspection, name, engineProfile=None):
+    '''
+    Make the import parameter commands based on name, engine profile and inspection
+    '''
 
     suggestedName = re.search(r'Suggested VM name "(.+?)"', inspection)
     if not suggestedName:
@@ -53,6 +60,10 @@ class VirtualBoxDriver(Driver):
     return OK(importParams)
 
   def importOVF(self, importParams, name, ovfFile):
+    '''
+    Import the OVF file as a virtual box vm.
+    '''
+
     importParams.insert(0, ovfFile)
     return self.vboxManager("import", " ".join(importParams)) \
       .then(defer(self.getMachineID, name))
@@ -106,17 +117,20 @@ class VirtualBoxDriver(Driver):
     self.vboxManager("list", "vms") >> self.parseMachinesList
 
   def parseMachinesList(self, vms):
-      matcher = re.compile(r'"([^"]+)" {([^}]+)}')
-      machines = {}
-      for line in vms.split("\n"):
-        parts = matcher.match(line)
-        if parts:
-          machines[parts.group(1)] = parts.group(2)
-      return OK(machines)
+    '''
+    Parse the output of "list vms" and return a dict of machine name to machine id.
+    '''
+    matcher = re.compile(r'"([^"]+)" {([^}]+)}')
+    machines = {}
+    for line in vms.split("\n"):
+      parts = matcher.match(line)
+      if parts:
+        machines[parts.group(1)] = parts.group(2)
+    return OK(machines)
     
   def getMachineID(self, name):
     '''
-    Retrieve the driver specific machine ID.
+    Retrieve the driver specific machine ID for a machine name.
     '''
     return self.vboxManager("list", "vms") \
       .bind(self.parseMachinesList) \
@@ -129,6 +143,9 @@ class VirtualBoxDriver(Driver):
     return self.vboxManager("list", "vms") >> defer(self.parseMachinesForID, uuid=uuid)
 
   def parseMachinesForID(self, vms, uuid):
+    '''
+    Parse the output of list vms to find if uuid exists.
+    '''
     if re.search(r'"([^"]+)" {'+re.escape(uuid)+'}', vms, re.M):
       return OK(True)
     else:
@@ -170,14 +187,17 @@ class VirtualBoxDriver(Driver):
       .bind(defer(self.parseMachineState, uuid=uuid))
 
   def parseMachineState(self, vminfo, uuid):
-      if re.search(r'^name="<inaccessible>"$', vminfo, re.M):
-        return OK('inaccessible')
-      
-      stateMatch = re.search(r'^VMState="(.+?)"$', vminfo, re.M)
-      if stateMatch:
-        return OK(stateMatch.group(1))
-      else:
-        return OK('inexistent')
+    '''
+    Parse the output of showvminfo to extrcat the VM state
+    '''
+    if re.search(r'^name="<inaccessible>"$', vminfo, re.M):
+      return OK('inaccessible')
+    
+    stateMatch = re.search(r'^VMState="(.+?)"$', vminfo, re.M)
+    if stateMatch:
+      return OK(stateMatch.group(1))
+    else:
+      return OK('inexistent')
   
   def getMachineState(self, uuid):
     '''
@@ -186,6 +206,9 @@ class VirtualBoxDriver(Driver):
     return self.getInternalState(uuid) >> self.vboxStateToMachineState
 
   def vboxStateToMachineState(self, vboxState):
+    '''
+    Resolve a vbox machine state to a substance engine state.
+    '''
     mapping = {
       "poweroff": EngineStates.STOPPED,
       "saved": EngineStates.SUSPENDED,
@@ -227,4 +250,3 @@ class VirtualBoxDriver(Driver):
       codeMatch = re.search(r'error: Details: code (VBOX_[A-Z_0-9]*)', err.stderr, re.M)
       code = codeMatch.group(1) if codeMatch else None
       return Fail(VirtualBoxError(message=err.stderr, code=code))
-
