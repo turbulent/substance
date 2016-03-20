@@ -1,5 +1,6 @@
 import os
 import logging
+from collections import OrderedDict
 from substance.monads import *
 from substance.logs import *
 from substance.shell import Shell
@@ -44,11 +45,17 @@ class Core(object):
   def assertConfig(self):
     return self.config.loadConfigFile()  \
       .catchError(FileDoesNotExist, self.makeDefaultConfig)
-    #  .catch(lambda x: self.makeDefaultConfig() if isinstance(x, FileDoesNotExist) else x) 
 
+  def getDefaultConfig(self):
+    defaults = OrderedDict()
+    defaults['assumeYes'] = False
+    defaults['basePath'] = os.path.join("~", ".substance")
+    return defaults
+    
   def makeDefaultConfig(self, data=None):
     logging.info("Generating default substance configuration in %s", self.config.getConfigFile())
-    for kkk, vvv in self.defaultConfig.iteritems():
+    defaults = self.getDefaultConfig()
+    for kkk, vvv in defaults.iteritems():
       self.config.set(kkk, vvv)
     return self.config.saveConfig()
   

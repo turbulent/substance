@@ -1,8 +1,21 @@
 import yaml
+import collections
+
 from substance.exceptions import (
   ConfigSyntaxError,
   FileSystemError
 )
+
+_yaml_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
+
+def _dict_representer(dumper, data):
+    return dumper.represent_dict(data.iteritems())
+
+def _dict_constructor(loader, node):
+    return collections.OrderedDict(loader.construct_pairs(node))
+
+yaml.add_representer(collections.OrderedDict, _dict_representer)
+yaml.add_constructor(_yaml_mapping_tag, _dict_constructor)
 
 def writeYAML(filename, data):
   try:
@@ -24,5 +37,6 @@ def readYAML(filename):
     raise ConfigSyntaxError(msg)
   except Exception as err:
     raise FileSystemError("Failed to read configuration file %s : %s" % (filename, err))
+
 
 

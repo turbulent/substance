@@ -1,5 +1,6 @@
 import os
 import logging
+from collections import OrderedDict
 from substance.monads import *
 from substance.config import (Config)
 from substance.logs import *
@@ -28,17 +29,26 @@ class Engine(object):
 
   config = None
   profile = None
-  defaultConfig = {
-    "name": "default",
-    "driver": "VirtualBox",
-    "id": None,
-    "profile": {"memory": 1024, "cpus": 2},
-    "docker": {"port": 2375, "tls": False, "certificateFile": None},
-    "network": {"privateIP": None, "publicIP": None, "sshIP": None, "sshPort": None},
-    "projectsPath": "~/dev/projects",
-    "mounts": ['a', 'b', 'c']
-  }
 
+  def getDefaultConfig(self):
+    defaults = OrderedDict()
+    defaults['name'] = 'default'
+    defaults['driver'] = 'VirtualBox'
+    defaults['id'] = None
+    defaults['profile'] = EngineProfile().__dict__
+    defaults['docker'] = OrderedDict()
+    defaults['docker']['port'] = 2375
+    defaults['docker']['tls'] = False
+    defaults['docker']['certificateFile'] = None
+    defaults['network'] = OrderedDict() 
+    defaults['network']['privateIP'] = None
+    defaults['network']['publicIP'] = None
+    defaults['network']['sshIP'] = None
+    defaults['network']['sshPort'] = None
+    defaults['projectsPath'] = '~/dev/projects'
+    defaults['mounts'] = []
+    return defaults
+ 
   def __init__(self, name, enginePath=None):
     self.name = name
     self.enginePath = enginePath
@@ -108,7 +118,7 @@ class Engine(object):
     return Shell.nukeDirectory(self.enginePath)
  
   def makeDefaultConfig(self, config=None, profile=None):
-    default = self.defaultConfig.copy()
+    default = self.getDefaultConfig()
     default["name"] = self.name
 
     if config:
@@ -116,8 +126,8 @@ class Engine(object):
         default.set(kkk, vvv)
 
     if profile:
-      default.get('profile')['memory'] = profile.memory
       default.get('profile')['cpus'] = profile.cpus
+      default.get('profile')['memory'] = profile.memory
 
     return OK(default)
 
