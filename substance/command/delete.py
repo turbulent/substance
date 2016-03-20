@@ -15,9 +15,8 @@ class Delete(Command):
 
     name = self.getInputName()
 
-    # XXX Add confirm check
-
     self.core.initialize() \
+      .then(defer(self.ask, "You are about to delete engine \"%s\"" % name)) \
       .then(defer(self.core.loadEngine, name)) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.deprovision) \

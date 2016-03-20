@@ -99,7 +99,7 @@ Commands:
       core = Core()
 
       if self.options.assumeYes:
-        core.setConfigKey("assumeYes", True)
+        core.setAssumeYes(True)
 
       moduleName = 'substance.command.'+self.cmdString
       className = self.cmdString.title()

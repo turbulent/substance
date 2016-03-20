@@ -2,6 +2,7 @@ import sys
 import os
 import re
 import logging
+from substance.shell import Shell
 from optparse import OptionParser
 from getpass import getpass
 
@@ -101,7 +102,8 @@ class Command(object):
     (self.options, self.args) = self.parseShellInput()
     self.main()
 
-
+  def ask(self, msg):
+    return Shell.printConfirm(msg, assumeYes=self.core.getAssumeYes())
 
   #---- Validation
 

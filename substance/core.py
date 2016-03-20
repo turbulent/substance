@@ -58,7 +58,15 @@ class Core(object):
     for kkk, vvv in defaults.iteritems():
       self.config.set(kkk, vvv)
     return self.config.saveConfig()
-  
+ 
+  #-- Runtime
+
+  def setAssumeYes(self, ay):
+    return self.config.set('assumeYes', ay)
+
+  def getAssumeYes(self):
+    return self.config.get('assumeYes', False)
+
   #-- Engine library management
 
   def getEngines(self):

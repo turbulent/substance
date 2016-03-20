@@ -16,6 +16,7 @@ class Deprovision(Command):
     # XXX Add confirm check
  
     self.core.initialize() \
+      .then(defer(self.ask, "You are about to deprovision engine \"%s\"" % name)) \
       .then(defer(self.core.loadEngine, name)) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.deprovision) \

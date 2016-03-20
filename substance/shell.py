@@ -4,7 +4,7 @@ import shutil
 import shlex
 import subprocess
 from subprocess import call, Popen, check_output, CalledProcessError
-from substance.exceptions import (FileSystemError, ShellCommandError)
+from substance.exceptions import (FileSystemError, ShellCommandError, UserInterruptError)
 from substance.monads import *
 
 # pylint: disable=W0232
@@ -13,12 +13,19 @@ class Shell(object):
 
   @staticmethod
   def printConfirm(msg, assumeYes=False):
-    logging.info(msg)
-    res = raw_input('Proceed? [N/y] ')
-    if assumeYes or res.lower().startswith('y'):
-      logging.info('... proceeding')
+    if assumeYes:
       return OK(True)
-    return Fail(ShellCommandError(code=0, message="User interrupted."))
+
+    logging.info(msg)
+    try:
+      res = raw_input('Proceed? [N/y] ')
+      if res.lower().startswith('y'):
+        logging.info('... proceeding')
+        return OK(True)
+      return Fail(UserInterruptError(message="User interrupted."))
+    except KeyboardInterrupt as err:
+      return Fail(UserInterruptError(message="User interrupted."))
+
 
   @staticmethod
   def call(cmd):
