@@ -6,7 +6,13 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
-from substance.exceptions import (FileSystemError, EngineAlreadyRunning, EngineExistsError, EngineNotProvisioned)
+from substance.exceptions import (
+  FileSystemError, 
+  EngineAlreadyRunning, 
+  EngineNotRunning,
+  EngineExistsError, 
+  EngineNotProvisioned
+)
 
 class EngineProfile(object):
   cpus = None
@@ -186,7 +192,9 @@ class Engine(object):
        
     return self.isRunning() \
       .bindIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) \
-      .bind(self.__suspend)  \
+      .bind(self.__suspend) \
+      .then(dinfo("Engine \"%s\" has been suspended.", self.name)) \
+      .map(chainSelf)
 
     #XXX Insert wait for suspension
 
