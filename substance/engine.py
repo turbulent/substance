@@ -14,7 +14,8 @@ from substance.exceptions import (
   EngineAlreadyRunning, 
   EngineNotRunning,
   EngineExistsError, 
-  EngineNotProvisioned
+  EngineNotProvisioned,
+  EngineProvisioned,
 )
 
 class EngineProfile(object):
@@ -104,7 +105,7 @@ class Engine(object):
     return OK(self)
 
   def loadConfigFile(self):
-    return self.config.loadConfigFile().map(self.chainSelf)
+    return self.config.loadConfigFile().then(self.validateConfig).map(self.chainSelf)
 
   def loadState(self):
     ddebug("Engine load state %s" % self.name)
@@ -127,6 +128,8 @@ class Engine(object):
   def remove(self):
     if not os.path.isdir(self.enginePath):
       return Fail(FileSystemError("Engine \"%s\" does not exist." % self.name))
+    if self.isProvisioned():
+      return Fail(EngineProvisioned("Engine \"%s\" is provisioned." % self.name))
     return Shell.nukeDirectory(self.enginePath)
  
   def makeDefaultConfig(self, config=None, profile=None):

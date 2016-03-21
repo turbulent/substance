@@ -73,6 +73,11 @@ class EngineNotProvisioned(EngineError):
   Engine VM is not provided. (ex. does not exist)
   '''
 
+class EngineProvisioned(EngineError):
+  '''
+  Raised when an engine is provisioned and remove call is initiated.
+  '''
+
 class EngineAlreadyProvisioned(EngineError):
   '''
   Engine VM is already provided.

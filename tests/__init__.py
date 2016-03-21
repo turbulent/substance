@@ -6,23 +6,29 @@ class TestBase(unittest.TestCase):
 
   tempFiles = []
   tempDirs = []
-  def addTemporaryFile(self):
+
+  @classmethod
+  def addTemporaryFile(cls):
     tempFile = tempfile.NamedTemporaryFile()
-    self.tempFiles.append(tempFile)
+    cls.tempFiles.append(tempFile)
     return tempFile
 
-  def addTemporaryDir(self):
+  @classmethod
+  def addTemporaryDir(cls):
     tempDir = tempfile.mkdtemp()
-    self.tempDirs.append(tempDir)
+    cls.tempDirs.append(tempDir)
     return tempDir
 
-  def clearTemporaryDirs(self):
-    for x in self.tempDirs:
+  @classmethod
+  def clearTemporaryDirs(cls):
+    for x in cls.tempDirs:
       Shell.nukeDirectory(x)
 
-  def clearTemporaryFiles(self):
-    for x in self.tempFiles:
+  @classmethod
+  def clearTemporaryFiles(cls):
+    for x in cls.tempFiles:
       x.close()
-
-  def raiser(self, e):
+ 
+  @classmethod
+  def raiser(e):
     raise e

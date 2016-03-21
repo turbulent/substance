@@ -15,9 +15,9 @@ class TestCore(tests.TestBase):
     
   def tearDown(self):
     if self.basePath:
-      Shell.nukeDirectory(self.basePath).catch(self.raiser)
+      Shell.nukeDirectory(self.basePath).catch(TestCore.raiser)
     if self.projectsPath:
-      Shell.nukeDirectory(self.projectsPath).catch(self.raiser)
+      Shell.nukeDirectory(self.projectsPath).catch(TestCore.raiser)
 
   def setUpDefaultCore(self):
     self.core = Core(basePath=self.basePath)
@@ -53,7 +53,7 @@ class TestCore(tests.TestBase):
     self.assertIsInstance(self.core.config.loadConfigFile(), OK)
     self.assertEqual(self.core.config.get("foo", None), "bar")
 
-  def testEngines(self):
+  def coreTestEngines(self):
     self.setUpDefaultCore()
     self.assertEqual(self.core.config.set("assumeYes", True), True)
 
@@ -63,15 +63,15 @@ class TestCore(tests.TestBase):
  
   def testCreateEngine(self):
     self.setUpDefaultCore()
-    createOp =self.core.createEngine("testEngine", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
+    createOp =self.core.createEngine("coreTestEngine", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
     self.assertIsInstance(createOp, OK)
 
 
-    engine = self.core.loadEngine("testEngine")
+    engine = self.core.loadEngine("coreTestEngine")
     self.assertIsInstance(engine, OK)
 
-    self.assertEqual(os.path.join(self.core.getEnginesPath(), "testEngine"), engine.getOK().getEnginePath())
-    self.assertTrue(engine.getOK().getEnginePath(), "testEngine")
+    self.assertEqual(os.path.join(self.core.getEnginesPath(), "coreTestEngine"), engine.getOK().getEnginePath())
+    self.assertTrue(engine.getOK().getEnginePath(), "coreTestEngine")
 
     engine = engine.bind(Engine.loadConfigFile)
     self.assertIsInstance(engine, OK)
@@ -84,15 +84,36 @@ class TestCore(tests.TestBase):
 
   def testGetEngines(self):
     self.setUpDefaultCore()
-    createOp =self.core.createEngine("testEngine", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
+    createOp =self.core.createEngine("coreTestEngine", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
     self.assertIsInstance(createOp, OK)
-    createOp2 =self.core.createEngine("testEngine2", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
+    createOp2 =self.core.createEngine("coreTestEngine2", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
     self.assertIsInstance(createOp2, OK)
-    createOp3 =self.core.createEngine("testEngine3", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
+    createOp3 =self.core.createEngine("coreTestEngine3", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
     self.assertIsInstance(createOp3, OK)
 
     engines = self.core.getEngines()
     self.assertIsInstance(engines, OK)
     self.assertEqual(len(engines.getOK()), 3)
-    self.assertEqual(engines.getOK(), ['testEngine','testEngine2','testEngine3'])
+    self.assertEqual(engines.getOK(), ['coreTestEngine','coreTestEngine2','coreTestEngine3'])
+
+  def testRemoveEngine(self):
+    self.setUpDefaultCore()
+    createOp =self.core.createEngine("coreTestEngine", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
+    self.assertIsInstance(createOp, OK)
+    createOp2 =self.core.createEngine("coreTestEngine2", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
+    self.assertIsInstance(createOp2, OK)
+    createOp3 =self.core.createEngine("coreTestEngine3", config={"projectsPath":self.projectsPath}, profile=EngineProfile(cpus=4, memory=512))
+    self.assertIsInstance(createOp3, OK)
+
+    engines = self.core.getEngines()
+    self.assertIsInstance(engines, OK)
+
+    self.core.removeEngine("coreTestEngine2")
+
+    self.assertTrue(not os.path.exists(os.path.join(self.core.getEnginesPath(), "coreTestEngine2")))
+
+    engines = self.core.getEngines()
+    self.assertIsInstance(engines, OK)
+    self.assertEqual(len(engines.getOK()), 2)
+    self.assertEqual(engines.getOK(), ['coreTestEngine','coreTestEngine3'])
 
