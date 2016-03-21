@@ -57,6 +57,7 @@ class Core(object):
     defaults = self.getDefaultConfig()
     for kkk, vvv in defaults.iteritems():
       self.config.set(kkk, vvv)
+    self.config.set("basePath", self.basePath)
     return self.config.saveConfig()
  
   #-- Runtime

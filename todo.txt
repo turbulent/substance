@@ -1,0 +1,3 @@
+
+- Optimize ls when fetching VM states (batch)
+

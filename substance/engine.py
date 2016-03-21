@@ -135,7 +135,7 @@ class Engine(object):
 
     if config:
       for kkk, vvv in config.iteritems():
-        default.set(kkk, vvv)
+        default[kkk] = vvv
 
     if profile:
       default.get('profile')['cpus'] = profile.cpus
