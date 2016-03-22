@@ -6,8 +6,9 @@ from substance.shell import Shell
 from substance.constants import (EngineStates)
 from substance.exceptions import (
   SubstanceDriverError,
+  ShellCommandError,
   VirtualBoxError, 
-  ShellCommandError
+  VirtualBoxMissingAdditions
 )
 
 class VirtualBoxDriver(Driver):
@@ -127,20 +128,6 @@ class VirtualBoxDriver(Driver):
       if parts:
         machines[parts.group(1)] = parts.group(2)
     return OK(machines)
-    
-  def getMachineID(self, name):
-    '''
-    Retrieve the driver specific machine ID for a machine name.
-    '''
-    return self.vboxManager("list", "vms") \
-      .bind(self.parseMachinesList) \
-      .bind(lambda x: OK(x[name]) if name in x else Fail("No Machine ID found for \"%s\"" %name))
-
-  def exists(self, uuid):
-    '''
-    Check in the driver that the specified identifier exists.
-    '''
-    return self.vboxManager("list", "vms") >> defer(self.parseMachinesForID, uuid=uuid)
 
   def parseMachinesForID(self, vms, uuid):
     '''
@@ -165,6 +152,62 @@ class VirtualBoxDriver(Driver):
       except ValueError:
         pass
     return OK(machDict)
+
+  def fetchGuestProperty(self, uuid, prop):
+    return self.vboxManager("guestproperty", "get %s %s" % (uuid, prop)) \
+      .bind(self.parseGuestProperty)
+
+  def parseGuestProperty(self, prop): 
+    prop = prop.strip()
+
+    if prop == 'No value set!' or not prop:
+      return OK(None)
+
+    match = re.match(r'^Value: (.+?)$', prop)
+    if match:
+      return OK(match.group(1))
+    else:
+      return Fail(VirtualBoxError(None, "Failed to to parse guest property output : %s" % prop))
+   
+  def fetchGuestAddVersion(self, uuid):
+    return self.fetchGuestProperty(uuid, "/VirtualBox/GuestAdd/Version") \
+      .bind(self.parseGuestAddVersion) \
+      .catchError(VirtualBoxMissingAdditions, lambda x: self.fetchGuestAddVersionFromInfo(uuid=uuid))
+
+  def fetchGuestAddVersionFromInfo(self, uuid):
+    def extractGuestAdd(info):
+      if 'GuestAdditionsVersion' in info:
+        return OK(info['GuestAdditionsVersion'])
+      else:
+        return OK(None)
+
+    return self.getMachineInfo(uuid) \
+      .bind(extractGuestAdd) \
+      .bind(self.parseGuestAddVersion)
+
+  def parseGuestAddVersion(self, guestAdd):
+    if guestAdd is None:
+      return Fail(VirtualBoxMissingAdditions("VirtualBox guest additions are not installed."))
+
+    parts = guestAdd.split("_", 1)
+    if len(parts) >= 1:
+      return OK(parts[0])
+    else:
+      return Fail(VirtualBoxMissingAdditions("VirtualBox guest additions are not installed."))
+ 
+  def getMachineID(self, name):
+    '''
+    Retrieve the driver specific machine ID for a machine name.
+    '''
+    return self.vboxManager("list", "vms") \
+      .bind(self.parseMachinesList) \
+      .bind(lambda x: OK(x[name]) if name in x else Fail("No Machine ID found for \"%s\"" %name))
+
+  def exists(self, uuid):
+    '''
+    Check in the driver that the specified identifier exists.
+    '''
+    return self.vboxManager("list", "vms") >> defer(self.parseMachinesForID, uuid=uuid)
 
   def isRunning(self, uuid):
     if self.getMachineState(uuid) is EngineStates.RUNNING:

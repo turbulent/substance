@@ -105,3 +105,15 @@ class VirtualBoxError(SubstanceDriverError):
   def __init__(self, code=None, message=''):
     super(VirtualBoxError, self).__init__(message)
     self.code = code
+
+class VirtualBoxMissingAdditions(SubstanceDriverError):
+  '''
+  The Virtual Box guest additions are missing.
+  '''
+
+class VirtualBoxVersion(SubstanceDriverError):
+  '''
+  Wrong version of the Virtual Box system is installed.
+  '''
+
+

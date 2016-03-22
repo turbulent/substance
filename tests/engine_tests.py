@@ -2,6 +2,7 @@ import unittest
 import os
 import tempfile
 import tests
+import re
 from substance.core import Core
 from substance.engine import (EngineProfile, Engine)
 from substance.shell import Shell
@@ -14,6 +15,8 @@ class TestEngine(tests.TestBase):
   engine = None
   basePath = None
   projectsPath = None
+
+  vmTest = False
 
   @classmethod
   def setUpClass(cls):
@@ -39,6 +42,8 @@ class TestEngine(tests.TestBase):
       Shell.nukeDirectory(cls.projectsPath).catch(cls.raiser)
 
   def testInitSequence(self):
+    if not self.vmTest:
+      return
     self.doProvision()
     self.doStart()
     self.doSuspend()
@@ -46,6 +51,8 @@ class TestEngine(tests.TestBase):
     self.doDeprovision()
     
   def testLaunch(self):
+    if not self.vmTest:
+      return
     self.doLaunch()
   
   def doProvision(self):
@@ -85,4 +92,9 @@ class TestEngine(tests.TestBase):
     state = self.engine.fetchState()
     self.assertIsInstance(state, OK)
     self.assertEqual(state.getOK(), stateMatch)
+
+  def testfetchGuestAdd(self):
+    op = self.engine.getDriver().fetchGuestAddVersion("testEngine")
+    self.assertIsInstance(op, OK)
+    self.assertTrue(re.match(r'^[0-9\.]*$', op.getOK()))
 
