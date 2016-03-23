@@ -8,7 +8,8 @@ from substance.exceptions import (
   SubstanceDriverError,
   ShellCommandError,
   VirtualBoxError, 
-  VirtualBoxMissingAdditions
+  VirtualBoxMissingAdditions,
+  VirtualBoxVersionError
 )
 
 class VirtualBoxDriver(Driver):
@@ -168,7 +169,23 @@ class VirtualBoxDriver(Driver):
       return OK(match.group(1))
     else:
       return Fail(VirtualBoxError(None, "Failed to to parse guest property output : %s" % prop))
-   
+  
+  def fetchVersion(self):
+    return self.vboxManager("--version").bind(self.parseVersion)
+
+  def parseVersion(self, vstring):
+    fail = Fail(VirtualBoxVersionError("Invalid version of VirtualBox installed."))
+
+    vstring = vstring.strip()
+    if vstring is None or vstring == "":
+      return fail
+
+    parts = vstring.split("_")
+    if len(parts) == 0:
+      return fail
+ 
+    return OK(parts[0].split("r")[0])
+     
   def fetchGuestAddVersion(self, uuid):
     return self.fetchGuestProperty(uuid, "/VirtualBox/GuestAdd/Version") \
       .bind(self.parseGuestAddVersion) \
@@ -277,7 +294,7 @@ class VirtualBoxDriver(Driver):
     ddebug("Machine state: %s : %s", vboxState, state)
     return OK(state)
 
-  def vboxManager(self, cmd, params):
+  def vboxManager(self, cmd, params=""):
     '''
     Invoke the VirtualBoxManager
     '''

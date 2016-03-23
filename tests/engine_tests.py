@@ -93,8 +93,12 @@ class TestEngine(tests.TestBase):
     self.assertIsInstance(state, OK)
     self.assertEqual(state.getOK(), stateMatch)
 
-  def testfetchGuestAdd(self):
+  def testFetchGuestAdd(self):
     op = self.engine.getDriver().fetchGuestAddVersion("testEngine")
     self.assertIsInstance(op, OK)
     self.assertTrue(re.match(r'^[0-9\.]*$', op.getOK()))
 
+  def testFetchVersion(self):
+    op = self.engine.getDriver().fetchVersion()
+    self.assertIsInstance(op, OK)
+    self.assertTrue(re.match(r'^[0-9\.]*$', op.getOK()))

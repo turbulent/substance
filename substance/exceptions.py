@@ -111,7 +111,7 @@ class VirtualBoxMissingAdditions(SubstanceDriverError):
   The Virtual Box guest additions are missing.
   '''
 
-class VirtualBoxVersion(SubstanceDriverError):
+class VirtualBoxVersionError(SubstanceDriverError):
   '''
   Wrong version of the Virtual Box system is installed.
   '''
