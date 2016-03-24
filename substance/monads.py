@@ -245,7 +245,6 @@ class Try(Monad):
 
   @staticmethod
   def attemptWrapper(f, expect=Exception):
-    @wraps(f)
     def tryer(*args, **kwargs):
       try:
         return OK(f(*args, **kwargs))

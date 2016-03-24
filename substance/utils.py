@@ -1,9 +1,11 @@
 import yaml
 import collections
+from pkg_resources import Requirement, resource_filename
 
 from substance.exceptions import (
   ConfigSyntaxError,
-  FileSystemError
+  FileSystemError,
+  FileDoesNotExist
 )
 
 _yaml_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
@@ -39,4 +41,13 @@ def readYAML(filename):
     raise FileSystemError("Failed to read configuration file %s : %s" % (filename, err))
 
 
-
+def readSupportFile(filename):
+  try:
+    keyfile = resource_filename(Requirement.parse("substance"), filename)
+    with open(keyfile, "r") as fileh:
+      keydata = fileh.read()
+      return keydata
+  except IOError as err:
+    raise FileDoesNotExist("File not found: %s" % keyfile)
+  except Exception as err:
+    raise FileSystemError("Failed to read: %s" % keyfile)

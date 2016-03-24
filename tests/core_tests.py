@@ -117,3 +117,15 @@ class TestCore(tests.TestBase):
     self.assertEqual(len(engines.getOK()), 2)
     self.assertEqual(engines.getOK(), ['coreTestEngine','coreTestEngine3'])
 
+  def testInsecureKey(self):
+    self.setUpDefaultCore()
+    op = self.core.loadInsecureKey()
+    self.assertIsInstance(op, OK)
+    self.assertIsNotNone(self.core.insecureKey)
+
+
+  def testInsecurePubKey(self):
+    self.setUpDefaultCore()
+    op = self.core.loadInsecurePubKey()
+    self.assertIsInstance(op, OK)
+    self.assertIsNotNone(self.core.insecurePubKey)

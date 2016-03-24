@@ -1,11 +1,12 @@
 import os
 import logging
 from collections import OrderedDict
+
 from substance.monads import *
 from substance.logs import *
 from substance.shell import Shell
 from substance.engine import Engine
-from substance.utils import (readYAML,writeYAML)
+from substance.utils import (readYAML,writeYAML,readSupportFile)
 from substance.config import (Config)
 from substance.exceptions import (
   FileSystemError,
@@ -16,7 +17,6 @@ from substance.exceptions import (
 
 class Core(object):
 
-  config = None
   defaultConfig = {
     "assumeYes": False,
     "basePath": os.path.join("~", ".substance")
@@ -29,6 +29,9 @@ class Core(object):
     configFile = configFile if configFile else "substance.yml"
     configFile = os.path.join(self.basePath, configFile)
     self.config = Config(configFile)
+
+    self.insecureKey = None
+    self.insecurePubKey = None
 
   def getBasePath(self):
     return self.basePath
@@ -101,3 +104,20 @@ class Core(object):
     if driver == "VirtualBox":
       return True
     return False
+
+  #-- Key and Auth
+ 
+  def loadInsecureKey(self):
+    return Try.attempt(defer(readSupportFile, filename='support/substance_insecure')).bind(self.setInsecureKey)
+ 
+  def setInsecureKey(self, keydata):
+    self.insecureKey = keydata
+    return OK(self)
+
+  def loadInsecurePubKey(self):
+    return Try.attempt(defer(readSupportFile, filename='support/substance_insecure.pub')).bind(self.setInsecurePubKey)
+ 
+  def setInsecurePubKey(self, keydata):
+    self.insecurePubKey = keydata
+    return OK(self)
+
