@@ -46,6 +46,8 @@ class TestEngine(tests.TestBase):
       return
     self.doProvision()
     self.doStart()
+    self.doTestFetchGuestAdd()
+    self.doTestFetchForwardedPorts()
     self.doSuspend()
     self.doRestart()
     self.doDeprovision()
@@ -93,7 +95,7 @@ class TestEngine(tests.TestBase):
     self.assertIsInstance(state, OK)
     self.assertEqual(state.getOK(), stateMatch)
 
-  def testFetchGuestAdd(self):
+  def doTestFetchGuestAdd(self):
     op = self.engine.getDriver().fetchGuestAddVersion("testEngine")
     self.assertIsInstance(op, OK)
     self.assertTrue(re.match(r'^[0-9\.]*$', op.getOK()))
@@ -102,3 +104,8 @@ class TestEngine(tests.TestBase):
     op = self.engine.getDriver().fetchVersion()
     self.assertIsInstance(op, OK)
     self.assertTrue(re.match(r'^[0-9\.]*$', op.getOK()))
+
+  def doTestFetchForwardedPorts(self):
+    op = self.engine.getDriver().fetchForwardedPorts(self.engine.getDriverID())
+    self.assertIsInstance(op, OK)
+    self.assertIsNotNone(op.getOK()) 

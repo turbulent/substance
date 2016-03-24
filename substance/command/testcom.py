@@ -1,6 +1,8 @@
 import logging
 from substance.command import Command
+from substance.engine import Engine
 from substance.monads import *
+from substance.logs import *
 
 class Testcom(Command):
 
@@ -20,4 +22,33 @@ class Testcom(Command):
     logging.debug("Options: %s", self.options)
     logging.debug("Args: %s", self.args)
 
-    self.core.initialize() >> info("Core initialized").catch(self.exitError)
+    name = self.getInputName()
+
+    self.core.initialize()  \
+      .then(defer(self.core.loadEngine, name)) \
+      .bind(Engine.loadConfigFile) \
+      .bind(self.printEngineInfo)  \
+      .bind(self.printForwardedPorts)  \
+      .catch(self.exitError)
+
+
+  def printEngineInfo(self, engine):
+
+    driver = engine.getDriver()
+    machInfo = driver.getMachineInfo(engine.getDriverID()).catch(self.exitError).getOK()
+
+    for k,v in machInfo.iteritems():
+      print("%s = %s" % (k,v))
+
+    return OK(engine) 
+
+  def printForwardedPorts(self, engine):
+
+    driver = engine.getDriver()
+    ports = driver.fetchForwardedPorts(engine.getDriverID()) \
+      .catch(self.exitError).getOK()
+
+    for port in ports:
+      print("Forwarded Port(%(name)s) NIC:%(nic)s, hostIP: %(hostIP)s, hostPort: %(hostPort)s, guestIP: %(guestIP)s, guestPort: %(guestPort)s" % port)
+
+    return OK(ports) 

@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from substance.logs import *
 from substance.monads import *
 from substance.driver import Driver
@@ -139,24 +140,64 @@ class VirtualBoxDriver(Driver):
     else:
       return OK(False)
 
+  def parseForwardedPorts(self, machInfo):
+    '''
+    Parse Virtual Box machine info for forwarded ports.
+    '''
+    lines = machInfo.split("\n")
+    ports = []
+    nic = None
+    for line in lines:
+      line = line.strip()
+     
+      #First match a nic from the info values
+      nicmatch = re.match(r'^nic(\d+)=".+?"$', line)
+      if nicmatch:
+        nic = nicmatch.group(1)
+
+      portmatch = re.match(r'^Forwarding.+?="(.+?),(.+?),(.*?),(.+?),(.*?),(.+?)"$', line)
+      if portmatch:
+        ports.append({
+          'nic': nic,
+          'name':portmatch.group(1),
+          'proto':portmatch.group(2),
+          'hostIP':portmatch.group(3),
+          'hostPort':portmatch.group(4),
+          'guestIP':portmatch.group(5),
+          'guestPort':portmatch.group(6)
+        })
+
+    return OK(ports)
+
   def parseMachineInfo(self, machInfo):
     '''
     Parse Virtual Box machine info into a dict.
     '''
     lines = machInfo.split("\n")
-    machDict = {}
+    machDict = OrderedDict()
+    rotKey = OrderedDict()
     for line in lines:
       try:
         var, value = line.split("=", 1)
         value = value.strip('"')
+        if not var in rotKey:
+          rotKey[var] = 0
+        if var in machDict:
+          rotKey[var] += 1
+        vark = var+"_%s" % rotKey[var]
         machDict[var] = value
       except ValueError:
         pass
     return OK(machDict)
 
+
   def fetchGuestProperty(self, uuid, prop):
     return self.vboxManager("guestproperty", "get %s %s" % (uuid, prop)) \
       .bind(self.parseGuestProperty)
+
+  def fetchForwardedPorts(self, uuid):
+    return self.vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
+      .bind(self.parseForwardedPorts)
 
   def parseGuestProperty(self, prop): 
     prop = prop.strip()
@@ -185,22 +226,10 @@ class VirtualBoxDriver(Driver):
       return fail
  
     return OK(parts[0].split("r")[0])
-     
+    
   def fetchGuestAddVersion(self, uuid):
     return self.fetchGuestProperty(uuid, "/VirtualBox/GuestAdd/Version") \
-      .bind(self.parseGuestAddVersion) \
-      .catchError(VirtualBoxMissingAdditions, lambda x: self.fetchGuestAddVersionFromInfo(uuid=uuid))
-
-  def fetchGuestAddVersionFromInfo(self, uuid):
-    def extractGuestAdd(info):
-      if 'GuestAdditionsVersion' in info:
-        return OK(info['GuestAdditionsVersion'])
-      else:
-        return OK(None)
-
-    return self.getMachineInfo(uuid) \
-      .bind(extractGuestAdd) \
-      .bind(self.parseGuestAddVersion)
+      .bind(self.parseGuestAddVersion) 
 
   def parseGuestAddVersion(self, guestAdd):
     if guestAdd is None:

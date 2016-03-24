@@ -1,3 +1,4 @@
 
 - Optimize ls when fetching VM states (batch)
-
+- Check for base virtualbox version
+- Check for base virtualbox additions version on vm manips
