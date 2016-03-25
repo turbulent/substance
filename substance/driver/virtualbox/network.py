@@ -5,6 +5,8 @@ from substance.logs import *
 from exceptions import *
 from vbox import (vboxManager)
 
+# -- Structs
+
 class ForwardedPort(object):
   def __init__(self, name, nic, proto, hostIP, hostPort, guestIP, guestPort):
     self.name = name
@@ -14,6 +16,12 @@ class ForwardedPort(object):
     self.hostPort = hostPort
     self.guestIP = guestIP
     self.guestPort = guestPort
+
+  def getCreateArg(self):
+    return "--natpf%(nic)s \"%(name)s\",%(proto)s,%(hostIP)s,%(hostPort)s,%(guestIP)s,%(guestPort)s" % self.__dict__
+
+  def getDeleteArg(self):
+    return "--natpf%(nic)s delete \"%(name)s\"" % self.__dict__
 
   def __repr__(self):
     return "%(name)s forward %(proto)s host(%(hostIP)s:%(hostPort)s) -> guest(%(guestIP)s:%(guestPort)s)" % self.__dict__
@@ -39,7 +47,7 @@ def readForwardedPorts(uuid):
   return vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
     .bind(parseForwardedPorts)
 
-def readNetworks(self):
+def readNetworks():
   return vboxManager("list", "dhcpservers").bind(parseNetworks)
 
 # -- Parse funcs
@@ -103,4 +111,28 @@ def parseForwardedPorts(vminfo):
 
   return OK(ports)
 
- 
+# -- Actions
+
+def clearAllForwardedPorts(uuid):
+  return readForwardedPorts(uuid).bind(defer(removeForwardedPorts, uuid=uuid))
+
+def removeForwardedPorts(ports, uuid):
+  args = []
+  for port in ports:
+    args.append(port.getDeleteArg())
+  
+  if len(args) > 0: 
+    return vboxManager("modifyvm", "%s %s" % (uuid, " ".join(args)))
+  else:
+    return OK(None)
+
+def addForwardedPorts(ports, uuid):
+  args = []
+  for port in ports:
+    args.append(port.getCreateArg())
+
+  if len(args) > 0:
+    return vboxManager("modifyvm", "%s %s" % (uuid, " ".join(args)))
+  else:
+    return OK(None)
+

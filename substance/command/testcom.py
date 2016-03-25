@@ -4,6 +4,9 @@ from substance.engine import Engine
 from substance.monads import *
 from substance.logs import *
 
+from substance.driver.virtualbox.machine import *
+from substance.driver.virtualbox.network import *
+
 class Testcom(Command):
 
   vboxManager = None
@@ -29,13 +32,17 @@ class Testcom(Command):
       .bind(Engine.loadConfigFile) \
       .bind(self.printEngineInfo)  \
       .bind(self.printForwardedPorts)  \
+      .bind(self.clearForwardedPorts) \
+      .bind(self.printForwardedPorts)  \
+      .bind(self.addForwardedPorts) \
+      .bind(self.printForwardedPorts)  \
       .catch(self.exitError)
 
 
   def printEngineInfo(self, engine):
 
     driver = engine.getDriver()
-    machInfo = driver.getMachineInfo(engine.getDriverID()).catch(self.exitError).getOK()
+    machInfo = readMachineInfo(engine.getDriverID()).catch(self.exitError).getOK()
 
     for k,v in machInfo.iteritems():
       print("%s = %s" % (k,v))
@@ -45,10 +52,38 @@ class Testcom(Command):
   def printForwardedPorts(self, engine):
 
     driver = engine.getDriver()
-    ports = driver.fetchForwardedPorts(engine.getDriverID()) \
+    ports = readForwardedPorts(engine.getDriverID()) \
       .catch(self.exitError).getOK()
 
     for port in ports:
-      print("Forwarded Port(%(name)s) NIC:%(nic)s, hostIP: %(hostIP)s, hostPort: %(hostPort)s, guestIP: %(guestIP)s, guestPort: %(guestPort)s" % port)
+      print("%s" % port)
 
-    return OK(ports) 
+    return OK(engine) 
+
+  def clearForwardedPorts(self, engine):
+    driver = engine.getDriver()
+    clear = clearAllForwardedPorts(engine.getDriverID()) \
+      .catch(self.exitError).getOK()
+    return OK(engine) 
+ 
+  def addForwardedPorts(self, engine):
+    ports = [
+      ForwardedPort("substance-ssh", 1, "tcp", "", 4500, "", 22),
+      ForwardedPort("Bogus port", 1, "tcp", "", 34252, "", 200),
+      ForwardedPort("docker-daemon", 1, "tcp", "", 3232, "", 2375),
+    ] 
+    return addForwardedPorts(ports, engine.getDriverID()) \
+      .then(lambda: OK(engine))
+
+  def printNetworks(self, engine):
+
+    driver = engine.getDriver()
+    nets = readNetworks()  \
+      .catch(self.exitError).getOK()
+
+    for net in nets:
+      print("%s" % net)
+
+    return OK(engine)
+
+  
