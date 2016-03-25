@@ -19,40 +19,35 @@ class VirtualBoxDriver(Driver):
       .bind(defer(machine.makeImportParams, name=name, engineProfile=engineProfile)) \
       .bind(defer(machine.importOVF, ovfFile=ovfFile, name=name))
 
-  def deleteMachine(self, uuid):
-    '''
-    Delete the machine by driver identifier.
-    '''
-    return vboxManager("unregistervm", "--delete \"%s\"" % (uuid)) \
-      .bind(lambda x: OK(uuid))
-
   def startMachine(self, uuid):
     '''
     Start the machine by driver identifier.
     '''
-    return vboxManager("startvm", "--type headless \"%s\"" % (uuid)) \
-      .bind(lambda x: OK(uuid))
+    return machine.start(uuid)
 
   def suspendMachine(self, uuid):
     '''
     Suspend the machine.
     '''
-    return vboxManager("controlvm", "\"%s\" savestate" % uuid) \
-      .bind(lambda x: OK(uuid))
+    return machine.suspend(uuid)
 
   def haltMachine(self, uuid):
     '''
     Halt the machine.
     '''
-    return vboxManager("controlvm", "\"%s\" acpipowerbutton" % uuid) \
-      .bind(lambda x: OK(uuid))
+    return machine.halt(uuid)
     
   def terminateMachine(self, uuid):
     '''
     Terminate the machine forcefully.
     '''
-    return vboxManager("controlvm", "\"%s\" poweroff" % uuid) \
-      .bind(lambda x: OK(uuid))
+    return machine.terminate(uuid)
+
+  def deleteMachine(self, uuid):
+    '''
+    Delete the machine by driver identifier.
+    '''
+    return machine.delete(uuid)
 
   def exportMachine(self, uuid):
     #XXX To be implemented

@@ -158,3 +158,25 @@ def parseGuestAddVersion(guestAdd):
   else:
     return Fail(VirtualBoxMissingAdditions("VirtualBox guest additions are not installed."))
 
+# -- Control
+
+def start(uuid):
+  return vboxManager("startvm", "--type headless \"%s\"" % (uuid)) \
+    .bind(lambda x: OK(uuid))
+
+def halt(uuid):
+  return vboxManager("controlvm", "\"%s\" acpipowerbutton" % uuid) \
+    .bind(lambda x: OK(uuid))
+
+def suspend(uuid):
+  return vboxManager("controlvm", "\"%s\" savestate" % uuid) \
+    .bind(lambda x: OK(uuid))
+
+def terminate(uuid):
+  return vboxManager("controlvm", "\"%s\" poweroff" % uuid) \
+    .bind(lambda x: OK(uuid))
+
+def delete(uuid):
+  return vboxManager("unregistervm", "--delete \"%s\"" % (uuid)) \
+    .bind(lambda x: OK(uuid))
+
