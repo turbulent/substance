@@ -4,6 +4,7 @@ from substance.monads import *
 from substance.logs import *
 from exceptions import *
 from vbox import (vboxManager)
+import ipaddress
 
 # -- Structs
 
@@ -33,17 +34,17 @@ class PortForward(object):
 
  
 class DHCP(object):
-  def __init__(self, interface, serverName, gateway, mask, lowerIP, upperIP, enabled):
+  def __init__(self, interface, networkName, gateway, netmask, lowerIP, upperIP, enabled):
     self.interface = interface
-    self.serverName = serverName
+    self.networkName = networkName
     self.gateway = gateway
-    self.mask = mask
+    self.netmask = netmask
     self.lowerIP = lowerIP
     self.upperIP = upperIP
     self.enabled = True if enabled == True or enabled == "Yes" else False
 
   def __repr__(self):
-    rep = "DHCP(%(interface)s gateway: %(gateway)s netmask %(mask)s (%(lowerIP)s to %(upperIP)s))" % self.__dict__
+    rep = "DHCP(%(interface)s gateway: %(gateway)s netmask %(netmask)s (%(lowerIP)s to %(upperIP)s))" % self.__dict__
     rep += " enabled" if self.enabled else ""
     return rep 
 
@@ -52,14 +53,8 @@ class DHCP(object):
       return self.__repr__() == other.__repr__()
     return False
 
-  def getCreateArgs(self):
-    return "--ifname %(interface)s --ip %(gateway)s --netmask %(mask)s --lowerip %(lowerIP)s --upperip %(upperIP)s --enable" % self.__dict__
-
-  def getRemoveArgs(self):
-    return "--netname %(serverName)s" % self.__dict__
-
 class HostOnlyInterface(object):
-  def __init__(self, name, mac, v4ip, v4mask, v6ip, v6prefix, status, dhcpEnabled, dhcpName):
+  def __init__(self, mac=None, v4ip=None, v4mask=None, v6ip=None, v6prefix=None, status=None, dhcpEnabled=False, dhcpName=None, name=None):
     self.name = name
     self.mac = mac
     self.v4ip = v4ip
@@ -88,25 +83,32 @@ def readDHCPs():
   return vboxManager("list", "dhcpservers") \
     .bind(defer(_mapAsBlocks, func=parseDHCPBlock))
 
-def readDHCP(name):
-  return readDHCPs() >> defer(filterDHCP(name=name))
+def readDHCP(interface):
+  return readDHCPs() >> defer(filterDHCPs, interface=interface)
 
 def readHostOnlyInterfaces():
   return vboxManager("list", "hostonlyifs") \
     .bind(defer(_mapAsBlocks, func=parseHostOnlyInterfaceBlock))
 
-def filterDHCP(dhcps, hoif):
-  dhcp = next((dhcp for dhcp in dhcps if dhcp.interface == hoif), None)
-  return OK(dhcp) if dhcp else Fail(VirtualBoxError("DHCP for interface %s was not found." % name))
+def readHostOnlyInterface(name):
+  return readHostOnlyInterfaces() >> defer(filterHostOnlyInterfaces, name=name)
+
+def filterHostOnlyInterfaces(hoifs, name):
+  item = next((item for item in hoifs if item.name == name), None)
+  return OK(item) if item else Fail(VirtualBoxError("Host Only Interface \"%s\" was not found." % name))
+  
+def filterDHCPs(dhcps, interface):
+  dhcp = next((dhcp for dhcp in dhcps if dhcp.interface == interface), None)
+  return OK(dhcp) if dhcp else Fail(VirtualBoxError("DHCP for interface \"%s\" was not found." % interface))
 
 # -- Parse funcs
 
 def parseDHCPBlock(block):
   actions = (
     (r'^NetworkName:\s+HostInterfaceNetworking-(.+?)$', 'interface'),
-    (r'^NetworkName:\s+(HostInterfaceNetworking-(.+?))$', 'serverName'),
+    (r'^NetworkName:\s+(HostInterfaceNetworking-(.+?))$', 'networkName'),
     (r'^IP:\s+(.+?)$', 'gateway'),
-    (r'^NetworkMask:\s+(.+?)$', 'mask'),
+    (r'^NetworkMask:\s+(.+?)$', 'netmask'),
     (r'^lowerIPAddress:\s+(.+?)$', 'lowerIP'),  
     (r'^upperIPAddress:\s+(.+?)$', 'upperIP'),  
     (r'Enabled:\s+(.+?)$', 'enabled')
@@ -182,11 +184,31 @@ def addPortForwards(ports, uuid):
   else:
     return OK(None)
 
-def addDHCP(dhcp):
-  return vboxManager("dhcpserver", "add %s" % dhcp.getCreateArgs())
+def addDHCP(hoif_name, gateway, netmask, lowerIP, upperIP):
+  arg = "--ifname \"%s\" --ip \"%s\" --netmask \"%s\" --lowerip \"%s\" --upperip \"%s\" --enable" % (hoif_name, gateway, netmask, lowerIP, upperIP)
+  return vboxManager("dhcpserver", "add %s" % arg)
 
-def removeDHCP(dhcp):
-  return vboxManager("dhcpserver", "remove %s" % dhcp.getDeleteArgs())
+def removeDHCP(hoif_name):
+  return vboxManager("dhcpserver", "remove --ifname \"%s\"" % hoif_name)
+
+def addHostOnlyInterface():
+  def parseResult(r):
+    match = re.match("^Interface '(.+?)' was successfully created", r)
+    if match:
+      return OK(match.group(1))
+    else:
+      return Fail(VirtualBoxError("Failed to create a new Host Only Interface"))
+  return vboxManager("hostonlyif", "create").bind(parseResult) 
+
+def configureHostOnlyInterface(name, v4ip=None, v4mask=None, v6ip=None, v6prefix=None):
+ if v6ip:
+   return vboxManager("hostonlyif", "ipconfig \"%s\" --ipv6 \"%s\" --netmasklengthv6 \"%s\"" % (name, v6ip, v6prefix))
+ return vboxManager("hostonlyif", "ipconfig \"%s\" --ip \"%s\" --netmask \"%s\"" % (name, v4ip, v4mask))
+
+def removeHostOnlyInterface(hoif):
+  return removeDHCP(hoif.name) \
+    .catch(lambda x: OK(hoif)) \
+    .then(defer(vboxManager, "hostonlyif", "remove \"%s\"" % hoif.name))
 
 #VBoxManage hostonlyif create
 #VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1

@@ -56,7 +56,7 @@ class TestVirtualBox(tests.TestBase):
     for dhcp in dhcps:
       self.assertIsInstance(dhcp, network.DHCP)
 
-  def testHOIFs(self):
+  def testHostOnlyOperations(self):
     op = network.readHostOnlyInterfaces()
     self.assertIsInstance(op, OK)
 
@@ -64,6 +64,43 @@ class TestVirtualBox(tests.TestBase):
     self.assertEqual(type(hoifs), type([]))
     for hoif in hoifs:
       self.assertIsInstance(hoif, network.HostOnlyInterface)
+
+    op = network.addHostOnlyInterface()
+    self.assertIsInstance(op, OK)
+    iface = op.getOK()
+
+    options = {'v4ip':'10.0.123.1','v4mask':'255.255.255.0'}
+    op = network.configureHostOnlyInterface(iface, **options)
+    self.assertIsInstance(op, OK)
+    
+    op = network.readHostOnlyInterface(iface)
+    hoif = op.getOK()
+    self.assertIsInstance(op, OK)
+    self.assertIsInstance(hoif, network.HostOnlyInterface)
+    self.assertEqual(hoif.name, iface)
+    self.assertEqual(hoif.v4ip, options['v4ip'])
+    self.assertEqual(hoif.v4mask, options['v4mask'])
+
+    dhcpOptions = {'gateway':'10.0.123.1', 'netmask':'255.255.255.0', 'lowerIP':'10.0.123.1', 'upperIP':'10.0.123.100'}   
+    op = network.addDHCP(iface, **dhcpOptions)
+    self.assertIsInstance(op, OK)
+
+    op = network.readDHCP(iface)
+    self.assertIsInstance(op, OK)
+    dhcp = op.getOK()
+    self.assertIsInstance(dhcp, network.DHCP)
+    self.assertEqual(dhcp.interface, iface)
+    self.assertEqual(dhcp.gateway, dhcpOptions['gateway']) 
+    self.assertEqual(dhcp.netmask, dhcpOptions['netmask']) 
+    self.assertEqual(dhcp.lowerIP, dhcpOptions['lowerIP']) 
+    self.assertEqual(dhcp.upperIP, dhcpOptions['upperIP']) 
+
+    op = network.removeHostOnlyInterface(hoif)
+    self.assertIsInstance(op, OK)
+    op = network.readHostOnlyInterface(iface)
+    self.assertIsInstance(op, Fail)
+    op = network.readDHCP(iface)
+    self.assertIsInstance(op, Fail)
 
   def testReadMachines(self):
     op = machine.readMachines()
