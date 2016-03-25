@@ -31,13 +31,17 @@ class Testcom(Command):
       .then(defer(self.core.loadEngine, name)) \
       .bind(Engine.loadConfigFile) \
       .bind(self.printEngineInfo)  \
-      .bind(self.printPortForwards)  \
-      .bind(self.clearPortForwards) \
-      .bind(self.printPortForwards)  \
-      .bind(self.addPortForwards) \
-      .bind(self.printPortForwards)  \
-      .catch(self.exitError)
+      .bind(self.printHOIFs)
 
+#      .bind(self.clearPortForwards) \
+#      .bind(self.printPortForwards)  \
+#      .bind(self.addPortForwards) \
+#      .bind(self.printPortForwards)  \
+#      .bind(self.printDHCPs)  \
+#      .bind(self.addDHCP)  \
+#      .bind(self.printDHCPs)  \
+#      .catch(self.exitError)
+#
 
   def printEngineInfo(self, engine):
 
@@ -75,10 +79,10 @@ class Testcom(Command):
     return addPortForwards(ports, engine.getDriverID()) \
       .then(lambda: OK(engine))
 
-  def printNetworks(self, engine):
+  def printDHCPs(self, engine):
 
     driver = engine.getDriver()
-    nets = readNetworks()  \
+    nets = readDHCPs()  \
       .catch(self.exitError).getOK()
 
     for net in nets:
@@ -86,4 +90,23 @@ class Testcom(Command):
 
     return OK(engine)
 
-  
+ 
+  def addDHCP(self, engine):
+    net = DHCP(
+      interface="vboxnet7",
+      serverName="HostInterfaceDHCPing-vboxnet7",
+      gateway="178.1.1.1",
+      mask="255.255.255.0",
+      lowerIP="178.1.1.100",
+      upperIP="178.1.1.150",
+      enabled="Yes"
+    )
+    return addDHCP(net).then(lambda: OK(engine))
+
+  def removeDHCP(self, engine):
+    return readDHCP("vboxnet7").bind(removeDHCP).then(lambda: OK(engine))
+    
+  def printHOIFs(self, engine):
+    hoifs = readHostOnlyInterfaces().catch(self.exitError).getOK()
+    for hoif in hoifs:
+      print("%s" % hoif)
