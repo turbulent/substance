@@ -24,8 +24,14 @@ class PortForward(object):
     return "--natpf%(nic)s delete \"%(name)s\"" % self.__dict__
 
   def __repr__(self):
-    return "%(name)s forward %(proto)s host(%(hostIP)s:%(hostPort)s) -> guest(%(guestIP)s:%(guestPort)s)" % self.__dict__
+    return "PortForward(%(nic)s, %(name)s, %(proto)s host(%(hostIP)s:%(hostPort)s) -> guest(%(guestIP)s:%(guestPort)s))" % self.__dict__
 
+  def __eq__(self, other):
+    if isinstance(other, self.__class__):
+      return self.__repr__() == other.__repr__()
+    return False
+
+ 
 class DHCP(object):
   def __init__(self, interface, serverName, gateway, mask, lowerIP, upperIP, enabled):
     self.interface = interface
@@ -37,9 +43,14 @@ class DHCP(object):
     self.enabled = True if enabled == True or enabled == "Yes" else False
 
   def __repr__(self):
-    rep = "dhcpserver %(interface)s gateway: %(gateway)s netmask %(mask)s (%(lowerIP)s to %(upperIP)s)" % self.__dict__
+    rep = "DHCP(%(interface)s gateway: %(gateway)s netmask %(mask)s (%(lowerIP)s to %(upperIP)s))" % self.__dict__
     rep += " enabled" if self.enabled else ""
     return rep 
+
+  def __eq__(self, other):
+    if isinstance(other, self.__class__):
+      return self.__repr__() == other.__repr__()
+    return False
 
   def getCreateArgs(self):
     return "--ifname %(interface)s --ip %(gateway)s --netmask %(mask)s --lowerip %(lowerIP)s --upperip %(upperIP)s --enable" % self.__dict__
@@ -60,8 +71,13 @@ class HostOnlyInterface(object):
     self.dhcpName = dhcpName
     
   def __repr__(self):
-    return "hoif(%(name)s, %(mac)s) IP: %(v4ip)s, netmask: %(v4mask)s, IPV6: %(v6ip)s, prefix: %(v6prefix)s status: %(status)s" % self.__dict__
-  
+    return "HostOnlyInterface(%(name)s, %(mac)s IP: %(v4ip)s, netmask: %(v4mask)s, IPV6: %(v6ip)s, prefix: %(v6prefix)s status: %(status)s)" % self.__dict__
+ 
+  def __eq__(self, other):
+    if isinstance(other, self.__class__):
+      return self.__repr__() == other.__repr__()
+    return False 
+
 # -- Read funcs
 
 def readPortForwards(uuid):
@@ -73,13 +89,13 @@ def readDHCPs():
     .bind(defer(_mapAsBlocks, func=parseDHCPBlock))
 
 def readDHCP(name):
-  return readDHCP() >> defer(filterDHCP(name=name))
+  return readDHCPs() >> defer(filterDHCP(name=name))
 
 def readHostOnlyInterfaces():
   return vboxManager("list", "hostonlyifs") \
     .bind(defer(_mapAsBlocks, func=parseHostOnlyInterfaceBlock))
 
-def filterDHCP(nets, hoif):
+def filterDHCP(dhcps, hoif):
   dhcp = next((dhcp for dhcp in dhcps if dhcp.interface == hoif), None)
   return OK(dhcp) if dhcp else Fail(VirtualBoxError("DHCP for interface %s was not found." % name))
 

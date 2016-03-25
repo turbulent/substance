@@ -49,7 +49,7 @@ def importOVF(importParams, name, ovfFile):
 # -- Read functions
 
 def readMachines():
-  vboxManager("list", "vms").bind(parseMachinesList)
+  return vboxManager("list", "vms").bind(parseMachinesList)
  
 def readMachineID(name):
   '''
