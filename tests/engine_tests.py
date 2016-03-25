@@ -9,6 +9,10 @@ from substance.shell import Shell
 from substance.monads import *
 from substance.constants import *
 
+from substance.driver.virtualbox.vbox import (readVersion)
+from substance.driver.virtualbox.network import (readNetworks, readForwardedPorts)
+from substance.driver.virtualbox.machine import (readGuestProperty, readGuestAddVersion)
+
 class TestEngine(tests.TestBase):
 
   core = None
@@ -16,7 +20,7 @@ class TestEngine(tests.TestBase):
   basePath = None
   projectsPath = None
 
-  vmTest = False
+  vmTest = True
 
   @classmethod
   def setUpClass(cls):
@@ -45,17 +49,17 @@ class TestEngine(tests.TestBase):
     if not self.vmTest:
       return
     self.doProvision()
-    self.doStart()
+#    self.doStart()
     self.doTestFetchGuestAdd()
     self.doTestFetchForwardedPorts()
-    self.doSuspend()
-    self.doRestart()
-    self.doDeprovision()
+#    self.doSuspend()
+#    self.doRestart()
+#    self.doDeprovision()
     
-  def testLaunch(self):
-    if not self.vmTest:
-      return
-    self.doLaunch()
+#  def testLaunch(self):
+#    if not self.vmTest:
+#      return
+#    self.doLaunch()
   
   def doProvision(self):
     op = self.engine.provision()
@@ -96,16 +100,16 @@ class TestEngine(tests.TestBase):
     self.assertEqual(state.getOK(), stateMatch)
 
   def doTestFetchGuestAdd(self):
-    op = self.engine.getDriver().fetchGuestAddVersion("testEngine")
+    op = readGuestAddVersion("testEngine")
     self.assertIsInstance(op, OK)
     self.assertTrue(re.match(r'^[0-9\.]*$', op.getOK()))
 
   def testFetchVersion(self):
-    op = self.engine.getDriver().fetchVersion()
+    op = readVersion()
     self.assertIsInstance(op, OK)
     self.assertTrue(re.match(r'^[0-9\.]*$', op.getOK()))
 
   def doTestFetchForwardedPorts(self):
-    op = self.engine.getDriver().fetchForwardedPorts(self.engine.getDriverID())
+    op = readForwardedPorts(self.engine.getDriverID())
     self.assertIsInstance(op, OK)
     self.assertIsNotNone(op.getOK()) 
