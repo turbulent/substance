@@ -31,11 +31,11 @@ class Testcom(Command):
       .then(defer(self.core.loadEngine, name)) \
       .bind(Engine.loadConfigFile) \
       .bind(self.printEngineInfo)  \
-      .bind(self.printForwardedPorts)  \
-      .bind(self.clearForwardedPorts) \
-      .bind(self.printForwardedPorts)  \
-      .bind(self.addForwardedPorts) \
-      .bind(self.printForwardedPorts)  \
+      .bind(self.printPortForwards)  \
+      .bind(self.clearPortForwards) \
+      .bind(self.printPortForwards)  \
+      .bind(self.addPortForwards) \
+      .bind(self.printPortForwards)  \
       .catch(self.exitError)
 
 
@@ -49,10 +49,10 @@ class Testcom(Command):
 
     return OK(engine) 
 
-  def printForwardedPorts(self, engine):
+  def printPortForwards(self, engine):
 
     driver = engine.getDriver()
-    ports = readForwardedPorts(engine.getDriverID()) \
+    ports = readPortForwards(engine.getDriverID()) \
       .catch(self.exitError).getOK()
 
     for port in ports:
@@ -60,19 +60,19 @@ class Testcom(Command):
 
     return OK(engine) 
 
-  def clearForwardedPorts(self, engine):
+  def clearPortForwards(self, engine):
     driver = engine.getDriver()
-    clear = clearAllForwardedPorts(engine.getDriverID()) \
+    clear = clearAllPortForwards(engine.getDriverID()) \
       .catch(self.exitError).getOK()
     return OK(engine) 
  
-  def addForwardedPorts(self, engine):
+  def addPortForwards(self, engine):
     ports = [
-      ForwardedPort("substance-ssh", 1, "tcp", "", 4500, "", 22),
-      ForwardedPort("Bogus port", 1, "tcp", "", 34252, "", 200),
-      ForwardedPort("docker-daemon", 1, "tcp", "", 3232, "", 2375),
+      PortForward("substance-ssh", 1, "tcp", "", 4500, "", 22),
+      PortForward("Bogus port", 1, "tcp", "", 34252, "", 200),
+      PortForward("docker-daemon", 1, "tcp", "", 3232, "", 2375),
     ] 
-    return addForwardedPorts(ports, engine.getDriverID()) \
+    return addPortForwards(ports, engine.getDriverID()) \
       .then(lambda: OK(engine))
 
   def printNetworks(self, engine):

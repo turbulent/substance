@@ -7,7 +7,7 @@ from vbox import (vboxManager)
 
 # -- Structs
 
-class ForwardedPort(object):
+class PortForward(object):
   def __init__(self, name, nic, proto, hostIP, hostPort, guestIP, guestPort):
     self.name = name
     self.nic = nic
@@ -43,9 +43,9 @@ class Network(object):
 
 # -- Read funcs
 
-def readForwardedPorts(uuid):
+def readPortForwards(uuid):
   return vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
-    .bind(parseForwardedPorts)
+    .bind(parsePortForwards)
 
 def readNetworks():
   return vboxManager("list", "dhcpservers").bind(parseNetworks)
@@ -82,7 +82,7 @@ def parseNetworkBlock(block):
 
   return OK(Network(**netinfo))
       
-def parseForwardedPorts(vminfo):
+def parsePortForwards(vminfo):
   '''
   Parse Virtual Box machine info for forwarded ports.
   '''
@@ -99,7 +99,7 @@ def parseForwardedPorts(vminfo):
 
     portmatch = re.match(r'^Forwarding.+?="(.+?),(.+?),(.*?),(.+?),(.*?),(.+?)"$', line)
     if portmatch:
-      ports.append(ForwardedPort(
+      ports.append(PortForward(
         nic=nic,
         name=portmatch.group(1),
         proto=portmatch.group(2),
@@ -113,10 +113,10 @@ def parseForwardedPorts(vminfo):
 
 # -- Actions
 
-def clearAllForwardedPorts(uuid):
-  return readForwardedPorts(uuid).bind(defer(removeForwardedPorts, uuid=uuid))
+def clearAllPortForwards(uuid):
+  return readPortForwards(uuid).bind(defer(removePortForwards, uuid=uuid))
 
-def removeForwardedPorts(ports, uuid):
+def removePortForwards(ports, uuid):
   args = []
   for port in ports:
     args.append(port.getDeleteArg())
@@ -126,7 +126,7 @@ def removeForwardedPorts(ports, uuid):
   else:
     return OK(None)
 
-def addForwardedPorts(ports, uuid):
+def addPortForwards(ports, uuid):
   args = []
   for port in ports:
     args.append(port.getCreateArg())
