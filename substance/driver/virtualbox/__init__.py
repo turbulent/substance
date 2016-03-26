@@ -8,6 +8,7 @@ from substance.constants import (EngineStates)
 from vbox import (vboxManager)
 import network
 import machine
+from exceptions import *
 
 class VirtualBoxDriver(Driver):
   '''
@@ -55,7 +56,7 @@ class VirtualBoxDriver(Driver):
  
   def getMachines(self):
     '''
-    Retrive the list of machines and their driver identifiers.
+    Retrieve the list of machines and their driver identifiers.
     '''
     return machine.readMachines()
 
