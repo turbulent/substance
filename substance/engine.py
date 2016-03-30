@@ -30,8 +30,12 @@ class EngineProfile(object):
 
 class Engine(object):
 
-  config = None
-  profile = None
+  def __init__(self, name, enginePath, core):
+    self.name = name
+    self.enginePath = enginePath
+    self.core = core
+    configFile = os.path.join(self.enginePath, "engine.yml")
+    self.config = Config(configFile)
 
   def getDefaultConfig(self):
     defaults = OrderedDict()
@@ -57,16 +61,10 @@ class Engine(object):
       return Fail(ConfigValidationError("Invalid name property in configuration (got %s expected %s)" %(self.config.get('name'), self.name)))
 
     driver = self.config.get('driver', None)
-    if not substance.core.Core.validDriver(driver):
+    if not self.core.validDriver(driver):
       return Fail(ConfigValidationError("Invalid driver property in configuration (%s is not supported)" % driver))
 
     return OK(self.config.getConfig())
-
-  def __init__(self, name, enginePath=None):
-    self.name = name
-    self.enginePath = enginePath
-    configFile = os.path.join(self.enginePath, "engine.yml")
-    self.config = Config(configFile)
 
   def getName(self):
     return self.name

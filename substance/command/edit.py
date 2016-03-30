@@ -12,8 +12,9 @@ class Edit(Command):
   def main(self):
 
     name = self.getInputName()
- 
-    self.core.loadEngine(name) \
+
+    self.core.initialize() \
+      .then(defer(self.core.loadEngine, name=name)) \
       .bind(self.editEngineConfig) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.validateConfig) \

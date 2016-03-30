@@ -51,3 +51,4 @@ def readSupportFile(filename):
     raise FileDoesNotExist("File not found: %s" % keyfile)
   except Exception as err:
     raise FileSystemError("Failed to read: %s" % keyfile)
+

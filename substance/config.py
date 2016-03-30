@@ -5,6 +5,8 @@ from substance.shell import Shell
 from substance.utils import (readYAML, writeYAML)
 from substance.exceptions import (FileSystemError, FileDoesNotExist)
 
+from collections import namedtuple
+
 
 class Config(object):
 
@@ -43,4 +45,6 @@ class Config(object):
       return Fail(FileDoesNotExist("File does not exist: %s" % self.configFile))
     logging.debug("Loading config file: %s", self.configFile)
     return self.readConfigFile() >> self.setConfig
+
+
 

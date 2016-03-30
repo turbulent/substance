@@ -4,6 +4,9 @@ class Driver(object):
   Substance virtualization driver abstract
   '''
 
+  def __init__(self, engine):
+    self.engine = engine
+  
   def importMachine(self, name, ovfFile, engineProfile=None):
     '''Import a machine image into a virtual machine'''
     raise NotImplementedError()

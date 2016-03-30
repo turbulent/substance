@@ -69,7 +69,7 @@ class TestVirtualBox(tests.TestBase):
     self.assertIsInstance(op, OK)
     iface = op.getOK()
 
-    options = {'v4ip':'10.0.123.1','v4mask':'255.255.255.0'}
+    options = {'ip':'10.0.123.1', 'netmask':'255.255.255.0'}
     op = network.configureHostOnlyInterface(iface, **options)
     self.assertIsInstance(op, OK)
     
@@ -78,8 +78,8 @@ class TestVirtualBox(tests.TestBase):
     self.assertIsInstance(op, OK)
     self.assertIsInstance(hoif, network.HostOnlyInterface)
     self.assertEqual(hoif.name, iface)
-    self.assertEqual(hoif.v4ip, options['v4ip'])
-    self.assertEqual(hoif.v4mask, options['v4mask'])
+    self.assertEqual(hoif.network.ip.format(), options['ip'])
+    self.assertEqual(hoif.network.netmask.format(), options['netmask'])
 
     dhcpOptions = {'gateway':'10.0.123.1', 'netmask':'255.255.255.0', 'lowerIP':'10.0.123.1', 'upperIP':'10.0.123.100'}   
     op = network.addDHCP(iface, **dhcpOptions)

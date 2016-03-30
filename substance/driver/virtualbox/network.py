@@ -4,7 +4,7 @@ from substance.monads import *
 from substance.logs import *
 from exceptions import *
 from vbox import (vboxManager)
-import ipaddress
+from netaddr import (IPAddress, IPNetwork)
 
 # -- Structs
 
@@ -13,9 +13,9 @@ class PortForward(object):
     self.name = name
     self.nic = nic
     self.proto = proto
-    self.hostIP = hostIP 
+    self.hostIP = hostIP if hostIP else None
     self.hostPort = hostPort
-    self.guestIP = guestIP
+    self.guestIP = guestIP if guestIP else None
     self.guestPort = guestPort
 
   def getCreateArg(self):
@@ -43,6 +43,8 @@ class DHCP(object):
     self.upperIP = upperIP
     self.enabled = True if enabled == True or enabled == "Yes" else False
 
+    self.network = IPNetwork(gateway+"/"+netmask)
+
   def __repr__(self):
     rep = "DHCP(%(interface)s gateway: %(gateway)s netmask %(netmask)s (%(lowerIP)s to %(upperIP)s))" % self.__dict__
     rep += " enabled" if self.enabled else ""
@@ -54,7 +56,7 @@ class DHCP(object):
     return False
 
 class HostOnlyInterface(object):
-  def __init__(self, mac=None, v4ip=None, v4mask=None, v6ip=None, v6prefix=None, status=None, dhcpEnabled=False, dhcpName=None, name=None):
+  def __init__(self, name, mac=None, v4ip=None, v4mask=None, v6ip=None, v6prefix=None, status=None, dhcpEnabled=False, dhcpName=None):
     self.name = name
     self.mac = mac
     self.v4ip = v4ip
@@ -65,6 +67,13 @@ class HostOnlyInterface(object):
     self.dhcpEnabled = True if dhcpEnabled == "Enabled" or dhcpEnabled is True else False
     self.dhcpName = dhcpName
     
+    if v6ip:
+      self.ip = IPAddress(v6ip)
+      self.network = IPNetwork(v6ip+"/"+v6prefix)
+    else:
+      self.ip = IPAddress(v4ip)
+      self.network = IPNetwork(v4ip+"/"+v4mask)
+
   def __repr__(self):
     return "HostOnlyInterface(%(name)s, %(mac)s IP: %(v4ip)s, netmask: %(v4mask)s, IPV6: %(v6ip)s, prefix: %(v6prefix)s status: %(status)s)" % self.__dict__
  
@@ -140,7 +149,7 @@ def parsePortForwards(vminfo):
   for line in lines:
     line = line.strip()
 
-    #First match a nic from the info values
+    # First match a nic from the info values
     nicmatch = re.match(r'^nic(\d+)=".+?"$', line)
     if nicmatch:
       nic = nicmatch.group(1)
@@ -186,8 +195,17 @@ def addPortForwards(ports, uuid):
 
 def addDHCP(hoif_name, gateway, netmask, lowerIP, upperIP):
   arg = "--ifname \"%s\" --ip \"%s\" --netmask \"%s\" --lowerip \"%s\" --upperip \"%s\" --enable" % (hoif_name, gateway, netmask, lowerIP, upperIP)
-  return vboxManager("dhcpserver", "add %s" % arg)
+  return vboxManager("dhcpserver", "add %s" % arg) \
+    .then(defer(enableDHCP, hoif_name=hoif_name))
 
+def enableDHCP(hoif_name):
+  arg = "--ifname \"%s\" --enable" % hoif_name
+  return vboxManager("dhcpserver", "modify %s" % arg)
+ 
+def disableDHCP(hoif_name):
+  arg = "--ifname \"%s\" --disable" % hoif_name
+  return vboxManager("dhcpserver", "modify %s" % arg)
+  
 def removeDHCP(hoif_name):
   return vboxManager("dhcpserver", "remove --ifname \"%s\"" % hoif_name)
 
@@ -200,10 +218,16 @@ def addHostOnlyInterface():
       return Fail(VirtualBoxError("Failed to create a new Host Only Interface"))
   return vboxManager("hostonlyif", "create").bind(parseResult) 
 
-def configureHostOnlyInterface(name, v4ip=None, v4mask=None, v6ip=None, v6prefix=None):
- if v6ip:
-   return vboxManager("hostonlyif", "ipconfig \"%s\" --ipv6 \"%s\" --netmasklengthv6 \"%s\"" % (name, v6ip, v6prefix))
- return vboxManager("hostonlyif", "ipconfig \"%s\" --ip \"%s\" --netmask \"%s\"" % (name, v4ip, v4mask))
+def configureHostOnlyInterface(name, ip, netmask):
+  net = _netFrom(ip+"/"+netmask)
+  if net.isFail():
+    return net
+
+  net = net.getOK()
+  #if net.version == 6: 
+  #  return vboxManager("hostonlyif", "ipconfig \"%s\" --ipv6 \"%s\" --netmasklengthv6 \"%s\"" % (name, net.ip, net.prefixlen))
+
+  return vboxManager("hostonlyif", "ipconfig \"%s\" --ip \"%s\" --netmask \"%s\"" % (name, net.ip, net.netmask)) 
 
 def removeHostOnlyInterface(hoif):
   return removeDHCP(hoif.name) \
@@ -218,6 +242,18 @@ def removeHostOnlyInterface(hoif):
 
 # -- Private helpers
 
+def _ipFrom(ip):
+  try:
+    return OK(IPAddress(ip))
+  except Exception as err:
+    return Fail(err)
+
+def _netFrom(net):
+  try:
+    return OK(IPNetwork(net))
+  except Exception as err:
+    return Fail(err)
+    
 def _mapAsBlocks(data, func):
   blocks = data.strip().split("\n\n")
   return OK(blocks).mapM(func)

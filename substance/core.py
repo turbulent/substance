@@ -17,11 +17,6 @@ from substance.exceptions import (
 
 class Core(object):
 
-  defaultConfig = {
-    "assumeYes": False,
-    "basePath": os.path.join("~", ".substance")
-  }
-
   def __init__(self, configFile=None, basePath=None):
     self.basePath = os.path.abspath(basePath) if basePath else os.path.expanduser('~/.substance')
     self.enginesPath = os.path.join(self.basePath, "engines")
@@ -53,6 +48,11 @@ class Core(object):
     defaults = OrderedDict()
     defaults['assumeYes'] = False
     defaults['basePath'] = os.path.join("~", ".substance")
+    defaults['drivers'] = ['VirtualBox']
+    defaults['network'] = OrderedDict()
+    defaults['network']['range'] = '172.21.21.0/24'
+    defaults['network']['VirtualBox'] = OrderedDict()
+    defaults['network']['VirtualBox']['interface'] = None
     return defaults
     
   def makeDefaultConfig(self, data=None):
@@ -86,11 +86,11 @@ class Core(object):
     if not os.path.isdir(enginePath):
       return Fail(EngineNotFoundError("Engine \"%s\" does not exist." % name))
     else:
-      return OK(Engine(name, enginePath))
+      return OK(Engine(name, enginePath=enginePath, core=self))
 
   def createEngine(self, name, config=None, profile=None):
     enginePath = os.path.join(self.enginesPath, name)
-    newEngine = Engine(name, enginePath)
+    newEngine = Engine(name, enginePath=enginePath, core=self)
     return newEngine.create(config=config, profile=profile)
 
   def removeEngine(self, name):
@@ -99,11 +99,9 @@ class Core(object):
  
   #-- Drivers
 
-  @staticmethod
-  def validDriver(driver):
-    if driver == "VirtualBox":
-      return True
-    return False
+  def validDriver(self, driver):
+    drivers = self.config.get('drivers', [])
+    return driver in drivers
 
   #-- Key and Auth
  

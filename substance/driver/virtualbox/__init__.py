@@ -10,11 +10,66 @@ import network
 import machine
 from exceptions import *
 
+from netaddr import (IPAddress, IPNetwork)
+
 class VirtualBoxDriver(Driver):
   '''
   Substance VirtualBox driver class. Interface to virtual box manager.
   '''
 
+#  def readNetworkConfig(self): 
+#    interface = self.engine.core.config.get('network', {}) \
+#      .get('virtualbox', {}) \
+#      .get('interface', None)
+#
+#    netrange = IPNetwork(self.engine.core.config.get('network').get('range'))
+#    netconfig = {
+#      'gateway': netrange[1],
+#      'netmask': netrange.netmask,
+#      'lowerIP': netrange[2],
+#      'upperIP': netrange[-1]
+#    }
+#
+#    return OK(netconfig)
+#
+#  def assertNetwork(self):
+#
+#    # Look in our config for an interface, if found, load it. If not found, create new.
+#    # Assert the configuration of the found interface.
+#      # If the ipconfig is wrong ; create a new interface.
+#      # If the DHCP config for the interface does not match : Ensure it does.
+#    # If no interface defined, create a new one.
+# 
+#    if interface:
+#      return network.readHostOnlyInterface(interface) \
+#        .catch(lambda err: self.provisionNetwork(netconfig)) \
+#        .bind(self.assertNetwork, config=netconfig)
+#    else:
+#      return self.provisionNetwork(netconfig)
+# 
+#  def assertNetwork(self, hoif, netconfig):
+#    if hoif.ip != netconfig['gateway']:
+#      logging.warn("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network.")
+#      return self.provisionNetwork(netconfig)
+#    elif not hoif.dhcpEnabled:
+#      logging.warn("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now.")
+#      return self.provisionNetworkDHCP(hoif.name, netconfig)
+#    return OK(hoif)
+# 
+#  def provisionNetwork(self, netconfig):
+#    ifm = network.addHostOnlyInterface() 
+#    if ifm.isFail():
+#      return ifm
+#    iface = ifm.getOK()
+#
+#    return network.configureHostOnlyInterface, ip=netconfig['gateway'], netmask=netconfig['netmask']) \
+#      .bid(defer(self.provisionNetworkDHCP(interface=iface, netconfig=netconfig)))
+#
+#  def provisionNetworkDHCP(self, interface, netconfig):
+#    network.removeDHCP(interface).catch(lambda x: OK(interface)) \
+#        .then(defer(addDHCP, **netconfig))
+#
+  
   def importMachine(self, name, ovfFile, engineProfile=None):
     return machine.inspectOVF(ovfFile) \
       .bind(defer(machine.makeImportParams, name=name, engineProfile=engineProfile)) \

@@ -1,4 +1,11 @@
 
 - Optimize ls when fetching VM states (batch)
-- Check for base virtualbox version
+X Check for base virtualbox version
 - Check for base virtualbox additions version on vm manips
+- Network setup on boot
+- SSH Connectivity to VM 
+- Shared Folders / Mounts
+- Docker install?
+- Docker configuration
+- 
+- 
