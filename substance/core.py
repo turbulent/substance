@@ -8,6 +8,7 @@ from substance.shell import Shell
 from substance.engine import Engine
 from substance.utils import (readYAML,writeYAML,readSupportFile)
 from substance.config import (Config)
+from substance.driver.virtualbox import VirtualBoxDriver
 from substance.exceptions import (
   FileSystemError,
   FileDoesNotExist,
@@ -47,12 +48,10 @@ class Core(object):
   def getDefaultConfig(self):
     defaults = OrderedDict()
     defaults['assumeYes'] = False
-    defaults['basePath'] = os.path.join("~", ".substance")
-    defaults['drivers'] = ['VirtualBox']
-    defaults['network'] = OrderedDict()
-    defaults['network']['range'] = '172.21.21.0/24'
-    defaults['network']['VirtualBox'] = OrderedDict()
-    defaults['network']['VirtualBox']['interface'] = None
+    defaults['drivers'] = ['virtualbox']
+    defaults['virtualbox'] = OrderedDict()
+    defaults['virtualbox']['network'] = "172.21.21.0/24"
+    defaults['virtualbox']['interface'] = None
     return defaults
     
   def makeDefaultConfig(self, data=None):
@@ -99,9 +98,18 @@ class Core(object):
  
   #-- Drivers
 
-  def validDriver(self, driver):
-    drivers = self.config.get('drivers', [])
-    return driver in drivers
+  def getDriver(self, name):
+    cls = {
+      'virtualbox': VirtualBoxDriver
+    }.get(name, 'virtualbox')
+    driver = cls(core=self)
+    return driver
+
+  def getDrivers(self):
+    return self.config.get('drivers', [])
+
+  def validateDriver(self, driver):
+    return driver in self.getDrivers()
 
   #-- Key and Auth
  

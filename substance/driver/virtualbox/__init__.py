@@ -1,9 +1,12 @@
-import re
+import os
+import logging
 from collections import OrderedDict
 from substance.logs import *
 from substance.monads import *
+from substance.config import Config
 from substance.driver import Driver
 from substance.constants import (EngineStates)
+from substance.exceptions import (FileDoesNotExist)
 
 from vbox import (vboxManager)
 import network
@@ -17,61 +20,104 @@ class VirtualBoxDriver(Driver):
   Substance VirtualBox driver class. Interface to virtual box manager.
   '''
 
-#  def readNetworkConfig(self): 
-#    interface = self.engine.core.config.get('network', {}) \
-#      .get('virtualbox', {}) \
-#      .get('interface', None)
-#
-#    netrange = IPNetwork(self.engine.core.config.get('network').get('range'))
-#    netconfig = {
-#      'gateway': netrange[1],
-#      'netmask': netrange.netmask,
-#      'lowerIP': netrange[2],
-#      'upperIP': netrange[-1]
-#    }
-#
-#    return OK(netconfig)
-#
-#  def assertNetwork(self):
-#
-#    # Look in our config for an interface, if found, load it. If not found, create new.
-#    # Assert the configuration of the found interface.
-#      # If the ipconfig is wrong ; create a new interface.
-#      # If the DHCP config for the interface does not match : Ensure it does.
-#    # If no interface defined, create a new one.
-# 
-#    if interface:
-#      return network.readHostOnlyInterface(interface) \
-#        .catch(lambda err: self.provisionNetwork(netconfig)) \
-#        .bind(self.assertNetwork, config=netconfig)
-#    else:
-#      return self.provisionNetwork(netconfig)
-# 
-#  def assertNetwork(self, hoif, netconfig):
-#    if hoif.ip != netconfig['gateway']:
-#      logging.warn("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network.")
-#      return self.provisionNetwork(netconfig)
-#    elif not hoif.dhcpEnabled:
-#      logging.warn("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now.")
-#      return self.provisionNetworkDHCP(hoif.name, netconfig)
-#    return OK(hoif)
-# 
-#  def provisionNetwork(self, netconfig):
-#    ifm = network.addHostOnlyInterface() 
-#    if ifm.isFail():
-#      return ifm
-#    iface = ifm.getOK()
-#
-#    return network.configureHostOnlyInterface, ip=netconfig['gateway'], netmask=netconfig['netmask']) \
-#      .bid(defer(self.provisionNetworkDHCP(interface=iface, netconfig=netconfig)))
-#
-#  def provisionNetworkDHCP(self, interface, netconfig):
-#    network.removeDHCP(interface).catch(lambda x: OK(interface)) \
-#        .then(defer(addDHCP, **netconfig))
-#
+  def __init__(self, core):
+    super(self.__class__, self).__init__(core)
+    self.config = Config(os.path.join(self.core.getBasePath(), "virtualbox.yml"))
+
+  # -- Configuration
+
+  def getDefaultConfig(self):
+    defaults = OrderedDict()
+    defaults['network'] = "172.21.21.0/24"
+    defaults['interface'] = None
+    return defaults
+
+  def makeDefaultConfig(self):
+    logging.info("Generating default virtualbox config in %s" % self.config.getConfigFile())
+    defaults = self.getDefaultConfig()
+    for kkk, vvv in defaults.iteritems():
+      self.config.set(kkk, vvv)
+    return self.config.saveConfig()
+
+  def assertConfig(self):
+    return self.config.loadConfigFile() \
+      .catchError(FileDoesNotExist, lambda err: self.makeDefaultConfig())
+ 
+  #---- Networking setup
+ 
+  def getNetworkInterface(self):
+    return self.config.get('interface', None)
+
+  def readNetworkConfig(self): 
+    netrange = IPNetwork(self.config.get('network'))
+    netconfig = {
+      'gateway': netrange[1].format(),
+      'netmask': netrange.netmask.format(),
+      'lowerIP': netrange[2].format(),
+      'upperIP': netrange[-1].format()
+    }
+
+    return OK(netconfig)
+
+  def assertNetworking(self):
+    interface = self.getNetworkInterface()
+    netconfig = self.readNetworkConfig()
+
+    logging.info("Checking VirtualBox networking...")
+
+    if interface:
+      hoif = network.readHostOnlyInterface(interface) \
+        .catchError(VirtualBoxObjectNotFound, lambda err: OK(None))
+      dhcp = network.readDHCP(interface) \
+        .catchError(VirtualBoxObjectNotFound, lambda err: OK(None))
+  
+      return Try.sequence((netconfig, hoif, dhcp)) \
+        .bind(self.assertNetworkConfiguration)
+    else:
+      return self.provisionNetworking(netconfig)
+ 
+  def assertNetworkConfiguration(self, netparts):
+
+    (netconfig, hoif, dhcp) = netparts
+
+    if not hoif:
+      return self.provisionNetworking(netconfig)
+    elif hoif.ip.format() != netconfig['gateway']:
+      logging.warn("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network." % hoif.name)
+      return self.provisionNetworking(netconfig)
+    elif dhcp is None:
+      logging.warn("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now." % hoif.name)
+      return self.provisionDHCP(hoif.name, netconfig)
+
+    print("All good!")
+    return OK(hoif)
+ 
+  def provisionNetworking(self, netconfig):
+    logging.info("Provisioning VirtualBox networking for substance")
+    ifm = network.addHostOnlyInterface() 
+    if ifm.isFail():
+      return ifm
+    iface = ifm.getOK()
+
+    return network.configureHostOnlyInterface(iface, ip=netconfig['gateway'], netmask=netconfig['netmask']) \
+      .then(defer(self.provisionDHCP, interface=iface, netconfig=netconfig)) \
+      .then(defer(self.saveInterface, iface=iface)) \
+      .then(defer(network.readHostOnlyInterface, name=iface))
+
+  def provisionDHCP(self, interface, netconfig):
+    logging.info("Provisioning DHCP service for host only interface")
+    network.removeDHCP(interface).catch(lambda x: OK(interface)) \
+      .bind(defer(network.addDHCP, **netconfig))
+
+  def saveInterface(self, iface):
+    self.config.set('interface', iface)
+    return self.config.saveConfig()
+
+  #---- Machine API
   
   def importMachine(self, name, ovfFile, engineProfile=None):
-    return machine.inspectOVF(ovfFile) \
+    return self.assertConfig() \
+      .then(defer(machine.inspectOVF, ovfFile)) \
       .bind(defer(machine.makeImportParams, name=name, engineProfile=engineProfile)) \
       .bind(defer(machine.importOVF, ovfFile=ovfFile, name=name))
 
@@ -79,7 +125,9 @@ class VirtualBoxDriver(Driver):
     '''
     Start the machine by driver identifier.
     '''
-    return machine.start(uuid)
+    return self.assertConfig() \
+      .then(self.assertNetworking) \
+      .then(defer(machine.start, uuid))
 
   def suspendMachine(self, uuid):
     '''
@@ -113,7 +161,7 @@ class VirtualBoxDriver(Driver):
     '''
     Retrieve the list of machines and their driver identifiers.
     '''
-    return machine.readMachines()
+    return self.assertConfig().then(self.assertNetworking).then(machine.readMachines)
 
   # -- Parse results from Virtual Box
 
@@ -145,7 +193,10 @@ class VirtualBoxDriver(Driver):
     '''
     Retrieve the Substance machine state for this driver id
     '''
-    return machine.readMachineState(uuid) >> self.vboxStateToMachineState
+    return self.assertConfig() \
+      .then(self.assertNetworking) \
+      .then(defer(machine.readMachineState, uuid=uuid)) \
+      .bind(self.vboxStateToMachineState)
 
   def vboxStateToMachineState(self, vboxState):
     '''

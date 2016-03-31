@@ -37,10 +37,10 @@ class Engine(object):
     configFile = os.path.join(self.enginePath, "engine.yml")
     self.config = Config(configFile)
 
-  def getDefaultConfig(self):
+  def getDefaults(self):
     defaults = OrderedDict()
     defaults['name'] = 'default'
-    defaults['driver'] = 'VirtualBox'
+    defaults['driver'] = 'virtualbox'
     defaults['id'] = None
     defaults['profile'] = EngineProfile().__dict__
     defaults['docker'] = OrderedDict()
@@ -56,15 +56,15 @@ class Engine(object):
     defaults['mounts'] = []
     return defaults
 
-  def validateConfig(self):
-    if self.config.get('name', None) != self.name:
-      return Fail(ConfigValidationError("Invalid name property in configuration (got %s expected %s)" %(self.config.get('name'), self.name)))
+  def validateConfig(self, config):
+    if config.get('name', None) != self.name:
+      return Fail(ConfigValidationError("Invalid name property in configuration (got %s expected %s)" %(config.get('name'), self.name)))
 
-    driver = self.config.get('driver', None)
-    if not self.core.validDriver(driver):
+    driver = config.get('driver', None)
+    if not self.core.validateDriver(driver):
       return Fail(ConfigValidationError("Invalid driver property in configuration (%s is not supported)" % driver))
 
-    return OK(self.config.getConfig())
+    return OK(config.getConfig())
 
   def getName(self):
     return self.name
@@ -83,9 +83,7 @@ class Engine(object):
       return "tcp://%s:%s" % (self.config.get('ip', 'INVALID'), self.config.get('docker_port', 2375))
 
   def getDriver(self):
-    return {
-      'VirtualBox': VirtualBoxDriver()
-    }.get(self.config.get('driver', 'VirtualBox'))
+    return self.core.getDriver(self.config.get('driver'))
 
   def getEngineProfile(self):
     profile = self.config.get('profile', {})
@@ -103,7 +101,7 @@ class Engine(object):
     return OK(self)
 
   def loadConfigFile(self):
-    return self.config.loadConfigFile().then(self.validateConfig).map(self.chainSelf)
+    return self.config.loadConfigFile().bind(self.validateConfig).map(self.chainSelf)
 
   def loadState(self):
     ddebug("Engine load state %s" % self.name)
@@ -119,8 +117,9 @@ class Engine(object):
 
     return Shell.makeDirectory(self.enginePath) \
       .then(defer(self.makeDefaultConfig, config=config, profile=profile)) \
-      .bind(self.config.saveConfig) \
-      .bind(dinfo("Generated default substance configuration in %s", self.config.configFile)) \
+      .bind(self.validateConfig) \
+      .then(self.config.saveConfig) \
+      .bind(dinfo("Generated default engine configuration in %s", self.config.configFile)) \
       .map(self.chainSelf)
  
   def remove(self):
@@ -131,18 +130,21 @@ class Engine(object):
     return Shell.nukeDirectory(self.enginePath)
  
   def makeDefaultConfig(self, config=None, profile=None):
-    default = self.getDefaultConfig()
+    default = self.getDefaults()
     default["name"] = self.name
+
+    for ck, cv in default.iteritems():
+      self.config.set(ck, cv)
 
     if config:
       for kkk, vvv in config.iteritems():
-        default[kkk] = vvv
+        self.config.set(kkk, vvv)
 
     if profile:
-      default.get('profile')['cpus'] = profile.cpus
-      default.get('profile')['memory'] = profile.memory
+      self.config.get('profile')['cpus'] = profile.cpus
+      self.config.get('profile')['memory'] = profile.memory
 
-    return OK(default)
+    return OK(self.config)
 
   def isProvisioned(self):
     '''

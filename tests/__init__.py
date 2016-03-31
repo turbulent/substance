@@ -1,6 +1,7 @@
 import unittest
 import tempfile
 import sys
+import pprint
 
 class TestBase(unittest.TestCase):
 
@@ -29,6 +30,6 @@ class TestBase(unittest.TestCase):
     for x in cls.tempFiles:
       x.close()
  
-  @classmethod
+  @staticmethod
   def raiser(e):
     raise e

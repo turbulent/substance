@@ -157,10 +157,10 @@ class Try(Monad):
   def getOrElse(self, default):
     return default if self.isFail() else self.getOK()
 
-  def bind(self, mf):
+  def bind(self, mf, *args, **kwargs):
     if self.isFail():
       return self
-    return mf(self.getOK())
+    return mf(self.getOK(), *args, **kwargs)
 
   def map(self, f):
     if self.isFail():
@@ -238,10 +238,10 @@ class Try(Monad):
       return fold(lambda acc, f: acc.bind(f), funcs, Try.of(x))
     return func
 
-  def sequence(self, monads):
+  @staticmethod
+  def sequence(monads):
     ''' Fold a list of monads into a monad containing the list of values '''
-    return reduce(lambda acc, mv: unshiftM(monad, acc, mv), reversed(monads), monad.of([]))
-
+    return reduce(lambda acc, mv: unshiftM(Try, acc, mv), reversed(monads), Try.of([]))
 
   @staticmethod
   def attemptWrapper(f, expect=Exception):

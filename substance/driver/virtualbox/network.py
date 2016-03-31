@@ -56,7 +56,7 @@ class DHCP(object):
     return False
 
 class HostOnlyInterface(object):
-  def __init__(self, name, mac=None, v4ip=None, v4mask=None, v6ip=None, v6prefix=None, status=None, dhcpEnabled=False, dhcpName=None):
+  def __init__(self, name, mac=None, v4ip=None, v4mask=None, v6ip=None, v6prefix=None, status=None, netName=None):
     self.name = name
     self.mac = mac
     self.v4ip = v4ip
@@ -64,8 +64,7 @@ class HostOnlyInterface(object):
     self.v6ip = v6ip
     self.v6prefix = v6prefix
     self.status = status
-    self.dhcpEnabled = True if dhcpEnabled == "Enabled" or dhcpEnabled is True else False
-    self.dhcpName = dhcpName
+    self.netName = netName
     
     if v6ip:
       self.ip = IPAddress(v6ip)
@@ -104,11 +103,11 @@ def readHostOnlyInterface(name):
 
 def filterHostOnlyInterfaces(hoifs, name):
   item = next((item for item in hoifs if item.name == name), None)
-  return OK(item) if item else Fail(VirtualBoxError("Host Only Interface \"%s\" was not found." % name))
+  return OK(item) if item else Fail(VirtualBoxObjectNotFound("Host Only Interface \"%s\" was not found." % name))
   
 def filterDHCPs(dhcps, interface):
   dhcp = next((dhcp for dhcp in dhcps if dhcp.interface == interface), None)
-  return OK(dhcp) if dhcp else Fail(VirtualBoxError("DHCP for interface \"%s\" was not found." % interface))
+  return OK(dhcp) if dhcp else Fail(VirtualBoxObjectNotFound("DHCP for interface \"%s\" was not found." % interface))
 
 # -- Parse funcs
 
@@ -133,8 +132,7 @@ def parseHostOnlyInterfaceBlock(block):
     (r'^IPV6Address:\s+(.+?)$', 'v6ip'),
     (r'^IPV6NetworkMaskPrefixLength:\s+(.+?)$', 'v6prefix'),
     (r'^Status:\s+(.+?)$', 'status'),
-    (r'^DHCP:\s+(.+?)$', 'dhcpEnabled'),
-    (r'^VBoxNetworkName:\s+(.+?)$', 'dhcpName'),
+    (r'^VBoxNetworkName:\s+(.+?)$', 'netName'),
     (r'^HardwareAddress:\s+(.+?)$', 'mac'),
   )
   return _extractClassFromBlock(block, actions, HostOnlyInterface)
@@ -272,4 +270,5 @@ def _extractClassFromBlock(block, actions, cls):
       if match:
         info[field] = match.group(1)
         break
+
   return OK(cls(**info))

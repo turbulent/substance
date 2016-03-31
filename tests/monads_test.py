@@ -1,5 +1,6 @@
 import unittest
 from substance.monads import *
+from collections import namedtuple
 
 class TestMonads(unittest.TestCase):
 
@@ -201,7 +202,10 @@ class TestMonads(unittest.TestCase):
 
   def testSequence(self):
     self.assertEquals(sequence(Try, [OK(1),OK(2),OK(3),OK(4)]), OK([1,2,3,4]))
+    self.assertIsInstance(sequence(Try, [OK(1),OK(2),OK(3),Fail(ValueError())]), Fail)
 
+    self.assertEquals(Try.sequence([OK(1),OK(2),OK(3)]), OK([1,2,3]))
+    self.assertIsInstance(Try.sequence([OK(1),Fail(ValueError()),OK(3)]), Fail)
+    
   def testUnshiftM(self):
     self.assertEquals(unshiftM(Try, OK([2,3]), OK(1)), OK([1,2,3]))
-

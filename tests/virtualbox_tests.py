@@ -20,7 +20,7 @@ class TestVirtualBox(tests.TestBase):
   basePath = None
   projectsPath = None
 
-  vmTest = True
+  vmTest = False
   vmName = "testVbox"
   vmUUID = None
 
@@ -141,12 +141,12 @@ class TestVirtualBox(tests.TestBase):
     self.assertIn(dhcpC,sdhcps) 
   
   def testHOIFs(self):
-    h1 = network.HostOnlyInterface("nic1", "00:00:00:00:00:00", "192.168.1.10", "255.255.255.0", None, None, "Up", True, "host")
-    h2 = network.HostOnlyInterface("nic2", "0f:00:00:00:00:00", "192.168.1.11", "255.255.255.0", None, None, "Up", True, "host")
-    h3 = network.HostOnlyInterface("nic3", "0g:00:00:00:00:00", "192.168.1.12", "255.255.255.0", None, None, "Up", True, "host")
-    sh1 = network.HostOnlyInterface("nic1", "00:00:00:00:00:00", "192.168.1.10", "255.255.255.0", None, None, "Up", True, "host")
-    sh2 = network.HostOnlyInterface("nic2", "0f:00:00:00:00:00", "192.168.1.11", "255.255.255.0", None, None, "Up", True, "host")
-    sh3 = network.HostOnlyInterface("nic3", "0g:00:00:00:00:00", "192.168.1.12", "255.255.255.0", None, None, "Up", True, "host")
+    h1 = network.HostOnlyInterface("nic1", "00:00:00:00:00:00", "192.168.1.10", "255.255.255.0", None, None, "Up", "host")
+    h2 = network.HostOnlyInterface("nic2", "0f:00:00:00:00:00", "192.168.1.11", "255.255.255.0", None, None, "Up", "host")
+    h3 = network.HostOnlyInterface("nic3", "0g:00:00:00:00:00", "192.168.1.12", "255.255.255.0", None, None, "Up", "host")
+    sh1 = network.HostOnlyInterface("nic1", "00:00:00:00:00:00", "192.168.1.10", "255.255.255.0", None, None, "Up","host")
+    sh2 = network.HostOnlyInterface("nic2", "0f:00:00:00:00:00", "192.168.1.11", "255.255.255.0", None, None, "Up", "host")
+    sh3 = network.HostOnlyInterface("nic3", "0g:00:00:00:00:00", "192.168.1.12", "255.255.255.0", None, None, "Up", "host")
  
     hs = [h1,h2,h3] 
     shs = [sh1,sh2,sh3]

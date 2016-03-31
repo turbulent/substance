@@ -26,11 +26,11 @@ class TestEngine(tests.TestBase):
     cls.core = Core(basePath=cls.basePath)
     cls.core.initialize().catch(cls.raiser)
 
-    cls.engine = cls.core.createEngine("testEngine", config={"driver":"VirtualBox","projectsPath":cls.projectsPath}) \
-      .bind(Engine.loadConfigFile) \
+    cls.engine = cls.core.createEngine("testEngine", config={"driver":"virtualbox","projectsPath":cls.projectsPath})  \
+      .bind(Engine.loadConfigFile)  \
       .catch(TestEngine.raiser) \
-      .getOK() \
-
+      .getOK()
+     
   @classmethod
   def tearDownClass(cls):
     if cls.engine and cls.engine.isProvisioned():

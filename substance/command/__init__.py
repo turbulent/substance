@@ -117,7 +117,7 @@ class Command(object):
     return bool(re.match(r'^[a-zA-Z0-9\-_]*$', name))
 
   def validateDriver(self, driver):
-    return self.core.validDriver(driver)
+    return self.core.validateDriver(driver)
 
   def validateInteger(self, value):
     try:

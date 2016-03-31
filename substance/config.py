@@ -31,7 +31,7 @@ class Config(object):
 
   def setConfig(self, config):
     self.config = config
-    return OK(self.config)
+    return OK(self)
 
   def saveConfig(self, config=None):
     config = self.config if not config else config
@@ -45,6 +45,3 @@ class Config(object):
       return Fail(FileDoesNotExist("File does not exist: %s" % self.configFile))
     logging.debug("Loading config file: %s", self.configFile)
     return self.readConfigFile() >> self.setConfig
-
-
-

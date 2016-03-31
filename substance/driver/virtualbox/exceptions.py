@@ -19,4 +19,7 @@ class VirtualBoxVersionError(SubstanceDriverError):
   Wrong version of the Virtual Box system is installed.
   '''
 
-
+class VirtualBoxObjectNotFound(SubstanceDriverError):
+  '''
+  Tried to read unknown object
+  '''
