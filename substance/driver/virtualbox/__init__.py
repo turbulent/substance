@@ -63,8 +63,6 @@ class VirtualBoxDriver(Driver):
     interface = self.getNetworkInterface()
     netconfig = self.readNetworkConfig()
 
-    logging.info("Checking VirtualBox networking...")
-
     if interface:
       hoif = network.readHostOnlyInterface(interface) \
         .catchError(VirtualBoxObjectNotFound, lambda err: OK(None))
@@ -89,7 +87,6 @@ class VirtualBoxDriver(Driver):
       logging.warn("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now." % hoif.name)
       return self.provisionDHCP(hoif.name, netconfig)
 
-    print("All good!")
     return OK(hoif)
  
   def provisionNetworking(self, netconfig):
@@ -161,7 +158,7 @@ class VirtualBoxDriver(Driver):
     '''
     Retrieve the list of machines and their driver identifiers.
     '''
-    return self.assertConfig().then(self.assertNetworking).then(machine.readMachines)
+    return machine.readMachines()
 
   # -- Parse results from Virtual Box
 
@@ -193,9 +190,7 @@ class VirtualBoxDriver(Driver):
     '''
     Retrieve the Substance machine state for this driver id
     '''
-    return self.assertConfig() \
-      .then(self.assertNetworking) \
-      .then(defer(machine.readMachineState, uuid=uuid)) \
+    return machine.readMachineState(uuid) \
       .bind(self.vboxStateToMachineState)
 
   def vboxStateToMachineState(self, vboxState):
