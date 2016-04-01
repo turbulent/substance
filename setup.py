@@ -4,7 +4,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 version = '0.1'
-install_requires = ['setuptools', 'PyYAML', 'tabulate', 'paramiko','netaddr']
+install_requires = ['setuptools', 'PyYAML', 'tabulate', 'paramiko', 'netaddr']
 
 setup(name='substance',
       version=version,
@@ -14,7 +14,7 @@ setup(name='substance',
       long_description=readme,
       description='substance - local dockerized development environment',
       install_requires=install_requires,
-      packages=['substance'],
+      packages=find_packages(),
       package_data={ 'substance': ['support/*'] },
       test_suite='tests',
       entry_points={
