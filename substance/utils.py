@@ -40,10 +40,12 @@ def readYAML(filename):
   except Exception as err:
     raise FileSystemError("Failed to read configuration file %s : %s" % (filename, err))
 
+def getSupportFile(filename):
+  return resource_filename(Requirement.parse("substance"), filename)
 
 def readSupportFile(filename):
   try:
-    keyfile = resource_filename(Requirement.parse("substance"), filename)
+    keyfile = getSupportFile(filename)
     with open(keyfile, "r") as fileh:
       keydata = fileh.read()
       return keydata

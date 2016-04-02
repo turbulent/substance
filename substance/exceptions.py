@@ -101,3 +101,18 @@ class MachineDoesNotExist(SubstanceDriverError):
   '''
   Machine does not exist
   '''
+
+class LinkConnectTimeoutExceeded(SubstanceError):
+  '''
+  Link connect timeout exceeded
+  '''
+ 
+class LinkTimeoutExceeded(SubstanceError):
+  '''
+  Link timeout exceeded
+  '''
+
+class LinkRetriesExceeded(SubstanceError):
+  '''
+  Link retries exceeded
+  '''

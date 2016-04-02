@@ -29,20 +29,12 @@ class Testcom(Command):
 
     self.core.initialize()  \
       .then(defer(self.core.loadEngine, name)) \
-      .bind(Engine.loadConfigFile) \
-      .bind(self.printEngineInfo)  \
-      .bind(self.printHOIFs)
+      .bind(Engine.loadConfigFile) 
+      .bind(testConnect)
 
-#      .bind(self.clearPortForwards) \
-#      .bind(self.printPortForwards)  \
-#      .bind(self.addPortForwards) \
-#      .bind(self.printPortForwards)  \
-#      .bind(self.printDHCPs)  \
-#      .bind(self.addDHCP)  \
-#      .bind(self.printDHCPs)  \
-#      .catch(self.exitError)
-#
-
+  def testConnect(self, engine):
+    pass
+  
   def printEngineInfo(self, engine):
 
     driver = engine.getDriver()

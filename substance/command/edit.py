@@ -17,8 +17,7 @@ class Edit(Command):
       .then(defer(self.core.loadEngine, name=name)) \
       .bind(self.editEngineConfig) \
       .bind(Engine.loadConfigFile) \
-      .bind(Engine.validateConfig) \
-      .then(dinfo("Engine \"%s\" configuration is valid.", name)) \
+      .then(dinfo("Engine \"%s\" configuration was updated.", name)) \
       .catch(self.exitError) 
 
   def editEngineConfig(self, engine):

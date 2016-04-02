@@ -2,8 +2,10 @@ import re
 from collections import OrderedDict
 from substance.monads import *
 from substance.logs import *
+from substance.constants import Constants
 from exceptions import *
 from vbox import (vboxManager)
+import machine
 from netaddr import (IPAddress, IPNetwork)
 
 # -- Structs
@@ -83,9 +85,17 @@ class HostOnlyInterface(object):
 
 # -- Read funcs
 
-def readPortForwards(uuid):
-  return vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
-    .bind(parsePortForwards)
+def readAllPortForwards(ignoreUUIDs=[]):
+  return machine.readMachines() \
+    .mapM(lambda m: readPortForwards(m) if m not in ignoreUUIDs else OK([])) \
+    .map(flatten)
+
+def readPortForwards(uuid, name=None):
+  op = vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
+    .bind(parsePortForwards) 
+  if name is not None:
+    op.bind(defer(filterPortForwards, name=name))
+  return op
 
 def readDHCPs():
   return vboxManager("list", "dhcpservers") \
@@ -168,7 +178,7 @@ def parsePortForwards(vminfo):
 
 # -- Actions
 
-def clearAllPortForwards(uuid):
+def clearPortForwards(uuid):
   return readPortForwards(uuid).bind(defer(removePortForwards, uuid=uuid))
 
 def removePortForwards(ports, uuid):

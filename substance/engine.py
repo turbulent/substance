@@ -1,11 +1,12 @@
 import os
 import logging
-from collections import OrderedDict
+from collections import (OrderedDict, namedtuple)
 import substance.core
 from substance.monads import *
 from substance.config import (Config)
 from substance.logs import *
 from substance.shell import Shell
+from substance.link import Link
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
 from substance.exceptions import (
@@ -19,8 +20,6 @@ from substance.exceptions import (
 )
 
 class EngineProfile(object):
-  cpus = None
-  memory = None
   def __init__(self, cpus=2, memory=1024):
     self.cpus = cpus
     self.memory = memory
@@ -51,12 +50,15 @@ class Engine(object):
     defaults['network']['privateIP'] = None
     defaults['network']['publicIP'] = None
     defaults['network']['sshIP'] = None
-    defaults['network']['sshPort'] = None
+    defaults['network']['sshPort'] = 4500
     defaults['projectsPath'] = '~/dev/projects'
     defaults['mounts'] = []
     return defaults
-
+  
   def validateConfig(self, config):
+    fields = ['name','driver','profile','docker','network','projectsPath','mounts']
+    self.config.validateFieldsPresent(config.getConfig(), fields)
+
     if config.get('name', None) != self.name:
       return Fail(ConfigValidationError("Invalid name property in configuration (got %s expected %s)" %(config.get('name'), self.name)))
 
@@ -95,6 +97,9 @@ class Engine(object):
   def setDriverID(self, driverID):
     self.config.set('id', driverID)
     return OK(self)
+
+  def getSSHPort(self):
+    return self.config.get('network', {}).get('sshPort', 22)
 
   def clearDriverID(self):
     self.config.set('id', None)
@@ -186,10 +191,19 @@ class Engine(object):
     return self.validateProvision() \
       .thenIfTrue(self.isRunning) \
       .thenIfTrue(failWith(EngineAlreadyRunning("Engine \"%s\" is already running" % self.name))) \
+      .then(self.__configure) \
       .then(self.__start) \
+      .bind(self.__print) \
+      .then(self.__waitForReady)
+
+  def __print(self, x):
+    print("PRINT %s" % x)
+    return OK(x)
+
+  def __configure(self):
+    self.getDriver().configureMachine(self.getDriverID(), self.config.getConfig())
 
   def provision(self):
-
     if self.isProvisioned():
       return OK(None)
 
@@ -240,6 +254,13 @@ class Engine(object):
     # XXX insert wait for stopped state
     return operation.map(self.chainSelf)
      
+  def readLink(self):
+    link = self.core.getLink()
+    return link.connectEngine(self)
+
+  def __waitForReady(self):
+    return self.readLink()
+
   def __start(self, *args):
     return self.getDriver().startMachine(self.getDriverID()).map(self.chainSelf)
 

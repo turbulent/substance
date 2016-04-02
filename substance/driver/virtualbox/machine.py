@@ -2,9 +2,46 @@ import re
 from collections import OrderedDict
 from substance.monads import *
 from substance.logs import *
+from substance.constants import Constants
 from substance.exceptions import (MachineDoesNotExist, SubstanceDriverError)
 from vbox import vboxManager
 from exceptions import *
+
+AdapterTypes = Constants(
+  NONE="none",
+  NULL="null",
+  NAT="nat",
+  HOSTONLY="hostonly",
+  NATNET="natnet",
+  INTNET="intnet",
+  BRIDGED="bridged"
+)
+
+class AdapterSettings(object):
+  def __init__(self, type, attachedTo, mac=None, promiscuous=False):
+    self.type = type
+    self.attachedTo = attachedTo
+    self.mac = mac
+    self.promiscuous = promiscuous
+
+  def getTypeArg(self):
+    return {
+      AdapterTypes.NAT: 'natnet',
+      AdapterTypes.HOSTONLY: 'hostonlyadapter',
+      AdapterTypes.NATNET: 'nat-network',
+      AdapterTypes.BRIDGED: 'bridgeadapter',
+      AdapterTypes.INTNET: 'intnet'
+    }.get(self.type, 'natnet')
+
+  def getAsArg(self, nicId=0):
+    vals = self.__dict__.copy()
+    vals['nicId'] = nicId
+    vals['typeArg'] = self.getTypeArg()
+    return "--nic%(nicId)d %(type)s --%(typeArg)s%(nicId)d %(attachedTo)s" % vals
+
+  def __repr__(self):
+    return "Adapter(nic=%(nic)s,nictype=%(nictype)s,mac=%(mac)s,promiscuous=%(promiscuous)s" % self.__dict__
+
 
 def inspectOVF(ovfFile):
   '''
@@ -90,7 +127,7 @@ def parseMachinesList(vms):
   for line in vms.split("\n"):
     parts = matcher.match(line)
     if parts:
-      machines[parts.group(1)] = parts.group(2)
+      machines[parts.group(2)] = parts.group(1)
   return OK(machines)
   
 def parseMachinesForID(vms, uuid):
@@ -157,6 +194,11 @@ def parseGuestAddVersion(guestAdd):
     return OK(parts[0])
   else:
     return Fail(VirtualBoxMissingAdditions("VirtualBox guest additions are not installed."))
+
+# -- Modify
+
+def configureAdapter(uuid, adapterId, adapterSettings):
+  return vboxManager("modifyvm", "\"%s\" %s" % (uuid, adapterSettings.getAsArg(adapterId)))
 
 # -- Control
 

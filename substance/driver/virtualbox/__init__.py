@@ -24,6 +24,9 @@ class VirtualBoxDriver(Driver):
     super(self.__class__, self).__init__(core)
     self.config = Config(os.path.join(self.core.getBasePath(), "virtualbox.yml"))
 
+  def assertSetup(self):
+    return self.assertConfig().then(self.assertNetworking)
+
   # -- Configuration
 
   def getDefaultConfig(self):
@@ -113,7 +116,7 @@ class VirtualBoxDriver(Driver):
   #---- Machine API
   
   def importMachine(self, name, ovfFile, engineProfile=None):
-    return self.assertConfig() \
+    return self.assertSetup() \
       .then(defer(machine.inspectOVF, ovfFile)) \
       .bind(defer(machine.makeImportParams, name=name, engineProfile=engineProfile)) \
       .bind(defer(machine.importOVF, ovfFile=ovfFile, name=name))
@@ -122,9 +125,50 @@ class VirtualBoxDriver(Driver):
     '''
     Start the machine by driver identifier.
     '''
-    return self.assertConfig() \
-      .then(self.assertNetworking) \
-      .then(defer(machine.start, uuid))
+    return machine.start(uuid) 
+
+  def readMachineInfo(self, uuid):
+    return Try.sequence([
+      machine.readGuestProperty(uuid, "/VirtualBox/GuestInfo/Net/0/V4/IP"),
+      machine.readGuestProperty(uuid, "/VirtualBox/GuestInfo/Net/1/V4/IP"),
+      network.readPortForwards(uuid, name="substance-ssh")
+    ]).bind(lambda i: {'privateIP':i[0], 'publicIP':i[1], 'sshPort': i[2].hostPort })
+  
+  def configureMachine(self, uuid, engineConfig):
+    desiredPort = engineConfig.get('network', {}).get('sshPort')
+    return self.assertSetup() \
+      .then(defer(self.resolvePortConflict, uuid=uuid, desiredPort=desiredPort)) \
+      .then(defer(self.configureMachineAdapters, uuid=uuid)) 
+
+  def resolvePortConflict(self, uuid, desiredPort):
+    logging.info("Checking for port conflicts")
+    return network.readAllPortForwards(ignoreUUIDs=[uuid]) \
+      .bind(defer(self.determinePort, desiredPort=desiredPort)) \
+      .bind(defer(self.configurePort, uuid=uuid))
+       
+  def determinePort(self, usedPorts, desiredPort):
+    basePort = 4500
+    unavailable = map(lambda x: x.hostPort, usedPorts)
+    port = desiredPort
+    while port in unavailable:
+      port += 1
+    logging.info("Determined SSH port as %s" % port)
+    return OK(port)
+
+  def configurePort(self, port, uuid):
+    pf = network.PortForward("substance-ssh", 1, "tcp", None, port, None, 22)
+    return network.removePortForwards([pf], uuid) \
+      .then(defer(network.addPortForwards, [pf], uuid))
+
+  def configureMachineAdapters(self, uuid):
+    interface = self.getNetworkInterface()
+    adapters = [ 
+      machine.AdapterSettings(machine.AdapterTypes.NAT, 'default', None, False),
+      machine.AdapterSettings(machine.AdapterTypes.HOSTONLY, interface, None, False),
+      machine.AdapterSettings(machine.AdapterTypes.NONE, None, None, False),
+      machine.AdapterSettings(machine.AdapterTypes.NONE, None, None, False)
+    ]
+    return Try.sequence([machine.configureAdapter(uuid, i+1, x) for i, x in enumerate(adapters)])
 
   def suspendMachine(self, uuid):
     '''

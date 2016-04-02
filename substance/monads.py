@@ -338,3 +338,40 @@ def failWith(exception):
 
 def chainSelf(self, *_, **__):
   return self
+
+def flatten(xs):
+  return [ x for sl in xs for x in sl]
+
+#class Retry(Monad):
+#
+#  @staticmethod
+#  def of(func):
+#    return RetryContinue(func)
+#
+#  def isContinue(self):
+#    return isinstance(self, Continue)
+#
+#  def isBreak(self):
+#    return isinstance(self, Break)
+#
+#  def isDone(self):
+#    return isinstance(self, Done)
+#
+#  def call(self):
+#    return self.value()
+#
+#  def bind(self, mf):
+#    value = self.call()
+#
+#    if value.isContinue():
+#    elif value.isBreak():
+#    elif value.isDone():
+#    
+#class Continue(Retry):
+#  pass
+#class Break(Retry):
+#  pass
+#class Done(Done):
+#  pass
+#
+#Retry(connect, timeout=60, retries=100).bind()

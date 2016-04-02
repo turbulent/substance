@@ -224,7 +224,7 @@ class TestVirtualBox(tests.TestBase):
     self.assertNotIn(portB, op.getOK())
     self.assertIn(portC, op.getOK())
 
-    op = network.clearAllPortForwards(self.vmUUID) \
+    op = network.clearPortForwards(self.vmUUID) \
       .then(defer(network.readPortForwards, uuid=self.vmUUID))
 
     self.assertIsInstance(op, OK)

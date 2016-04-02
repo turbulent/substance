@@ -50,7 +50,12 @@ def assertVirtualBoxVersion():
   if VBOX_VERSION_CHECKED:
     return OK(VBOX_VERSION_CHECKED)
   else:
-    return readVersion().bind(checkVersion) 
+    return readVersion().bind(checkVersion).bind(saveVersion)
+
+def saveVersion(vstring):
+  global VBOX_VERSION_CHECKED
+  VBOX_VERSION_CHECKED = vstring
+  return OK(vstring)
 
 def checkVersion(vstring):
   semver = vstring.split('.')

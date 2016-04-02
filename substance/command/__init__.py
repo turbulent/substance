@@ -108,6 +108,9 @@ class Command(object):
   #---- Validation
 
   def getInputName(self):
+    if len(self.args) <= 0:
+      return self.exitError("Please specify an engine name.")
+      
     name = self.args[0]
     if not name or not self.validateEngineName(name):
       return self.exitError("Invalid name specified. Please use only letters, numbers, dash or underscores.")

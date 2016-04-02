@@ -209,3 +209,7 @@ class TestMonads(unittest.TestCase):
     
   def testUnshiftM(self):
     self.assertEquals(unshiftM(Try, OK([2,3]), OK(1)), OK([1,2,3]))
+
+  def testFlatten(self):
+    self.assertEqual(['a','b','c','d','e','f'], flatten([['a','b'], ['c','d'], ['e','f']]))
+

@@ -45,3 +45,8 @@ class Config(object):
       return Fail(FileDoesNotExist("File does not exist: %s" % self.configFile))
     logging.debug("Loading config file: %s", self.configFile)
     return self.readConfigFile() >> self.setConfig
+  
+  def validateFieldsPresent(self, block, fields):
+    reducer = lambda acc,x: Fail("Property does not exist in configuration: %s" % x) if not x in block else OK(None)
+    return reduce(reducer, fields, OK(None))
+

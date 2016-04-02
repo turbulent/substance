@@ -6,7 +6,8 @@ from substance.monads import *
 from substance.logs import *
 from substance.shell import Shell
 from substance.engine import Engine
-from substance.utils import (readYAML,writeYAML,readSupportFile)
+from substance.link import Link
+from substance.utils import (readYAML,writeYAML,readSupportFile,getSupportFile)
 from substance.config import (Config)
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.exceptions import (
@@ -98,6 +99,12 @@ class Core(object):
  
   #-- Drivers
 
+  def getDrivers(self):
+    return self.config.get('drivers', [])
+
+  def validateDriver(self, driver):
+    return driver in self.getDrivers()
+
   def getDriver(self, name):
     cls = {
       'virtualbox': VirtualBoxDriver
@@ -105,25 +112,17 @@ class Core(object):
     driver = cls(core=self)
     return driver
 
-  def getDrivers(self):
-    return self.config.get('drivers', [])
+  #-- Engine Link
 
-  def validateDriver(self, driver):
-    return driver in self.getDrivers()
+  def getLink(self, type="ssh"):
+    link = Link(keyFile=self.getInsecureKeyFile())
+    return link
 
   #-- Key and Auth
- 
-  def loadInsecureKey(self):
-    return Try.attempt(defer(readSupportFile, filename='support/substance_insecure')).bind(self.setInsecureKey)
- 
-  def setInsecureKey(self, keydata):
-    self.insecureKey = keydata
-    return OK(self)
 
-  def loadInsecurePubKey(self):
-    return Try.attempt(defer(readSupportFile, filename='support/substance_insecure.pub')).bind(self.setInsecurePubKey)
- 
-  def setInsecurePubKey(self, keydata):
-    self.insecurePubKey = keydata
-    return OK(self)
+  def getInsecureKeyFile(self):
+    return getSupportFile('support/substance_insecure')
 
+  def getInsecurePubKeyFile(self):
+    return getSupportFile('support/substance_insecure.pub')
+ 
