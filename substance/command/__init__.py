@@ -90,7 +90,9 @@ class Command(object):
     sys.exit(1)
 
   def exitError(self, msg=None, code=1):
-    if msg:
+    if msg and isinstance(msg, Exception):
+      logging.error("%s (%s)" % (msg, type(msg).__name__))
+    elif msg:
       logging.error(msg)
     sys.exit(1)
 

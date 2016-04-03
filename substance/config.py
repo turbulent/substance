@@ -24,7 +24,10 @@ class Config(object):
     return value
 
   def get(self, key, default=None):
-    return self.config.get(key, None)
+    return self.config.get(key, default)
+
+  def getBlockKey(self, block, key, default=None):
+    return self.config.get(block, {}).get(key, default)
 
   def getConfig(self):
     return self.config

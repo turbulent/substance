@@ -83,6 +83,9 @@ class Engine(object):
   def getDockerURL(self):
     if self.getDriverID():
       return "tcp://%s:%s" % (self.config.get('ip', 'INVALID'), self.config.get('docker_port', 2375))
+  
+  def getPublicIP(self):
+    return self.config.get('network').get('publicIP', None)
 
   def getDriver(self):
     return self.core.getDriver(self.config.get('driver'))
@@ -98,8 +101,12 @@ class Engine(object):
     self.config.set('id', driverID)
     return OK(self)
 
-  def getSSHPort(self):
-    return self.config.get('network', {}).get('sshPort', 22)
+  def getConnectInfo(self):
+    info = {
+      'hostname': self.config.getBlockKey('network', 'sshIP', 'localhost'), 
+      'port': self.config.getBlockKey('network', 'sshPort', 22) 
+    }
+    return info
 
   def clearDriverID(self):
     self.config.set('id', None)
@@ -168,8 +175,10 @@ class Engine(object):
     return self.getDriver().exists(machID)
 
   def isRunning(self):
-    isRunningState = (lambda state: (state is EngineStates.RUNNING))
-    return self.fetchState().map(isRunningState)
+    return self.fetchState().map(lambda state: (state is EngineStates.RUNNING))
+
+  def isSuspended(self):
+    return self.fetchState().map(lambda state: (state is EngineStates.SUSPENDED))
 
   def fetchState(self):
     if not self.isProvisioned():
@@ -184,24 +193,36 @@ class Engine(object):
     # 4. Setup guest networking
     # 4. Fetch the guest IP from the machine and store it in the machine state.
     '''
-    return self.provision().then(self.start)
+    return self.provision() \
+      .then(self.start) \
+      .then(self.updateNetworkInfo)
+
+  def updateNetworkInfo(self):
+    logging.info("Updating network info from driver")
+    return self.__readDriverNetworkInfo().bind(self.saveDriverNetworkInfo)
+ 
+  def saveDriverNetworkInfo(self, info):
+    net = self.config.get('network', OrderedDict())
+    net.update(info) 
+    self.config.set('network', net)
+    return self.config.saveConfig()
 
   def start(self):
+    state = self.fetchState()
+    if state.isFail():
+      return state
 
-    return self.validateProvision() \
+    chain = self.validateProvision() \
       .thenIfTrue(self.isRunning) \
-      .thenIfTrue(failWith(EngineAlreadyRunning("Engine \"%s\" is already running" % self.name))) \
-      .then(self.__configure) \
-      .then(self.__start) \
-      .bind(self.__print) \
-      .then(self.__waitForReady)
+      .thenIfTrue(failWith(EngineAlreadyRunning("Engine \"%s\" is already running" % self.name))) 
 
-  def __print(self, x):
-    print("PRINT %s" % x)
-    return OK(x)
-
-  def __configure(self):
-    self.getDriver().configureMachine(self.getDriverID(), self.config.getConfig())
+    if state.getOK() is EngineStates.SUSPENDED:
+      return chain.then(self.__start).then(self.__waitForReady)
+    else:
+      return chain.then(self.__configure) \
+        .then(self.updateNetworkInfo) \
+        .then(self.__start) \
+        .then(self.__waitForReady)
 
   def provision(self):
     if self.isProvisioned():
@@ -209,9 +230,11 @@ class Engine(object):
 
     logging.info("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config.get('driver'))
 
-    return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance-engine/box.ovf", self.getEngineProfile()) \
+    return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance/box/substance.ovf", self.getEngineProfile()) \
       .bind(self.setDriverID) \
       .then(self.config.saveConfig) \
+      .then(self.__configure) \
+      .then(self.updateNetworkInfo) \
       .map(self.chainSelf)
 
   def deprovision(self):
@@ -258,9 +281,6 @@ class Engine(object):
     link = self.core.getLink()
     return link.connectEngine(self)
 
-  def __waitForReady(self):
-    return self.readLink()
-
   def __start(self, *args):
     return self.getDriver().startMachine(self.getDriverID()).map(self.chainSelf)
 
@@ -275,7 +295,17 @@ class Engine(object):
 
   def __delete(self, *args):
     return self.getDriver().deleteMachine(self.getDriverID()).map(self.chainSelf)
- 
+
+  def __readDriverNetworkInfo(self):
+    return self.getDriver().readMachineNetworkInfo(self.getDriverID())
+
+  def __configure(self):
+    return self.getDriver().configureMachine(self.getDriverID(), self.config.getConfig())
+
+  def __waitForReady(self):
+    logging.info("Waiting for machine to boot...")
+    return self.readLink()
+
   chainSelf = chainSelf
 
   def __repr__(self):

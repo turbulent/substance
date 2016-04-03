@@ -23,11 +23,11 @@ class Ls(Command):
   def tabulateEngine(self, engine):  
     state = engine.state if engine.state else "-"
     prov = "yes" if engine.isProvisioned() else "no"
-    dockerURL = engine.getDockerURL()
-    return OK([engine.getName(), prov, state, dockerURL, "-"])
+    ip = engine.getPublicIP() if engine.getPublicIP() else "-"
+    return OK([engine.getName(), prov, state, ip, "-"])
 
   def tabulateEngines(self, engines):
-    headers = ["NAME", "PROVISIONED", "STATE", "URL", "ERRORS"]
+    headers = ["NAME", "PROVISIONED", "STATE", "IP", "ERRORS"]
     table = tabulate(engines, headers=headers, tablefmt="plain")
     return OK(table)
 

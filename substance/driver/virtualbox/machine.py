@@ -7,6 +7,28 @@ from substance.exceptions import (MachineDoesNotExist, SubstanceDriverError)
 from vbox import vboxManager
 from exceptions import *
 
+MachineStates = Constants(
+  POWEROFF="poweroff",
+  SAVED="saved",
+  ABORTED="aborted",
+  PAUSED="paused",
+  STUCK="stuck",
+  RESTORING="restoring",
+  SNAPSHOTTING="snapshotting",
+  SETTING_UP="setting up",
+  ONLINE_SNAPSHOTTING="online snapshotting",
+  RESTORING_SNAPSHOT="restoring snapshot",
+  DELETING_SNAPSHOT="deleting snapshot",
+  LIVE_SNAPSHOTTING="live snapshotting",
+  RUNNING="running",
+  STARTING="starting",
+  STOPPING="stopping",
+  SAVING="saving",
+  UNKNOWN="unknown",
+  INACCESSIBLE="inaccessible",
+  INEXISTENT="inexistent"
+)
+
 AdapterTypes = Constants(
   NONE="none",
   NULL="null",
@@ -92,9 +114,13 @@ def readMachineID(name):
   '''
   Retrieve the driver specific machine ID for a machine name.
   '''
+  def findMachineID(machs):
+    revmach = dict(zip(machs.values(), machs.keys()))
+    return OK(revmach[name]) if name in revmach else Fail(MachineDoesNotExist("No Machine ID found for \"%s\"" %name))
+
   return vboxManager("list", "vms") \
     .bind(parseMachinesList) \
-    .bind(lambda x: OK(x[name]) if name in x else Fail(MachineDoesNotExist("No Machine ID found for \"%s\"" %name)))
+    >> findMachineID
 
 def readMachineInfo(uuid):
   return vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
@@ -109,6 +135,7 @@ def readMachineState(uuid):
     .bind(parseMachineState)
 
 def readGuestProperty(uuid, prop):
+  logging.debug("Read guest property %s on %s" % (prop, uuid))
   return vboxManager("guestproperty", "get %s %s" % (uuid, prop)) \
     .bind(parseGuestProperty)
 
@@ -180,6 +207,7 @@ def parseGuestProperty(prop):
     return OK(None)
 
   match = re.match(r'^Value: (.+?)$', prop)
+  logging.debug("Guest Property: %s" % prop)
   if match:
     return OK(match.group(1))
   else:
@@ -212,6 +240,14 @@ def halt(uuid):
 
 def suspend(uuid):
   return vboxManager("controlvm", "\"%s\" savestate" % uuid) \
+    .bind(lambda x: OK(uuid))
+
+def pause(uuid):
+  return vboxManager("controlvm", "\"%s\" pause" % uuid) \
+    .bind(lambda x: OK(uuid))
+
+def resume(uuid):
+  return vboxManager("controlvm", "\"%s\" resume" % uuid) \
     .bind(lambda x: OK(uuid))
 
 def terminate(uuid):

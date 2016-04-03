@@ -21,13 +21,13 @@ class Link(object):
     self.client = None
     self.sftp = None
 
-  def waitForConnect(self, maxtries=100, timeout=60):
+  def waitForConnect(self, maxtries=200, timeout=60):
     start = time()   
     connected = False
     tries = 0
     while not connected:
       logging.debug("Connect attempt %s..." % tries)
-      state = self.connect() \
+      state = self.connect()  \
         .catchError(paramiko.ssh_exception.SSHException, lambda err: OK(None)) \
         .catchError(socket.error, lambda err: OK(None)) 
       if state.isFail() or state.getOK() is not None:
@@ -39,8 +39,10 @@ class Link(object):
       tries += 1
  
   def connectEngine(self, engine):
-    self.hostname = "127.0.0.1"
-    self.port = engine.getSSHPort()
+    connectDetails = engine.getConnectInfo()
+    self.hostname = connectDetails.get('hostname')
+    self.port = connectDetails.get('port')
+    logging.info("Connecting to engine %s via %s:%s" % (engine.name, self.hostname, self.port))
     return self.loadKey().then(self.waitForConnect)
 
   def connectHost(self, host, port):
@@ -52,6 +54,7 @@ class Link(object):
     try:
       if not self.key:
         self.key = paramiko.rsakey.RSAKey.from_private_key_file(self.keyFile, password=None)
+      logging.debug("Connecting using key: %s" % self.keyFile)
     except Exception as err:
       return Fail(err)
     return OK(self.key) 

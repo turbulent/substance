@@ -125,15 +125,30 @@ class VirtualBoxDriver(Driver):
     '''
     Start the machine by driver identifier.
     '''
-    return machine.start(uuid) 
+    state = machine.readMachineState(uuid)
+    if state.isFail():
+      return state
 
-  def readMachineInfo(self, uuid):
+    if state.getOK() in [machine.MachineStates.PAUSED]:
+      return machine.resume(uuid)
+    else:
+      return machine.start(uuid) 
+
+  def readMachineNetworkInfo(self, uuid):
+    def format(res):
+      info = OrderedDict()
+      info['sshPort'] = res[0].hostPort if res[0] else None
+      info['sshIP'] = '127.0.0.1'
+      info['privateIP'] = res[1]
+      info['publicIP'] = res[2]
+      return info
+
     return Try.sequence([
+      network.readPortForward(uuid, name="substance-ssh"),
       machine.readGuestProperty(uuid, "/VirtualBox/GuestInfo/Net/0/V4/IP"),
-      machine.readGuestProperty(uuid, "/VirtualBox/GuestInfo/Net/1/V4/IP"),
-      network.readPortForwards(uuid, name="substance-ssh")
-    ]).bind(lambda i: {'privateIP':i[0], 'publicIP':i[1], 'sshPort': i[2].hostPort })
-  
+      machine.readGuestProperty(uuid, "/VirtualBox/GuestInfo/Net/1/V4/IP")
+    ]).map(format)
+ 
   def configureMachine(self, uuid, engineConfig):
     desiredPort = engineConfig.get('network', {}).get('sshPort')
     return self.assertSetup() \
@@ -148,16 +163,21 @@ class VirtualBoxDriver(Driver):
        
   def determinePort(self, usedPorts, desiredPort):
     basePort = 4500
+    logging.debug("Base port: %s" % basePort) 
+    logging.debug("Desired port: %s" % desiredPort)
     unavailable = map(lambda x: x.hostPort, usedPorts)
-    port = desiredPort
-    while port in unavailable:
+    port = desiredPort if desiredPort >= basePort else basePort
+    while port in unavailable or port < basePort:
+      logging.debug("Port %s is in use." % port)
       port += 1
     logging.info("Determined SSH port as %s" % port)
     return OK(port)
 
   def configurePort(self, port, uuid):
+    logging.debug("Configure substance-ssh port on port %s" % port)
     pf = network.PortForward("substance-ssh", 1, "tcp", None, port, None, 22)
     return network.removePortForwards([pf], uuid) \
+      .catch(lambda err: OK(None)) \
       .then(defer(network.addPortForwards, [pf], uuid))
 
   def configureMachineAdapters(self, uuid):
@@ -235,32 +255,32 @@ class VirtualBoxDriver(Driver):
     Retrieve the Substance machine state for this driver id
     '''
     return machine.readMachineState(uuid) \
-      .bind(self.vboxStateToMachineState)
+      .bind(self.machineStateToEngineState)
 
-  def vboxStateToMachineState(self, vboxState):
+  def machineStateToEngineState(self, vboxState):
     '''
     Resolve a vbox machine state to a substance engine state.
     '''
     mapping = {
-      "poweroff": EngineStates.STOPPED,
-      "saved": EngineStates.SUSPENDED,
-      "aborted": EngineStates.STOPPED,
-      "paused": EngineStates.STOPPED,
-      "stuck": EngineStates.STOPPED,
-      "restoring": EngineStates.STOPPED,
-      "snapshotting": EngineStates.STOPPED,
-      "setting up": EngineStates.STOPPED,
-      "online snapshotting": EngineStates.STOPPED,
-      "restoring snapshot": EngineStates.STOPPED,
-      "deleting snapshot": EngineStates.STOPPED,
-      "running": EngineStates.RUNNING,
-      "starting": EngineStates.RUNNING,
-      "stopping" : EngineStates.RUNNING,
-      "saving": EngineStates.RUNNING,
-      "live snapshotting": EngineStates.RUNNING,
-      "unknown": EngineStates.UNKNOWN,
-      "inaccessible": EngineStates.INEXISTENT,
-      "inexistent": EngineStates.INEXISTENT
+      machine.MachineStates.POWEROFF: EngineStates.STOPPED,
+      machine.MachineStates.SAVED: EngineStates.SUSPENDED,
+      machine.MachineStates.PAUSED: EngineStates.SUSPENDED,
+      machine.MachineStates.ABORTED: EngineStates.STOPPED,
+      machine.MachineStates.STUCK: EngineStates.STOPPED,
+      machine.MachineStates.RESTORING: EngineStates.STOPPED,
+      machine.MachineStates.SNAPSHOTTING: EngineStates.STOPPED,
+      machine.MachineStates.SETTING_UP: EngineStates.STOPPED,
+      machine.MachineStates.ONLINE_SNAPSHOTTING: EngineStates.STOPPED,
+      machine.MachineStates.RESTORING_SNAPSHOT: EngineStates.STOPPED,
+      machine.MachineStates.DELETING_SNAPSHOT: EngineStates.STOPPED,
+      machine.MachineStates.LIVE_SNAPSHOTTING: EngineStates.RUNNING,
+      machine.MachineStates.RUNNING: EngineStates.RUNNING,
+      machine.MachineStates.STARTING: EngineStates.RUNNING,
+      machine.MachineStates.STOPPING : EngineStates.RUNNING,
+      machine.MachineStates.SAVING: EngineStates.RUNNING,
+      machine.MachineStates.UNKNOWN: EngineStates.UNKNOWN,
+      machine.MachineStates.INACCESSIBLE: EngineStates.INEXISTENT,
+      machine.MachineStates.INEXISTENT: EngineStates.INEXISTENT
     }
     state = mapping.get(vboxState, EngineStates.UNKNOWN)
     ddebug("Machine state: %s : %s", vboxState, state)

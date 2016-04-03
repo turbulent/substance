@@ -16,9 +16,9 @@ class PortForward(object):
     self.nic = nic
     self.proto = proto
     self.hostIP = hostIP if hostIP else None
-    self.hostPort = hostPort
+    self.hostPort = int(hostPort)
     self.guestIP = guestIP if guestIP else None
-    self.guestPort = guestPort
+    self.guestPort = int(guestPort)
 
   def getCreateArg(self):
     return "--natpf%(nic)s \"%(name)s\",%(proto)s,%(hostIP)s,%(hostPort)s,%(guestIP)s,%(guestPort)s" % self.__dict__
@@ -90,13 +90,14 @@ def readAllPortForwards(ignoreUUIDs=[]):
     .mapM(lambda m: readPortForwards(m) if m not in ignoreUUIDs else OK([])) \
     .map(flatten)
 
-def readPortForwards(uuid, name=None):
-  op = vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
-    .bind(parsePortForwards) 
-  if name is not None:
-    op.bind(defer(filterPortForwards, name=name))
-  return op
+def readPortForwards(uuid):
+  return vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) >> parsePortForwards
 
+def readPortForward(uuid, name=None):
+  return vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
+    >> parsePortForwards \
+    >> defer(filterPortForwards, name=name)
+  
 def readDHCPs():
   return vboxManager("list", "dhcpservers") \
     .bind(defer(_mapAsBlocks, func=parseDHCPBlock))
@@ -110,6 +111,10 @@ def readHostOnlyInterfaces():
 
 def readHostOnlyInterface(name):
   return readHostOnlyInterfaces() >> defer(filterHostOnlyInterfaces, name=name)
+
+def filterPortForwards(ports, name):
+  item = next((item for item in ports if item.name == name), None)
+  return OK(item) if item else Fail(VirtualBoxObjectNotFound("Port Forward named \"%s\" was not found." % name))
 
 def filterHostOnlyInterfaces(hoifs, name):
   item = next((item for item in hoifs if item.name == name), None)
