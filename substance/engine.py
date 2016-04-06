@@ -57,7 +57,8 @@ class Engine(object):
     return defaults
   
   def validateConfig(self, config):
-    fields = ['name','driver','profile','docker','network','projectsPath','mounts']
+    fields = ['name','driver','profile','docker','network','projectsPath','mounts', 'box']
+
     self.config.validateFieldsPresent(config.getConfig(), fields)
 
     if config.get('name', None) != self.name:
@@ -66,13 +67,6 @@ class Engine(object):
     driver = config.get('driver', None)
     if not self.core.validateDriver(driver):
       return Fail(ConfigValidationError("Invalid driver property in configuration (%s is not supported)" % driver))
-
-    boxstring = config.get('box', None)
-    box = self.core.readBox(boxstring) 
-    if not boxstring:
-      return Fail(ConfigValidationError("Missing box property in configuration (%s)" % boxstring))
-    elif box.isFail():
-      return Fail(ConfigValidationError("Box property is invalid in configuration (%s)" % boxstring)) 
 
     return OK(config.getConfig())
 
