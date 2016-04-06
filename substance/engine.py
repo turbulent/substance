@@ -7,6 +7,7 @@ from substance.config import (Config)
 from substance.logs import *
 from substance.shell import Shell
 from substance.link import Link
+from substance.box import Box
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
 from substance.exceptions import (
@@ -65,6 +66,13 @@ class Engine(object):
     driver = config.get('driver', None)
     if not self.core.validateDriver(driver):
       return Fail(ConfigValidationError("Invalid driver property in configuration (%s is not supported)" % driver))
+
+    boxstring = config.get('box', None)
+    box = self.core.readBox(boxstring) 
+    if not boxstring:
+      return Fail(ConfigValidationError("Missing box property in configuration (%s)" % boxstring))
+    elif box.isFail():
+      return Fail(ConfigValidationError("Box property is invalid in configuration (%s)" % boxstring)) 
 
     return OK(config.getConfig())
 
@@ -212,25 +220,36 @@ class Engine(object):
     if state.isFail():
       return state
 
-    chain = self.validateProvision() \
-      .thenIfTrue(self.isRunning) \
-      .thenIfTrue(failWith(EngineAlreadyRunning("Engine \"%s\" is already running" % self.name))) 
+    if state == EngineStates.RUNNING:
+      return EngineAlreadyRunning("Engine \"%s\" is already running" % self.name)
 
     if state.getOK() is EngineStates.SUSPENDED:
-      return chain.then(self.__start).then(self.__waitForReady)
+      return self.__start().then(self.__waitForReady)
     else:
-      return chain.then(self.__configure) \
+      return self.__configure() \
         .then(self.updateNetworkInfo) \
         .then(self.__start) \
         .then(self.__waitForReady)
 
+  def readBox(self):
+    return self.core.readBox(self.config.get('box'))
+    
   def provision(self):
-    if self.isProvisioned():
-      return OK(None)
 
     logging.info("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config.get('driver'))
 
-    return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance/box/box.ovf", self.getEngineProfile()) \
+    prov = self.validateProvision()
+    if prov.isFail():
+      return prov
+    elif prov.getOK():
+      return OK(self)
+
+    box = self.readBox().bind(Box.fetch)
+    if box.isFail():
+      return box
+    box = box.getOK()
+ 
+    return self.getDriver().importMachine(self.name, box.getOVFFile(), self.getEngineProfile()) \
       .bind(self.setDriverID) \
       .then(self.config.saveConfig) \
       .then(self.__configure) \

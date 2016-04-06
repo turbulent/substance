@@ -131,7 +131,7 @@ def readMachineExists(uuid):
   
 def readMachineState(uuid):
   return vboxManager("showvminfo", "--machinereadable \"%s\"" % uuid) \
-    .catch(lambda err: OK("inexistent") if err.code is "VBOX_E_OBJECT_NOT_FOUND" else None) \
+    .catch(lambda err: OK("inexistent") if err.code == "VBOX_E_OBJECT_NOT_FOUND" else Fail(err)) \
     .bind(parseMachineState)
 
 def readGuestProperty(uuid, prop):

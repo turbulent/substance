@@ -76,6 +76,12 @@ class Shell(object):
     return OK(path) if os.path.exists(path) else Fail(FileSystemError("Path %s does not exist." % path))
 
   @staticmethod
+  def rmFile(path):
+    if os.path.isdir(path):
+      Fail(FileSystemError("%s is a directory.") % path)
+    return OK(os.remove(path))
+
+  @staticmethod
   def nukeDirectory(path):
     try:
       if path and path is not '/' and path is not 'C:\\':

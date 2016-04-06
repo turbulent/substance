@@ -7,6 +7,7 @@ import logging
 import collections
 import os
 import hashlib
+import tarfile
 from time import time
 from pkg_resources import Requirement, resource_filename
 
@@ -129,3 +130,8 @@ def makeXHRRequest(url, params=None):
   payload = r.json()
   return payload
 
+def untar(filename, destination=None):
+  tar = tarfile.open(filename)
+  tar.extractall(destination)
+  tar.close()
+  return filename

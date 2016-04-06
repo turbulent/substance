@@ -8,6 +8,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.engine import Engine
 from substance.link import Link
+from substance.box import Box
 from substance.db import DB
 from substance.constants import Tables
 from substance.utils import (
@@ -91,7 +92,7 @@ class Core(object):
   def getAssumeYes(self):
     return self.config.get('assumeYes', False)
 
-  def getDefaultBox(self):
+  def getDefaultBoxString(self):
     return self.config.get('defaultBox', 'turbulent/substance-box:0.1')
 
   #-- Engine library management
@@ -156,35 +157,9 @@ class Core(object):
       
   #-- Box handling
 
-  def getBoxPath(self, component=None):
-    return os.path.join(self.boxesPath, component)
-
-  def fetchBox(self, box):
-    manifestURL = box.getRegistryURL()
-    return Try.attempt(makeXHRRequest, url=manifestURL) >> defer(self.downloadBox, box=box)
-
-  def downloadBox(self, boxResult, box):
-    archiveURL = boxResult['archiveURL']
-    archiveSHA = boxResult['archiveSHA1']
-
-    logging.info("Downloading %s:%s (%s)" % (box.name, box.version, boxResult['archiveURL']))
-    archive = os.path.join(self.boxesPath, box.getArchivePath())
-
-    return Try.sequence([
-      Shell.makeDirectory(os.path.dirname(archive)),
-      Try.attempt(streamDownload, url=archiveURL, destination=archive) \
-        .then(defer(self.verifyBoxArchive, expectedSHA=archiveSHA, archive=archive)),
-      self.getDB().updateBoxRecord(box, boxResult)
-    ])
-
-  def verifyBoxArchive(self, expectedSHA, archive):
-    logging.info("Verifying archive...")
-    sha = sha1sum(archive)
-    if sha == expectedSHA:
-      return OK(sha)
-    else:
-      Try.attempt(lambda: os.remove(archive))
-      return Fail(BoxArchiveHashMismatch("Box archive hash mismatch. Failed download?"))
+  def readBox(self, boxstring):
+    return Box.parseBoxString(boxstring) \
+      .map(lambda p: Box(core=self, **p))
 
   #-- Keys handling
 

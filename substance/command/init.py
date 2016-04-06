@@ -31,8 +31,8 @@ class Init(Command):
   def buildConfigFromArgs(self, config={}):
     opts = {}
 
-    boxName = self.core.getDefaultBox() if not self.options.box else self.options.box
-    box = Box.parseBoxString(boxName)
+    boxName = self.core.getDefaultBoxString() if not self.options.box else self.options.box
+    box = self.core.getBox(boxName)
     if box.isFail():
       return box
     opts['box'] = box.getOK().get('boxstring')

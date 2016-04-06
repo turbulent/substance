@@ -75,7 +75,7 @@ class VirtualBoxDriver(Driver):
       return Try.sequence((netconfig, hoif, dhcp)) \
         .bind(self.assertNetworkConfiguration)
     else:
-      return self.provisionNetworking(netconfig)
+      return netconfig.bind(self.provisionNetworking)
  
   def assertNetworkConfiguration(self, netparts):
 

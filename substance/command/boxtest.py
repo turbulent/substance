@@ -27,10 +27,9 @@ class Boxtest(Command):
 
     name = self.getBoxArg()
 
-    box = Box.fromBoxString(name).catch(self.exitError)
-     
     self.core.initialize()  \
-      .then(defer(self.core.fetchBox, box=box.getOK())) \
+      .then(defer(self.core.readBox, boxstring=name)) \
+      .bind(defer(Box.fetch)) \
       .catch(self.exitError)
 
 
