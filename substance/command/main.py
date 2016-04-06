@@ -49,6 +49,7 @@ Commands:
   # Engine List, Init and Delete
   substance ls
   substance init mybox
+  substance init mybox --box turbulent/substance-box:0.1
   substance delete mybox
 
   # Engine Control

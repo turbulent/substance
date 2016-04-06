@@ -116,3 +116,19 @@ class LinkRetriesExceeded(SubstanceError):
   '''
   Link retries exceeded
   '''
+
+class BoxError(SubstanceError):
+  '''
+  Box error category
+  '''
+
+class InvalidBoxName(BoxError):
+  '''
+  Name of box was not formatted correctly
+  '''
+
+class BoxArchiveHashMismatch(BoxError):
+  '''
+  Raised when a box archive hash does not match the registry.
+  '''
+

@@ -18,6 +18,10 @@ class Constants(object):
       raise self.ConstError, "Can't unbind const(%s)"%name
     raise NameError, name
 
+Tables = Constants(
+  BOXES="boxes"
+)
+
 EngineStates = Constants(
   RUNNING="running",
   STOPPED="stopped",

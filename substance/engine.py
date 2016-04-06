@@ -230,7 +230,7 @@ class Engine(object):
 
     logging.info("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config.get('driver'))
 
-    return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance/box/substance.ovf", self.getEngineProfile()) \
+    return self.getDriver().importMachine(self.name, "/Users/bbeausej/dev/substance/box/box.ovf", self.getEngineProfile()) \
       .bind(self.setDriverID) \
       .then(self.config.saveConfig) \
       .then(self.__configure) \

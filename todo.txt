@@ -8,4 +8,5 @@ X Check for base virtualbox version
 - Docker install?
 - Docker configuration
 - 
-- 
+- Add / Set hostname
+- Box format / Box download 

@@ -1,6 +1,7 @@
 import os
 from substance.logs import *
 from substance.command import Command
+from substance.box import Box
 from substance.engine import EngineProfile
 from substance.exceptions import (InvalidOptionError)
 
@@ -12,6 +13,7 @@ class Init(Command):
     optparser.add_option("--driver", dest="driver", help="Virtualization driver for this engine")
     optparser.add_option("--memory", type="int", dest="memory", help="Machine memory allocation")
     optparser.add_option("--cpus", type="int", dest="cpus", help="Machine vCPU allocation")
+    optparser.add_option("--box", type="str", dest="box", help="Engine box image")
     return optparser
 
   def main(self):
@@ -28,6 +30,13 @@ class Init(Command):
 
   def buildConfigFromArgs(self, config={}):
     opts = {}
+
+    boxName = self.core.getDefaultBox() if not self.options.box else self.options.box
+    box = Box.parseBoxString(boxName)
+    if box.isFail():
+      return box
+    opts['box'] = box.getOK().get('boxstring')
+
     if self.options.driver:
       if not self.validateDriver(self.options.driver):
         return Fail(InvalidOptionError("Driver %s is not valid." % self.options.driver))
