@@ -1,3 +1,5 @@
+import sys
+import os
 import logging
 import paramiko
 import socket
@@ -103,6 +105,30 @@ class Link(object):
       code=linkResponse.stdout.channel.recv_exit_status()
     ))
 
+  def streamCommand(self, cmd, *args, **kwargs):
+    try:
+      channel = self.client.get_transport().open_session()
+      forward = paramiko.agent.AgentRequestHandler(channel)
+      stdin = channel.makefile('wb', -1)
+      stdout = channel.makefile('rb', -1)
+      stderr = channel.makefile('rb', -1)
+      channel.exec_command(cmd, *args, **kwargs)
+      while True:
+        if channel.exit_status_ready():
+          break
+        if channel.recv_ready():
+          sys.stdout.write(channel.recv(1024))
+         
+        if channel.recv_stderr_ready():
+          sys.stdout.write(channel.recv_stderr(1024))
+
+      code = channel.recv_exit_status()
+
+      return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=code))
+    except Exception as err:
+      return Fail(err)
+
+
   def getClient(self):
     return self.client
 
@@ -116,6 +142,14 @@ class Link(object):
     
   def download(self, remotePath, localPath):
     return Try.attempt(self._get, remotePath, localPath)
+
+  def runScript(self, scriptPath, sudo=False):
+    scriptName = "/tmp/%s.sh" % time()
+    cmd = "sudo %s" % scriptName if sudo else "%s" % scriptName
+
+    return self.upload(scriptPath, scriptName) \
+      .then(defer(self.runCommand, "chmod +x %s" % scriptName)) \
+      .then(defer(self.streamCommand, cmd=cmd))
 
   def _put(self, localPath, remotePath):
     client = self.getSFTP()
