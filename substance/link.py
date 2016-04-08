@@ -86,26 +86,34 @@ class Link(object):
     }
 
   def command(self, cmd, *args, **kwargs):
-    return self.runCommand(cmd) >> self.onRunCommand
-
-  def runCommand(self, cmd, *args, **kwargs):
-    try:
-      stdin, stdout, stderr = self.client.exec_command(cmd, *args, **kwargs)
-      return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=None))
-    except Exception as err:
-      return Fail(err)
-
-  def onRunCommand(self, linkResponse):
-    return OK(LinkResponse(
-      link=self,
-      cmd=linkResponse.cmd,
-      stdin=linkResponse.stdin,
-      stdout=linkResponse.stdout,
-      stderr=linkResponse.stderr,
-      code=linkResponse.stdout.channel.recv_exit_status()
-    ))
+    return self.runCommand(cmd) 
 
   def streamCommand(self, cmd, *args, **kwargs):
+    return self.runCommand(cmd, stream=True) 
+
+#  def runCommand(self, cmd, *args, **kwargs):
+#    try:
+#      stdin, stdout, stderr = self.client.exec_command(cmd, *args, **kwargs)
+#      return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=None))
+#    except Exception as err:
+#      return Fail(err)
+#
+#  def onRunCommand(self, linkResponse):
+#    return OK(LinkResponse(
+#      link=self,
+#      cmd=linkResponse.cmd,
+#      stdin=linkResponse.stdin,
+#      stdout=linkResponse.stdout,
+#      stderr=linkResponse.stderr,
+#      code=linkResponse.stdout.channel.recv_exit_status()
+#    ))
+
+  def runCommand(self, cmd, sudo=False, stream=False, *args, **kwargs):
+   
+    cmd = "sudo %s" % cmd if sudo is True else "%s" % cmd
+
+    logging.debug("LINKCOMMAND: %s" % cmd)
+
     try:
       channel = self.client.get_transport().open_session()
       forward = paramiko.agent.AgentRequestHandler(channel)
@@ -116,10 +124,10 @@ class Link(object):
       while True:
         if channel.exit_status_ready():
           break
-        if channel.recv_ready():
+        if channel.recv_ready() and stream:
           sys.stdout.write(channel.recv(1024))
          
-        if channel.recv_stderr_ready():
+        if channel.recv_stderr_ready() and stream:
           sys.stdout.write(channel.recv_stderr(1024))
 
       code = channel.recv_exit_status()
@@ -145,11 +153,10 @@ class Link(object):
 
   def runScript(self, scriptPath, sudo=False):
     scriptName = "/tmp/%s.sh" % time()
-    cmd = "sudo %s" % scriptName if sudo else "%s" % scriptName
 
     return self.upload(scriptPath, scriptName) \
-      .then(defer(self.runCommand, "chmod +x %s" % scriptName)) \
-      .then(defer(self.streamCommand, cmd=cmd))
+      .then(defer(self.runCommand, "chmod +x %s" % scriptName, sudo=True)) \
+      .then(defer(self.runCommand, cmd=scriptName, sudo=sudo, stream=True))
 
   def _put(self, localPath, remotePath):
     client = self.getSFTP()
