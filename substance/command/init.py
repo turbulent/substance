@@ -32,10 +32,10 @@ class Init(Command):
     opts = {}
 
     boxName = self.core.getDefaultBoxString() if not self.options.box else self.options.box
-    box = self.core.getBox(boxName)
+    box = self.core.readBox(boxName)
     if box.isFail():
       return box
-    opts['box'] = box.getOK().get('boxstring')
+    opts['box'] = box.getOK().boxstring
 
     if self.options.driver:
       if not self.validateDriver(self.options.driver):

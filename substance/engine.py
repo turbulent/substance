@@ -84,10 +84,16 @@ class Engine(object):
 
   def getDockerURL(self):
     if self.getDriverID():
-      return "tcp://%s:%s" % (self.config.get('ip', 'INVALID'), self.config.get('docker_port', 2375))
-  
+      return "tcp://%s:%s" % (self.getPublicIP(), self.getDockerPort())
+ 
+  def getDockerPort(self):
+    return self.config.get('docker', {}).get('port', 2375) 
+
   def getPublicIP(self):
     return self.config.get('network').get('publicIP', None)
+
+  def getPrivateIP(self):
+    return self.config.get('network').get('privateIP', None)
 
   def getDriver(self):
     return self.core.getDriver(self.config.get('driver'))
@@ -246,9 +252,9 @@ class Engine(object):
     return self.getDriver().importMachine(self.name, box.getOVFFile(), self.getEngineProfile()) \
       .bind(self.setDriverID) \
       .then(self.config.saveConfig) \
-      .then(self.__configure) \
-      .then(self.updateNetworkInfo) \
       .map(self.chainSelf)
+      #.then(self.__configure) \
+      #.then(self.updateNetworkInfo) \
 
   def deprovision(self):
 

@@ -7,6 +7,16 @@ X Check for base virtualbox version
 - Shared Folders / Mounts
 - Docker install?
 - Docker configuration
-- 
-- Add / Set hostname
 - Box format / Box download 
+- Color highlights in logs
+
+Virtualbox
+- Shutdown should use poweroff soft instead of acpipowerbutton
+- Add / Set hostname
+- Add to /etc/hosts
+
+Box
+- BOX format manifest 
+- BOX format registry backend
+- BOX format push/pull
+
