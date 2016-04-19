@@ -148,12 +148,20 @@ class VirtualBoxDriver(Driver):
       machine.readGuestProperty(uuid, "/VirtualBox/GuestInfo/Net/0/V4/IP"),
       machine.readGuestProperty(uuid, "/VirtualBox/GuestInfo/Net/1/V4/IP")
     ]).map(format)
- 
+
   def configureMachine(self, uuid, engineConfig):
     desiredPort = engineConfig.get('network', {}).get('sshPort')
+    pfolder = machine.SharedFolder('projects', os.path.expanduser(engineConfig.get('projectsPath')))
+
     return self.assertSetup() \
       .then(defer(self.resolvePortConflict, uuid=uuid, desiredPort=desiredPort)) \
-      .then(defer(self.configureMachineAdapters, uuid=uuid)) 
+      .then(defer(self.configureMachineAdapters, uuid=uuid)) \
+      .then(defer(self.configureMachineFolders, uuid=uuid, folders=[pfolder]))
+
+  def configureMachineFolders(self, folders, uuid):
+    logging.info("Configure machine shared folders")
+    return machine.clearSharedFolders(uuid) \
+      .then(defer(machine.addSharedFolders, folders=folders, uuid=uuid))
 
   def resolvePortConflict(self, uuid, desiredPort):
     logging.info("Checking for port conflicts")

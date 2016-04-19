@@ -28,12 +28,27 @@ class EngineProfile(object):
   def __repr__(self):
     return "%s" % {'cpus': self.cpus, 'memory': self.memory}
 
+
+class EngineFolder(object):
+  def __init__(self, name, hostPath, guestPath, uid=None, gid=None, umask=None):
+    self.name = name
+    self.hostPath = hostPath
+    self.guestPath = guestPath
+    self.uid = uid if uid else 1000
+    self.gid = gid if gid else 1000
+    self.umask = umask if umask else "0022"
+
+  def __repr__(self):
+    return "EngineFolder(name=%(name)s, host:%(hostPath)s -> guest:%(guestPath)s)" % self.__dict__
+
+
 class Engine(object):
 
   def __init__(self, name, enginePath, core):
     self.name = name
     self.enginePath = enginePath
     self.core = core
+    self.link = core.getLink()
     configFile = os.path.join(self.enginePath, "engine.yml")
     self.config = Config(configFile)
 
@@ -203,7 +218,12 @@ class Engine(object):
     '''
     return self.provision() \
       .then(self.start) \
-      .then(self.updateNetworkInfo)
+      .then(self.updateNetworkInfo) \
+      .then(self.postLaunch)
+
+  def postLaunch(self):
+    return self.setHostname() \
+      .then(self.mountFolders)
 
   def updateNetworkInfo(self):
     logging.info("Updating network info from driver")
@@ -220,7 +240,7 @@ class Engine(object):
     if state.isFail():
       return state
 
-    if state == EngineStates.RUNNING:
+    if state.getOK() is EngineStates.RUNNING:
       return EngineAlreadyRunning("Engine \"%s\" is already running" % self.name)
 
     if state.getOK() is EngineStates.SUSPENDED:
@@ -297,8 +317,9 @@ class Engine(object):
     return operation.map(self.chainSelf)
      
   def readLink(self):
-    link = self.core.getLink()
-    return link.connectEngine(self)
+    if not self.link:
+      self.link = self.core.getLink()
+    return self.link.connectEngine(self)
 
   def __start(self, *args):
     return self.getDriver().startMachine(self.getDriverID()).map(self.chainSelf)
@@ -319,12 +340,44 @@ class Engine(object):
     return self.getDriver().readMachineNetworkInfo(self.getDriverID())
 
   def __configure(self):
-    return self.getDriver().configureMachine(self.getDriverID(), self.config.getConfig())
+    return self.getDriver().configureMachine(self.getDriverID(), self.config.getConfig()) 
 
   def __waitForReady(self):
     logging.info("Waiting for machine to boot...")
     return self.readLink()
 
+  def setHostname(self):
+    logging.info("Configuring machine hostname")
+    hostCmd = "hostname %s" % self.name
+    hostsCmd = "sed -i 's/substance-min/%s/g' /etc/hosts" % self.name
+    serviceCmd = "service hostname restart"
+    echoCmd = "echo %s > /etc/hostname" % self.name
+    cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (echoCmd, hostCmd, hostsCmd, serviceCmd)
+    cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
+    return Try.sequence(cmds) 
+ 
+  def getEngineFolders(self):
+    pfolder = EngineFolder(
+      name='projects',
+      hostPath=os.path.expanduser(self.config.get('projectsPath')),
+      guestPath='/projects',
+      uid=1000,
+      gid=1000,
+      umask="0022"
+    )
+    return [pfolder]
+ 
+  def mountFolders(self):
+    logging.info("Mounting engine folders")
+    folders = self.getEngineFolders()
+    return Try.of(map(self.mountFolder, folders))
+ 
+  def mountFolder(self, folder):
+    mountCmd = "mount -t vboxsf -o umask=%(umask)s,gid=%(gid)s,uid=%(uid)s %(name)s %(guestPath)s" % folder.__dict__
+    mkdirCmd = "mkdir -p %(guestPath)s && chown -R %(uid)s:%(gid)s %(guestPath)s" % folder.__dict__
+    return self.link.runCommand(mkdirCmd, sudo=True) \
+      .then(defer(self.link.runCommand, mountCmd, sudo=True))
+    
   chainSelf = chainSelf
 
   def __repr__(self):

@@ -24,21 +24,24 @@ class Link(object):
     self.sftp = None
 
   def waitForConnect(self, maxtries=200, timeout=60):
+
     start = time()   
-    connected = False
     tries = 0
-    while not connected:
+
+    while not self.connected:
       logging.debug("Connect attempt %s..." % tries)
       state = self.connect()  \
         .catchError(paramiko.ssh_exception.SSHException, lambda err: OK(None)) \
         .catchError(socket.error, lambda err: OK(None)) 
-      if state.isFail() or state.getOK() is not None:
+      if state.isFail():
         return state
       if time() - start > timeout:
         return Fail(LinkConnectTimeoutExceeded("Timeout exceeded"))
       if tries >= maxtries:
         return Fail(LinkRetriesExceeded("Max retries exceeded"))
       tries += 1
+  
+    return OK(self)
  
   def connectEngine(self, engine):
     connectDetails = engine.getConnectInfo()
@@ -86,7 +89,7 @@ class Link(object):
     }
 
   def command(self, cmd, *args, **kwargs):
-    return self.runCommand(cmd) 
+    return self.runCommand(cmd, *args, **kwargs) 
 
   def streamCommand(self, cmd, *args, **kwargs):
     return self.runCommand(cmd, stream=True) 
