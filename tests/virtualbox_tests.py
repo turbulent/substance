@@ -20,7 +20,7 @@ class TestVirtualBox(tests.TestBase):
   basePath = None
   projectsPath = None
 
-  vmTest = False
+  vmTest = True
   vmName = "testVbox"
   vmUUID = None
 
@@ -113,6 +113,7 @@ class TestVirtualBox(tests.TestBase):
 
     self.doImport()
     self.doTestPF()
+    self.doTestSF()
     self.doReadGuestAdd()
     self.doStart()
     self.doSuspend()
@@ -229,6 +230,25 @@ class TestVirtualBox(tests.TestBase):
 
     self.assertIsInstance(op, OK)
     self.assertEqual(op.getOK(), [])
+
+  def doTestSF(self):
+    d1 = self.addTemporaryDir()
+    f1 = machine.SharedFolder(os.path.basename(d1), d1)
+    d2 = self.addTemporaryDir()
+    f2 = machine.SharedFolder(os.path.basename(d2), d2)
+    folders = [f1, f2]
+
+    op = machine.addSharedFolders(folders, self.vmUUID) \
+      .then(defer(machine.readSharedFolders, uuid=self.vmUUID))
+    self.assertIsInstance(op, OK)
+    self.assertEqual(len(op.getOK()), 2)
+    self.assertEqual([ x.machinePath for x in op.getOK() ], [d1, d2])
+   
+    op = machine.clearSharedFolders(self.vmUUID) \
+      .then(defer(machine.readSharedFolders, uuid=self.vmUUID))
+    self.assertIsInstance(op, OK)
+    self.assertEqual(len(op.getOK()), 0)
+
 
   def doStart(self):
     self.assertIsInstance(machine.start(self.vmUUID), OK)

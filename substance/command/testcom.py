@@ -1,4 +1,5 @@
 import logging
+import pprint
 from substance.command import Command
 from substance.engine import Engine
 from substance.monads import *
@@ -27,14 +28,49 @@ class Testcom(Command):
 
     name = self.getInputName()
 
-    self.core.initialize()  \
+    engine = self.core.initialize()  \
       .then(defer(self.core.loadEngine, name)) \
       .bind(Engine.loadConfigFile) 
-      .bind(testConnect)
+
+    if engine.isFail():
+      return self.exitError(engine)
+    engine = engine.getOK()
+
+    self.readFolders(engine).map(self.debugPrint) \
+      .then(defer(self.addFolder, engine=engine)) \
+      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint) \
+      .then(defer(self.clearFolders, engine=engine)) \
+      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint) \
+      .then(defer(self.addFolders, engine=engine)) \
+      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint)  \
+      .then(defer(self.clearFolders, engine=engine)) \
+      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint) \
+
+  def debugPrint(self, x):
+    pprint.pprint(x)
+    return x
 
   def testConnect(self, engine):
     pass
-  
+
+  def addFolder(self, engine):
+    folder = machine.SharedFolder("tmp", "/tmp")
+    return machine.addSharedFolder(folder, engine.getDriverID())
+
+  def addFolders(self, engine):
+    folders = [
+      machine.SharedFolder("bbeausej", "/Users/bbeausej"),
+      machine.SharedFolder("tmp", "/tmp")
+    ]
+
+    return machine.addSharedFolders(folders, engine.getDriverID())
+ 
+  def clearFolders(self, engine):
+    return machine.clearSharedFolders(engine.getDriverID())
+
+  def readFolders(self, engine):
+    return machine.readSharedFolders(engine.getDriverID())
+
   def printEngineInfo(self, engine):
 
     driver = engine.getDriver()

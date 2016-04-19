@@ -64,6 +64,16 @@ class AdapterSettings(object):
   def __repr__(self):
     return "Adapter(nic=%(nic)s,nictype=%(nictype)s,mac=%(mac)s,promiscuous=%(promiscuous)s" % self.__dict__
 
+class SharedFolder(object):
+  def __init__(self, machineName, machinePath, name=None):
+    self.machineName = machineName
+    self.machinePath = machinePath
+    self.name = name
+
+  def __repr__(self):
+    return "SharedFolder(%(machineName)s -> %(machinePath)s, %(name)s)" % self.__dict__
+
+# -- Import API
 
 def inspectOVF(ovfFile):
   '''
@@ -223,6 +233,16 @@ def parseGuestAddVersion(guestAdd):
   else:
     return Fail(VirtualBoxMissingAdditions("VirtualBox guest additions are not installed."))
 
+def parseSharedFolders(machInfo):
+  def extractFolders(acc, k):
+    match = re.match(r'^SharedFolderNameMachineMapping(\d+)', k)
+    if match:
+      idx = match.group(1)
+      acc.append(SharedFolder(machInfo[k], machInfo["SharedFolderPathMachineMapping%s"%idx], name=k))
+    return acc
+
+  return OK(reduce(extractFolders, machInfo.keys(), []))
+ 
 # -- Modify
 
 def configureAdapter(uuid, adapterId, adapterSettings):
@@ -258,3 +278,29 @@ def delete(uuid):
   return vboxManager("unregistervm", "--delete \"%s\"" % (uuid)) \
     .bind(lambda x: OK(uuid))
 
+# -- Shared Folders
+
+def addSharedFolder(folder, uuid):
+  return vboxManager("sharedfolder", "add \"%s\" --name \"%s\" --hostpath \"%s\"" % (uuid, folder.machineName, folder.machinePath)) \
+    .then(defer(enableSharedFolderSymlinks, folder=folder, uuid=uuid))
+
+def enableSharedFolderSymlinks(folder, uuid):
+  symlinksKey = "VBoxInternal2/SharedFoldersEnableSymlinksCreate/%s" % folder.machineName
+  return vboxManager("setextradata", "\"%s\" \"%s\" \"%s\"" % (uuid, symlinksKey, 1))
+
+def removeSharedFolder(folder, uuid):
+  return vboxManager("sharedfolder", "remove \"%s\" --name \"%s\"" % (uuid, folder.machineName))
+
+def addSharedFolders(folders, uuid):
+  return OK(map(defer(addSharedFolder, uuid=uuid), folders))
+
+def removeSharedFolders(folders, uuid):
+  return OK(map(defer(removeSharedFolder, uuid=uuid), folders))
+
+def clearSharedFolders(uuid):
+  return readSharedFolders(uuid) \
+    .bind(removeSharedFolders, uuid=uuid)
+
+def readSharedFolders(uuid):
+  return readMachineInfo(uuid) \
+    .bind(parseSharedFolders)
