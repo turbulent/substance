@@ -235,7 +235,7 @@ def start(uuid):
     .bind(lambda x: OK(uuid))
 
 def halt(uuid):
-  return vboxManager("controlvm", "\"%s\" acpipowerbutton" % uuid) \
+  return vboxManager("controlvm", "\"%s\" poweroff soft" % uuid) \
     .bind(lambda x: OK(uuid))
 
 def suspend(uuid):

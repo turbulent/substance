@@ -32,16 +32,7 @@ let count--
 sudo dd if=/dev/zero of=/tmp/whitespace bs=1024 count=$count;
 sudo rm /tmp/whitespace;
 
-echo "Zeroing drive space for /boot"
- 
-# Whiteout /boot
-count=`df --sync -kP /boot | tail -n1 | awk -F ' ' '{print $4}'`;
-let count--
-sudo dd if=/dev/zero of=/boot/whitespace bs=1024 count=$count;
-sudo rm /boot/whitespace;
-
 echo "Zeroing swap..."
-
 swappart=$(cat /proc/swaps | grep -v Filename | tail -n1 | awk -F ' ' '{print $1}')
 if [ "$swappart" != "" ]; then
   sudo swapoff $swappart;

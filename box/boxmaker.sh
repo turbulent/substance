@@ -54,3 +54,5 @@ VBoxManage export ${VMNAME} -o box.ovf
 echo "=====> Compressing package"
 
 tar -zcvf substance-box-0.1.box box.yml box.ovf box-disk1.vmdk
+
+VBoxManage unregistervm --delete ${VMNAME}
