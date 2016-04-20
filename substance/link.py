@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import paramiko
+from paramiko.py3compat import u
 import socket
 from time import time
 from collections import namedtuple
@@ -11,6 +12,14 @@ from substance.exceptions import *
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
 LinkResponse = namedtuple('LinkResponse', ['link','stdin','stdout','stderr', 'code', 'cmd'])
+
+try:
+  import termios
+  import tty
+  hasTermios = True
+except ImportError:
+  hasTermios = False
+
 
 class Link(object):
   
@@ -160,6 +169,75 @@ class Link(object):
     return self.upload(scriptPath, scriptName) \
       .then(defer(self.runCommand, "chmod +x %s" % scriptName, sudo=True)) \
       .then(defer(self.runCommand, cmd=scriptName, sudo=sudo, stream=True))
+
+  def interactive(self):
+    if hasTermios:
+      return Try.attempt(self._posixShell)
+    else:
+      return Try.attempt(self._windowsShell)
+
+  def _posixShell(self):
+    import select
+ 
+    channel = self.client.invoke_shell()
+    forward = paramiko.agent.AgentRequestHandler(channel)
+         
+    sys.stdout.write('\r\n*** Begin interactive session.\r\n')
+    oldtty = termios.tcgetattr(sys.stdin)
+    try:
+      tty.setraw(sys.stdin.fileno())
+      tty.setcbreak(sys.stdin.fileno())
+      channel.settimeout(0.0)
+
+      while True:
+        r, w, e = select.select([channel, sys.stdin], [], [])
+        if channel in r:
+          try:
+            x = u(channel.recv(1024))
+            if len(x) == 0:
+              sys.stdout.write('\r\n*** End of interactive session.\r\n')
+              break
+            sys.stdout.write(x)
+            sys.stdout.flush()
+          except socket.timeout:
+            pass
+        if sys.stdin in r:
+          x = sys.stdin.read(1)
+          if len(x) == 0:
+            break
+          channel.send(x)
+
+    finally:
+      termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
+
+  def _windowsShell(self):
+    import threading
+  
+    sys.stdout.write("Line-buffered terminal emulation. Press F6 or ^Z to send EOF.\r\n\r\n")
+        
+    def writeall(sock):
+      while True:
+        data = sock.recv(256)
+        if not data:
+          sys.stdout.write('\r\n*** EOF ***\r\n\r\n')
+          sys.stdout.flush()
+          break
+        sys.stdout.write(data)
+        sys.stdout.flush()
+        
+    writer = threading.Thread(target=writeall, args=(chan,))
+    writer.start()
+    try:
+      while True:
+        d = sys.stdin.read(1)
+        if not d:
+          break
+        chan.send(d)
+    except EOFError:
+      # user hit ^Z or F6
+      pass
+
+
 
   def _put(self, localPath, remotePath):
     client = self.getSFTP()

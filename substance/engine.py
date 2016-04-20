@@ -349,6 +349,9 @@ class Engine(object):
   def __configure(self):
     return self.getDriver().configureMachine(self.getDriverID(), self)
 
+  def shell(self):
+    return self.readLink() >> Link.interactive
+
   def __waitForReady(self):
     logging.info("Waiting for machine to boot...")
     return self.readLink()

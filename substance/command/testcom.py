@@ -36,15 +36,7 @@ class Testcom(Command):
       return self.exitError(engine)
     engine = engine.getOK()
 
-    self.readFolders(engine).map(self.debugPrint) \
-      .then(defer(self.addFolder, engine=engine)) \
-      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint) \
-      .then(defer(self.clearFolders, engine=engine)) \
-      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint) \
-      .then(defer(self.addFolders, engine=engine)) \
-      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint)  \
-      .then(defer(self.clearFolders, engine=engine)) \
-      .then(defer(self.readFolders, engine=engine)).map(self.debugPrint) \
+    return engine.shell()
 
   def debugPrint(self, x):
     pprint.pprint(x)
