@@ -124,10 +124,16 @@ class Engine(object):
     self.config.set('id', driverID)
     return OK(self)
 
+  def getSSHPort(self):
+    return self.config.getBlockKey('network', 'sshPort', 22)
+
+  def getSSHIP(self):
+    return self.config.getBlockKey('network', 'sshIP', 'localhost')
+
   def getConnectInfo(self):
     info = {
-      'hostname': self.config.getBlockKey('network', 'sshIP', 'localhost'), 
-      'port': self.config.getBlockKey('network', 'sshPort', 22) 
+      'hostname': self.getSSHIP(),
+      'port': self.getSSHPort()
     }
     return info
 
@@ -219,15 +225,15 @@ class Engine(object):
     return self.provision() \
       .then(self.start) \
       .then(self.updateNetworkInfo) \
-      .then(self.postLaunch)
 
-  def postLaunch(self):
-    return self.setHostname() \
-      .then(self.mountFolders)
 
   def updateNetworkInfo(self):
     logging.info("Updating network info from driver")
     return self.__readDriverNetworkInfo().bind(self.saveDriverNetworkInfo)
+
+  def postLaunch(self):
+    return self.setHostname() \
+      .then(self.mountFolders)
  
   def saveDriverNetworkInfo(self, info):
     net = self.config.get('network', OrderedDict())
@@ -249,7 +255,8 @@ class Engine(object):
       return self.__configure() \
         .then(self.updateNetworkInfo) \
         .then(self.__start) \
-        .then(self.__waitForReady)
+        .then(self.__waitForReady) \
+        .then(self.postLaunch)
 
   def readBox(self):
     return self.core.readBox(self.config.get('box'))
@@ -340,7 +347,7 @@ class Engine(object):
     return self.getDriver().readMachineNetworkInfo(self.getDriverID())
 
   def __configure(self):
-    return self.getDriver().configureMachine(self.getDriverID(), self.config.getConfig()) 
+    return self.getDriver().configureMachine(self.getDriverID(), self)
 
   def __waitForReady(self):
     logging.info("Waiting for machine to boot...")
@@ -375,6 +382,7 @@ class Engine(object):
   def mountFolder(self, folder):
     mountCmd = "mount -t vboxsf -o umask=%(umask)s,gid=%(gid)s,uid=%(uid)s %(name)s %(guestPath)s" % folder.__dict__
     mkdirCmd = "mkdir -p %(guestPath)s && chown -R %(uid)s:%(gid)s %(guestPath)s" % folder.__dict__
+    # XXX Make this non VBOX specific
     return self.link.runCommand(mkdirCmd, sudo=True) \
       .then(defer(self.link.runCommand, mountCmd, sudo=True))
     

@@ -12,9 +12,6 @@ from substance.exceptions import (SubstanceError)
 class Deprovision(Command):
   def main(self):
     name = self.getInputName()
-  
-    # XXX Add confirm check
- 
     self.core.initialize() \
       .then(defer(self.ask, "You are about to deprovision engine \"%s\"" % name)) \
       .then(defer(self.core.loadEngine, name)) \

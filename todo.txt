@@ -9,6 +9,7 @@ X Check for base virtualbox version
 - Docker configuration
 - Box format / Box download 
 - Color highlights in logs
+- Fix assume yes with config loading 
 
 Virtualbox
 - Shutdown should use poweroff soft instead of acpipowerbutton

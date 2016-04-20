@@ -65,13 +65,13 @@ class AdapterSettings(object):
     return "Adapter(nic=%(nic)s,nictype=%(nictype)s,mac=%(mac)s,promiscuous=%(promiscuous)s" % self.__dict__
 
 class SharedFolder(object):
-  def __init__(self, machineName, machinePath, name=None):
-    self.machineName = machineName
-    self.machinePath = machinePath
+  def __init__(self, name, hostPath, vboxName=None):
     self.name = name
+    self.hostPath = hostPath
+    self.vboxName = vboxName
 
   def __repr__(self):
-    return "SharedFolder(%(machineName)s -> %(machinePath)s, %(name)s)" % self.__dict__
+    return "SharedFolder(%(name)s -> %(hostPath)s, %(vboxName)s)" % self.__dict__
 
 # -- Import API
 
@@ -238,7 +238,7 @@ def parseSharedFolders(machInfo):
     match = re.match(r'^SharedFolderNameMachineMapping(\d+)', k)
     if match:
       idx = match.group(1)
-      acc.append(SharedFolder(machInfo[k], machInfo["SharedFolderPathMachineMapping%s"%idx], name=k))
+      acc.append(SharedFolder(name=machInfo[k], hostPath=machInfo["SharedFolderPathMachineMapping%s"%idx], vboxName=k))
     return acc
 
   return OK(reduce(extractFolders, machInfo.keys(), []))
@@ -281,15 +281,15 @@ def delete(uuid):
 # -- Shared Folders
 
 def addSharedFolder(folder, uuid):
-  return vboxManager("sharedfolder", "add \"%s\" --name \"%s\" --hostpath \"%s\"" % (uuid, folder.machineName, folder.machinePath)) \
+  return vboxManager("sharedfolder", "add \"%s\" --name \"%s\" --hostpath \"%s\"" % (uuid, folder.name, folder.hostPath)) \
     .then(defer(enableSharedFolderSymlinks, folder=folder, uuid=uuid))
 
 def enableSharedFolderSymlinks(folder, uuid):
-  symlinksKey = "VBoxInternal2/SharedFoldersEnableSymlinksCreate/%s" % folder.machineName
+  symlinksKey = "VBoxInternal2/SharedFoldersEnableSymlinksCreate/%s" % folder.name
   return vboxManager("setextradata", "\"%s\" \"%s\" \"%s\"" % (uuid, symlinksKey, 1))
 
 def removeSharedFolder(folder, uuid):
-  return vboxManager("sharedfolder", "remove \"%s\" --name \"%s\"" % (uuid, folder.machineName))
+  return vboxManager("sharedfolder", "remove \"%s\" --name \"%s\"" % (uuid, folder.vboxName))
 
 def addSharedFolders(folders, uuid):
   return OK(map(defer(addSharedFolder, uuid=uuid), folders))
