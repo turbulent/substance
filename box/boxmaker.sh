@@ -5,8 +5,9 @@ BOX_OVF="substance-min.ovf"
 BOX_PORT="6666"
 KEY="../support/substance_insecure"
 VMNAME="substance"
+SSHOPTS="-X -A -t"
 
-VBoxManage import --vsys 0 --vmname ${VMNAME} --cpus 1 --memory 512 ${BOX_OVF}
+VBoxManage import --vsys 0 --vmname ${VMNAME} --cpus 1 --memory 1024 ${BOX_OVF}
 VBoxManage storageattach ${VMNAME} --storagectl "IDE" --port 0 --device 0 --type dvddrive --medium ${VBOX_ADD_ISO}
 VBoxManage modifyvm ${VMNAME} --nic1 nat --natnet1 default
 VBoxManage modifyvm ${VMNAME} --nic2 hostonly 
@@ -36,14 +37,12 @@ echo "substance" | sudo -S bash -c 'echo "substance ALL=(ALL) NOPASSWD:ALL" > /e
 echo ""
 echo "===> Allow ssh forwarding with sudo"
 echo "substance" | sudo -S bash -c 'echo "Defaults env_keep += SSH_AUTH_SOCK" >> /etc/sudoers'
-echo "substance" | sudo -S bash -c 'echo 'chmod -R 777 `dirname $SSH_AUTH_SOCK`' >> /home/substance/.profile'
 END
 
-cat scripts/01-base-reqs.sh | ssh -t substance@127.0.0.1 -i ${KEY} -p${BOX_PORT} 
-cat scripts/02-tools.sh | ssh -t substance@127.0.0.1 -i ${KEY} -p${BOX_PORT} 
-cat scripts/03-turbulent.sh | ssh -t substance@127.0.0.1 -i ${KEY} -p${BOX_PORT} 
-cat scripts/10-sparsify.sh | ssh -t substance@127.0.0.1 -i ${KEY} -p${BOX_PORT} 
-
+cat scripts/01-base-reqs.sh | ssh ${SSHOPTS} substance@127.0.0.1 -i ${KEY} -p${BOX_PORT}  'bash -s'
+cat scripts/03-turbulent.sh | ssh ${SSHOPTS} substance@127.0.0.1 -i ${KEY} -p${BOX_PORT}  'bash -s'
+cat scripts/02-tools.sh | ssh ${SSHOPTS} substance@127.0.0.1 -i ${KEY} -p${BOX_PORT}  'bash -s'
+cat scripts/10-sparsify.sh | ssh ${SSHOPTS} substance@127.0.0.1 -i ${KEY} -p${BOX_PORT}  'bash -s'
 
 VBoxManage controlvm ${VMNAME} poweroff soft
 echo "=====> Waiting for machine to shut down..."

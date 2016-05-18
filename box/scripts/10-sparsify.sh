@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash -x
+
+export DEBIAN_FRONTEND=noninteractive
 
 echo "Performing image cleanup..."
 

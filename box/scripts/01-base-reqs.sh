@@ -1,11 +1,13 @@
-#!/bin/bash
+#!/bin/bash -x
 
 export DEBIAN_FRONTEND=noninteractive
 echo "===> Making sure system is up to date"
-sudo apt-get -y install apt-transport-https ca-certificates
 sudo apt-key update
+sudo apt-get -y update --fix-missing
+sudo apt-get -y install apt-transport-https ca-certificates acpid python-pip
 sudo apt-get -y update
 sudo apt-get -y upgrade
+sudo apt-get -y install python-pip
 
 #Guest additions requirements
 echo "====> Guest additions build reqs"
