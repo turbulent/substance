@@ -47,15 +47,15 @@ Options:
 Commands:
 
   # Engine List, Init and Delete
-  substance ls
-  substance init mybox
-  substance init mybox --box turbulent/substance-box:0.1
-  substance delete mybox
+  #substance ls
+  #substance init mybox
+  #substance init mybox --box turbulent/substance-box:0.1
+  #substance delete mybox
 
   # Engine Control
-  substance launch mybox
-  substance stop mybox
-  substance deprovision mybox
+  #substance launch mybox
+  #substance stop mybox
+  #substance deprovision mybox
 
   # Task Control
   substance task mybox load /projects/myproject/containers.yml
@@ -67,7 +67,9 @@ Commands:
 
   substance enter mybox myboxweb
   
-  substance env mybox
+  #substance env mybox
+  #substance ssh mybox
+  #substance sshinfo mybox
 
   #Porcelain
   substance spawn -c client -p project 
