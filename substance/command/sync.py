@@ -26,5 +26,4 @@ class Sync(Command):
       .catch(self.exitError)
 
   def syncFolders(self, engine):
-    syncher = SubstanceSyncher(engine)
-    return syncher.start()
+    return engine.getSyncher().start()

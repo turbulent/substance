@@ -5,7 +5,6 @@ import Queue
 
 from substance.monads import *
 from substance.logs import *
-from substance.engine import Engine
 from substance.shell import Shell
 from substance.exceptions import (SubstanceError)
 
@@ -22,7 +21,8 @@ class SubstanceSyncher(object):
   UP = "up"
   DOWN = "down"
 
-  def __init__(self, engine):
+  def __init__(self, engine, keyfile):
+    self.keyfile = keyfile
     self.engine = engine
     self.localAgent = LocalWatchAgent(self.processLocalEvent)
     self.remoteAgent = RemoteWatchAgent(self.processRemoteEvent)
@@ -129,7 +129,7 @@ class SubstanceSyncher(object):
     self.toSync[direction].pop(folder, None)
 
     syncher = Rsync()
-    syncher.setTransport(self.engine.getSSHPort(), "/Users/bbeausej/dev/substance/support/substance_insecure")
+    syncher.setTransport(self.engine.getSSHPort(), self.keyfile)
     syncher.setFilters(self.pathsToFilters(folder, paths))
     syncher.setLongOption('delay-updates', True)
     syncher.setLongOption('partial-dir', '.~subsync~')

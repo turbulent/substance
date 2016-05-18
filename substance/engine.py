@@ -10,6 +10,7 @@ from substance.link import Link
 from substance.box import Box
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
+from substance.syncher import SubstanceSyncher
 from substance.exceptions import (
   FileSystemError, 
   ConfigValidationError,
@@ -143,6 +144,9 @@ class Engine(object):
     }
     return info
 
+  def getSyncher(self):
+    return SubstanceSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+    
   def clearDriverID(self):
     self.config.set('id', None)
     return OK(self)
