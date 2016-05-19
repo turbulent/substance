@@ -87,11 +87,10 @@ class Engine(object):
     defaults['devroot']['path'] = '~/devroot'
     defaults['devroot']['mode'] = 'rsync'
     defaults['devroot']['excludes'] = ['*.*.swp']
-    defaults['mounts'] = []
     return defaults
   
   def validateConfig(self, config):
-    fields = ['name','driver','profile','docker','network','devroot','mounts', 'box']
+    fields = ['name','driver','profile','docker','network','devroot','box']
 
     ops = []
     ops.append(self.config.validateFieldsPresent(config.getConfig(), fields))
