@@ -38,7 +38,7 @@ class SubstanceSyncher(object):
     self.excludes = []
     
   def getFolders(self):
-    return self.engine.getEngineFolders()
+    return reduce(lambda acc, x: acc + [x] if x.mode == 'rsync' else acc, self.engine.getEngineFolders(), [])
 
   def getFolderFromPath(self, path, direction=None):
     direction = self.UP if not direction else direction
@@ -56,11 +56,15 @@ class SubstanceSyncher(object):
       return op
     
     folders = self.getFolders()
+
+    if len(folders) == 0:
+      return Fail(SubstanceError("No rsync folders definedfor synchronization in engine configuration."))
+
     for folder in folders:
       self.localAgent.startWatching(folder.hostPath)
+      self.remoteAgent.startWatching(folder.guestPath)
 
     self.remoteAgent.connect("ws://%s:%s" % (self.engine.getPublicIP(), 1500))
-    self.remoteAgent.startWatching(folder.guestPath)
 
     try:
       self.remoteAgent.start()
