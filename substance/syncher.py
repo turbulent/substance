@@ -2,15 +2,18 @@ import os
 import time
 import logging
 import Queue
+import fnmatch
+from collections import OrderedDict
 
 from substance.monads import *
 from substance.logs import *
 from substance.shell import Shell
 from substance.exceptions import (SubstanceError)
+from substance.utils import pathComponents
 
 from subwatch.watcher import (LocalWatchAgent, RemoteWatchAgent)
 from subwatch.events import WatchEventHandler
-from subwatch.events import WatchEvent
+from subwatch.events import (WatchEvent, EVENT_TYPE_MODIFIED)
 
 from tornado import ioloop
 
@@ -18,8 +21,9 @@ logging.getLogger("watchdog").setLevel(logging.CRITICAL)
 
 class SubstanceSyncher(object):
 
-  UP = "up"
-  DOWN = "down"
+  UP = ">>"
+  DOWN = "<<"
+  PARTIAL_DIR = '.~subsync~'
 
   def __init__(self, engine, keyfile):
     self.keyfile = keyfile
@@ -29,24 +33,23 @@ class SubstanceSyncher(object):
     self.unison = {}
     self.synching = {}
     self.toSync = {self.UP:{}, self.DOWN:{}}
-    self.syncPeriod = 0.4
+    self.syncPeriod = 0.3
     self.schedule = {self.UP: False, self.DOWN: False}
-
+    self.excludes = []
+    
   def getFolders(self):
     return self.engine.getEngineFolders()
 
-  def getFolderFromHostPath(self, path):
-    for folder in self.getFolders():
-      if folder.hostPath == path:
-        return OK(folder)
-    return Fail(NameError("%s is not a folder." % path))
+  def getFolderFromPath(self, path, direction=None):
+    direction = self.UP if not direction else direction
 
-  def getFolderFromGuestPath(self, path):
     for folder in self.getFolders():
-      if folder.guestPath == path:
+      if direction is self.UP and folder.hostPath == path:
+        return OK(folder)
+      elif direction is self.DOWN and folder.guestPath == path:
         return OK(folder)
     return Fail(NameError("%s is not a folder." % path))
-   
+ 
   def start(self):
     op = self.initialSync()
     if op.isFail():
@@ -78,35 +81,56 @@ class SubstanceSyncher(object):
     self.remoteAgent.stop()
     ioloop.IOLoop.current().stop()
     return OK(None)
- 
+  
+  def scheduleSync(self, direction):
+    if self.schedule[direction] is False:
+      self.schedule[direction] = True
+      ioloop.IOLoop.current().call_later(self.syncPeriod, defer(self.incrementalSync, direction=direction))
+
   def processLocalEvent(self, event):
-    logging.info("LOCAL %s" % event)
-    folder = self.getFolderFromHostPath(event.watchPath)
+    #logging.info("LOCAL %s" % event)
+    return self.processEvent(event, self.UP)
+
+  def processRemoteEvent(self, event):
+    #logging.info("REMOTE %s" % event)
+    return self.processEvent(event, self.DOWN)
+
+  def processEvent(self, event, direction=None):
+    direction = self.UP if direction is None else direction
+  
+    path = event.getRelativePath()
+    folder = self.getFolderFromPath(event.watchPath, direction)
+
     if folder.isFail():
+      logging.error("%s" % folder)
       return folder
     else:
       folder = folder.getOK()
 
-    if folder not in self.toSync[self.UP]:
-      self.toSync[self.UP][folder] = []
+    if event.type == EVENT_TYPE_MODIFIED and event.isDirectory:
+      logging.debug("IGNORED")
+      return
+
+    if self.fileMatch(path, self.getExcludes()):
+      logging.debug("IGNORED")
+      return
+
+    if folder not in self.toSync[direction]:
+      self.toSync[direction][folder] = []
     
-    path = event.getRelativePath()
     if not event.isDirectory: 
       path = os.path.dirname(path)
+   
+    if path not in self.toSync[direction][folder]:
+      self.toSync[direction][folder].append(path)
+      self.scheduleSync(direction)
 
-    if path not in self.toSync[self.UP][folder]:
-      self.toSync[self.UP][folder].append(path)
-      self.scheduleSyncUp()
-  
-  def scheduleSyncUp(self):
-    if self.schedule[self.UP] is False:
-      self.schedule[self.UP] = True
-      ioloop.IOLoop.current().call_later(self.syncPeriod, defer(self.incrementalSync, direction=self.UP))
+  def fileMatch(self, filename, excludes=[]):
+    for ex in excludes:
+      if fnmatch.fnmatch(filename, ex):
+        return True
+    return False
  
-  def processRemoteEvent(self, event):
-    logging.info("REMOTE %s" % event)
-
-
   def initialSync(self):
     folders = self.getFolders()
     chain = OK(None)
@@ -122,17 +146,18 @@ class SubstanceSyncher(object):
     return Try.sequence(seq)
 
   def syncFolder(self, folder, direction, paths, incremental=False):
-    filters = "\n".join(self.pathsToFilters(folder, paths))
+    filters = "\n".join(self.makeFilters(folder, paths))
 
     logging.info("Synchronizing %s %s %s:%s" % (folder.hostPath, direction, self.engine.name, folder.guestPath))
-    logging.info("%s" % filters)
     self.toSync[direction].pop(folder, None)
 
     syncher = Rsync()
     syncher.setTransport(self.engine.getSSHPort(), self.keyfile)
-    syncher.setFilters(self.pathsToFilters(folder, paths))
+    syncher.setFilters(self.makeFilters(folder, paths))
     syncher.setLongOption('delay-updates', True)
-    syncher.setLongOption('partial-dir', '.~subsync~')
+    syncher.setLongOption('partial-dir', self.PARTIAL_DIR)
+    syncher.setLongOption('itemize-changes', True)
+    syncher.setLongOption('log-format', '%o\t%n %L')
 
     if incremental is True:
       syncher.setLongOption('delete', True)
@@ -150,12 +175,43 @@ class SubstanceSyncher(object):
       .then(dinfo("Finished sync of %s %s %s:%s" % (folder.hostPath, direction, self.engine.name, folder.guestPath))) \
       .then(lambda: OK(folder))
 
-  def pathsToFilters(self, folder, paths):
+  def getExcludes(self):
+    exs = self.excludes
+    plus = []
+    #plus.append('*.git/index.lock')
+    plus.append('*.~subsync~')
+    plus.append('*.~subsync~/**')
+    plus.append('*.*.swo')
+    plus.append('*.*.swp')
+    plus.append('*.*.swpx')
+    plus.append('*.DS_Store')
+    return exs + plus
+
+  def setExcludes(self, excludes=[]):
+    self.excludes = excludes
+
+  def makeFilters(self, folder, includes=[]):
     filters = []
-    for path in paths:
-      p = ''.join(path.rsplit(os.sep, 1))
-      filters.append("+ "+p+"/")
-      filters.append("+ "+p+"/**")
+
+    exs = folder.getExcludes() + self.getExcludes()
+    for ex in exs:
+      filters.append("- "+ex)
+
+    inc = OrderedDict()
+    for path in includes:
+      p = ''
+      parts = pathComponents(path)
+      for part in parts:
+        p = os.path.join(p, part)
+        if p not in inc:
+          inc[p] = os.sep
+        if part == parts[-1]:
+          inc[p] = os.sep+"***"
+
+    for path, opt in inc.iteritems():
+      path = ''.join(path.rsplit(os.sep, 1)) if path.endswith(os.sep) else path
+      filters.append("+ "+path+opt)
+
     filters.append("- *")
     return filters
 
@@ -171,7 +227,6 @@ class Rsync(object):
   
     self.filters = []
     self.opt = {
-      'm':True,
       'a':True,
       'r':True,
       'u':True
@@ -252,7 +307,6 @@ class Rsync(object):
     return transport
 
   def getCommand(self): 
-
     params = {
       'filters': self.getCommandFilters(),
       'opt': self.getCommandOpt(),

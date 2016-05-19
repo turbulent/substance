@@ -38,6 +38,13 @@ class EngineFolder(object):
     self.uid = uid if uid else 1000
     self.gid = gid if gid else 1000
     self.umask = umask if umask else "0022"
+    self.excludes = []
+
+  def setExcludes(self, exs=[]):
+    self.excludes = exs
+
+  def getExcludes(self):
+    return self.excludes
 
   def __eq__(self, other):
     return True if self.__hash__() == other.__hash__() else False

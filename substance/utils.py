@@ -135,3 +135,23 @@ def untar(filename, destination=None):
   tar.extractall(destination)
   tar.close()
   return filename
+
+def pathComponents(path):
+  folders = []
+  path = os.path.normpath(path)
+  while 1:
+    path, folder = os.path.split(path)
+  
+    if folder != "":
+      folders.append(folder)
+    else:
+      if path != "":
+        folders.append(path)
+      break
+
+  folders.reverse()  
+  return folders
+ 
+#def pathComponents(path):
+#  path = os.path.normpath(path)
+#  return path.split(os.sep)
