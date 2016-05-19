@@ -9,10 +9,11 @@ from substance.core import Core
 class Substance(Command):
   """Substance CLI command"""
 
-  cmdString = None
-  command = None
-  input = None
-  commandInput = None
+  def __init__(self):
+    super(Substance, self).__init__()
+    self.cmdString = None
+    self.commandInput = None
+    self.command = None
 
   def setupLogging(self):
     log_level = logging.DEBUG if self.options.debug else logging.INFO
@@ -43,6 +44,7 @@ substance - Local dockerized development environment.
 Options:
   -f    Alternate config file location
   -d    Activate debugging logs
+  -y    Assume yes when prompted
 
 Commands:
 

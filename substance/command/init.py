@@ -8,7 +8,8 @@ from substance.exceptions import (InvalidOptionError)
 class Init(Command):
 
   def getShellOptions(self, optparser):
-    optparser.add_option("--projects", dest="projects", help="Path to projects director")
+    optparser.add_option("--devroot", dest="devroot", help="Path to local devroot directory.")
+    optparser.add_option('--devroot-mode', dest="devroot_mode", help="devroot sync mode", default="rsync")
     optparser.add_option("--mount", dest="mounts", help="Mount host path to engine path", nargs=10)
     optparser.add_option("--driver", dest="driver", help="Virtualization driver for this engine")
     optparser.add_option("--memory", type="int", dest="memory", help="Machine memory allocation")
@@ -42,11 +43,19 @@ class Init(Command):
         return Fail(InvalidOptionError("Driver %s is not valid." % self.options.driver))
       opts['driver'] = self.options.driver
 
-    if self.options.projects:
-      if not os.path.isdir(self.options.projects):
-        return Fail(InvalidOptionError("Projects path %s does not exist." % self.options.projects))
-      opts['projectsPath'] = self.options.driver
+    if self.options.devroot:
+      if not os.path.isdir(self.options.devroot):
+        return Fail(InvalidOptionError("Devroot path %s does not exist." % self.options.devroot))
+      opts['devroot'] = {} if 'devroot' not in opts else opts['devroot']
+      opts['devroot']['path'] = self.options.devroot
 
+    if self.options.devroot_mode:
+      #XXX Fix hardcoded values.
+      if self.options.devroot_mode not in ['rsync','sharedfolder']:
+        return Fail(InvalidOptionError("Devroot mode '%s' is not valid."))
+      opts['devroot'] = {} if 'devroot' not in opts else opts['devroot']
+      opts['devroot']['mode'] = self.options.devroot_mode
+      
     config['config'] = opts
     return OK(config)
 

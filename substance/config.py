@@ -2,7 +2,7 @@ import os
 import logging
 from substance.monads import *
 from substance.shell import Shell
-from substance.utils import (readYAML, writeYAML)
+from substance.utils import (readYAML, writeYAML, mergeDict)
 from substance.exceptions import (FileSystemError, FileDoesNotExist)
 
 from collections import namedtuple
@@ -10,10 +10,9 @@ from collections import namedtuple
 
 class Config(object):
 
-  loaded = False
-  config = {}
-
   def __init__(self, configFile=None):
+    self.loaded = False
+    self.config = {}
     self.configFile = configFile
 
   def getConfigFile(self):
@@ -33,7 +32,7 @@ class Config(object):
     return self.config
 
   def setConfig(self, config):
-    self.config = config
+    mergeDict(self.config, config)
     return OK(self)
 
   def saveConfig(self, config=None):

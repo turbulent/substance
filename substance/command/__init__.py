@@ -7,12 +7,11 @@ from optparse import OptionParser
 from getpass import getpass
 
 class Command(object):
-  options = {}
-  args = []
-  core = None
-  input = None
 
   def __init__(self, core=None):
+    self.options = {}
+    self.args = []
+    self.input = None
     self.core = core
 
   def help(self):

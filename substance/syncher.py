@@ -301,7 +301,7 @@ class Rsync(object):
     return dest
 
   def getCommandTransport(self):
-    transport = "ssh -p %s" % self.port
+    transport = "ssh -p %s -o StrictHostKeyChecking=no" % self.port
     if self.keyfile is not None:
       transport += " -i \"%s\"" % self.keyfile
     return transport

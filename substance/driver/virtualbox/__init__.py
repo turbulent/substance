@@ -151,11 +151,13 @@ class VirtualBoxDriver(Driver):
 
   def configureMachine(self, uuid, engine):
    
-    def engineFolderToVBoxFolder(x):
-      return machine.SharedFolder(name=x.name, hostPath=x.hostPath)
+    def engineFolderToVBoxFolder(acc, x):
+      if x.mode == 'sharedfolder':
+        acc.append(machine.SharedFolder(name=x.name, hostPath=x.hostPath))
+      return acc
 
+    folders = reduce(engineFolderToVBoxFolder, engine.getEngineFolders(), [])
     desiredPort = engine.getSSHPort()
-    folders = map(engineFolderToVBoxFolder, engine.getEngineFolders())
 
     return self.assertSetup() \
       .then(defer(self.resolvePortConflict, uuid=uuid, desiredPort=desiredPort)) \

@@ -45,6 +45,8 @@ class Core(object):
     self.insecureKey = None
     self.insecurePubKey = None
 
+    self.assumeYes = False
+
   def getBasePath(self):
     return self.basePath
 
@@ -87,10 +89,15 @@ class Core(object):
   #-- Runtime
 
   def setAssumeYes(self, ay):
-    return self.config.set('assumeYes', ay)
+    self.assumeYes = True
+    return True
 
   def getAssumeYes(self):
-    return self.config.get('assumeYes', False)
+    if self.config.get('assumeYes', False):
+      return True
+    elif self.assumeYes:
+      return True
+    return False
 
   def getDefaultBoxString(self):
     return self.config.get('defaultBox', 'turbulent/substance-box:0.1')
@@ -127,7 +134,9 @@ class Core(object):
     return self.config.get('drivers', [])
 
   def validateDriver(self, driver):
-    return driver in self.getDrivers()
+    if driver in self.getDrivers():
+      return OK(driver)
+    return Fail(ValueError("Driver '%s' is not a valid driver."))
 
   def getDriver(self, name):
     cls = {

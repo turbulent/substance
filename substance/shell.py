@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import shutil
 import shlex
@@ -6,6 +7,7 @@ import subprocess
 from subprocess import call, Popen, check_output, CalledProcessError
 from substance.exceptions import (FileSystemError, ShellCommandError, UserInterruptError)
 from substance.monads import *
+from threading import Thread
 
 # pylint: disable=W0232
 

@@ -151,7 +151,19 @@ def pathComponents(path):
 
   folders.reverse()  
   return folders
- 
-#def pathComponents(path):
-#  path = os.path.normpath(path)
-#  return path.split(os.sep)
+
+def mergeDict(a, b, path=None):
+  if path is None: path = []
+  for key in b:
+    if key in a:
+      if isinstance(a[key], dict) and isinstance(b[key], dict):
+        mergeDict(a[key], b[key], path + [str(key)])
+      elif a[key] == b[key]:
+        pass # same leaf value
+      else:
+        a[key] = b[key]
+    else:
+      a[key] = b[key]
+  return a
+
+

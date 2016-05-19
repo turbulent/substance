@@ -8,6 +8,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
+from substance.utils import mergeDict
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
 from substance.syncher import SubstanceSyncher
@@ -31,15 +32,16 @@ class EngineProfile(object):
 
 
 class EngineFolder(object):
-  def __init__(self, name, hostPath, guestPath, uid=None, gid=None, umask=None):
+  def __init__(self, name, mode, hostPath, guestPath, uid=None, gid=None, umask=None, excludes=[]):
     self.name = name
+    self.mode = mode
     self.hostPath = hostPath
     self.guestPath = guestPath
     self.uid = uid if uid else 1000
     self.gid = gid if gid else 1000
     self.umask = umask if umask else "0022"
-    self.excludes = []
-
+    self.excludes = excludes
+ 
   def setExcludes(self, exs=[]):
     self.excludes = exs
 
@@ -53,7 +55,7 @@ class EngineFolder(object):
     return hash((self.name, self.hostPath, self.guestPath))
 
   def __repr__(self):
-    return "EngineFolder(name=%(name)s, host:%(hostPath)s -> guest:%(guestPath)s)" % self.__dict__
+    return "EngineFolder(name=%(name)s, %(mode)s host:%(hostPath)s -> guest:%(guestPath)s)" % self.__dict__
 
 
 class Engine(object):
@@ -81,23 +83,47 @@ class Engine(object):
     defaults['network']['publicIP'] = None
     defaults['network']['sshIP'] = None
     defaults['network']['sshPort'] = 4500
-    defaults['projectsPath'] = '~/dev/projects'
+    defaults['devroot'] = OrderedDict()
+    defaults['devroot']['path'] = '~/devroot'
+    defaults['devroot']['mode'] = 'rsync'
+    defaults['devroot']['excludes'] = ['*.*.swp']
     defaults['mounts'] = []
     return defaults
   
   def validateConfig(self, config):
-    fields = ['name','driver','profile','docker','network','projectsPath','mounts', 'box']
+    fields = ['name','driver','profile','docker','network','devroot','mounts', 'box']
 
-    self.config.validateFieldsPresent(config.getConfig(), fields)
+    ops = []
+    ops.append(self.config.validateFieldsPresent(config.getConfig(), fields))
+    ops.append(self.confValidateName(config.get('name', None)))
+    ops.append(self.core.validateDriver(config.get('driver', None)))
+    ops.append(self.confValidateDevroot(config.get('devroot', {})))
 
-    if config.get('name', None) != self.name:
-      return Fail(ConfigValidationError("Invalid name property in configuration (got %s expected %s)" %(config.get('name'), self.name)))
+    return Try.sequence(ops) \
+      .catch(lambda err: ConfigValidationError(err.message)) \
+      .then(lambda: OK(config.getConfig()))
 
-    driver = config.get('driver', None)
-    if not self.core.validateDriver(driver):
-      return Fail(ConfigValidationError("Invalid driver property in configuration (%s is not supported)" % driver))
+  def confValidateName(self, name):
+    if name != self.name:
+      return Fail(ConfigValidationError("Invalid name property in configuration (got %s expected %s)" %(config.get('name'), self.name))) 
+    return OK(name)
 
-    return OK(config.getConfig())
+  def confValidateDevroot(self, devroot):
+    path = devroot.get('path', '')
+    path = os.path.expanduser(path)
+    if not path:
+      return Fail(ConfigValidationError("devroot path configuration is missing."))
+    elif not os.path.isdir(path):
+      logging.info("WARNING: devroot '%s' does not exist locally." % path)
+
+    mode = devroot.get('mode', None)
+    if not mode:
+      return Fail(ConfigValidationError("devroot mode is not set."))
+    elif mode not in ['sharedfolder','rsync']:
+      #XXX Fix hardcoded values.
+      return Fail(ConfigValidationError("devroot mode '%s' is not valid." % mode)) 
+
+    return OK(devroot)
 
   def getName(self):
     return self.name
@@ -191,16 +217,16 @@ class Engine(object):
     default = self.getDefaults()
     default["name"] = self.name
 
-    for ck, cv in default.iteritems():
-      self.config.set(ck, cv)
-
-    if config:
-      for kkk, vvv in config.iteritems():
-        self.config.set(kkk, vvv)
+    cf = {}
+    mergeDict(cf, default)
+    mergeDict(cf, config)
 
     if profile:
-      self.config.get('profile')['cpus'] = profile.cpus
-      self.config.get('profile')['memory'] = profile.memory
+      cf['profile']['cpus'] = profile.cpus
+      cf['profile']['memory'] = profile.memory
+
+    for ck, cv in cf.iteritems():
+      self.config.set(ck, cv)
 
     return OK(self.config)
 
@@ -384,13 +410,17 @@ class Engine(object):
     return Try.sequence(cmds) 
  
   def getEngineFolders(self):
+    #XXX Dynamic mounts / remove hardcoded values.
+    devroot = self.config.get('devroot')
     pfolder = EngineFolder(
-      name='projects',
-      hostPath=os.path.expanduser(self.config.get('projectsPath')),
-      guestPath='/projects',
+      name='devroot',
+      mode=devroot.get('mode'),
+      hostPath=os.path.expanduser(devroot.get('path')),
+      guestPath='/devroot',
       uid=1000,
       gid=1000,
-      umask="0022"
+      umask="0022",
+      excludes=devroot.get('excludes', [])
     )
     return [pfolder]
  
