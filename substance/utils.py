@@ -10,7 +10,6 @@ import hashlib
 import tarfile
 from time import time
 from pkg_resources import Requirement, resource_filename
-
 from substance.exceptions import (
   ConfigSyntaxError,
   FileSystemError,

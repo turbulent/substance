@@ -4,7 +4,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 version = '0.1'
-install_requires = ['setuptools', 'PyYAML', 'tabulate', 'paramiko', 'netaddr', 'requests', 'tinydb']
+install_requires = ['setuptools', 'PyYAML', 'tabulate', 'paramiko', 'netaddr', 'requests', 'tinydb', 'python_hosts']
 
 setup(name='substance',
       version=version,

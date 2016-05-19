@@ -9,6 +9,7 @@ from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
 from substance.utils import mergeDict
+from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
 from substance.syncher import SubstanceSyncher
@@ -267,7 +268,36 @@ class Engine(object):
     return self.provision() \
       .then(self.start) \
       .then(self.updateNetworkInfo) \
+      .then(self.addToHostsFile)
 
+  def addToHostsFile(self):
+    logging.info("Registering engine in local hosts file")
+    try:
+      hosts = SubHosts.checkoutFromSystem()
+     
+      if not hosts.exists(address=self.getPublicIP()) or not hosts.exists(names=[self.name]): 
+        logging.info("Not found in local hosts file. Adding.")
+        hosts.addEngine(self)
+        hosts.write()
+        hosts.commitToSystem()
+      else:
+        logging.info("Host is already registered in local hosts file.")
+        return OK(None)
+    except Exception as err:
+      return Fail(err)
+    
+  def removeFromHostsFile(self):
+    logging.info("Removing engine from local hosts file")
+    try:
+      hosts = SubHosts.checkoutFromSystem()
+      if hosts.exists(names=[self.name]): 
+        hosts.remove_all_matching(None, self.name)
+        hosts.write()
+        hosts.commitToSystem()
+      else:
+        return OK(None)
+    except Exception as err:
+      return Fail(err)
 
   def updateNetworkInfo(self):
     logging.info("Updating network info from driver")
@@ -336,6 +366,7 @@ class Engine(object):
       .then(self.__delete) \
       .then(self.clearDriverID)  \
       .then(self.config.saveConfig)  \
+      .then(self.removeFromHostsFile) \
       .then(dinfo("Engine \"%s\" has been deprovisioned.", self.name)) \
       .map(self.chainSelf)
 
