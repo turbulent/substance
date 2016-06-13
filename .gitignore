@@ -2,3 +2,4 @@ build
 dist
 substance.egg-info
 *.pyc
+box/packer_cache

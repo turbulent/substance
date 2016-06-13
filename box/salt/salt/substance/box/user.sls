@@ -1,3 +1,10 @@
+packer-user:
+  user.absent
+
+packer-sudo:
+  file.absent:
+    - name: /etc/sudoers.d/packer
+ 
 substance-user:
   user:
     - name: substance
