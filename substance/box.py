@@ -100,7 +100,9 @@ class Box(object):
       return OK(self)
 
     manifestURL = self.getRegistryURL()
-    return Try.attempt(makeXHRRequest, url=manifestURL) >> defer(self.download)
+    return Try.attempt(makeXHRRequest, url=manifestURL) \
+      .catch(lambda err: Fail(InvalidBoxName("Failed to fetch the box manifest for %s. Does this box exist?" % self.boxstring))) \
+      .bind(defer(self.download))
 
   def isDownloaded(self):
     return True if os.path.exists(self.getOVFFile()) else False
