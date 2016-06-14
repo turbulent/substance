@@ -38,22 +38,21 @@ apt-get -y autoclean
 
 rm -rf /var/lib/apt/lists/*
 
+
+# Clean up udev
+set +e
+rm /var/lib/dhcp/*
+rm /etc/udev/rules.d/70-persistent-net.rules
+mkdir /etc/udev/rules.d/70-persistent-net.rules
+rm -rf /dev/.udev/
+rm /lib/udev/rules.d/75-persistent-net-generator.rules
+
+# Wipe MAC addy
+for nic in /etc/sysconfig/network-scripts/ifcfg-eth*; do sed -i /HWADDR/d $nic; done
+set -e
+
 #Clean out the logs & history
 find /var/log -type f | while read f; do echo -ne '' | tee $f; done;
 rm -f /root/.bash_history
 history -c
 
-#Compress the disk.
-
-count=`df --sync -kP / | tail -n1  | awk -F ' ' '{print $4}'`;
-let count--
-dd if=/dev/zero of=/tmp/whitespace bs=1024 count=$count;
-rm /tmp/whitespace;
-
-swappart=$(cat /proc/swaps | grep -v Filename | tail -n1 | awk -F ' ' '{print $1}')
-if [ "$swappart" != "" ]; then
-  swapoff $swappart;
-  dd if=/dev/zero of=$swappart;
-  mkswap $swappart;
-  swapon $swappart;
-fi

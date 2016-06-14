@@ -53,7 +53,7 @@
 
   "provisioners": [{  
     "type": "shell",
-    "scripts": ["scripts/upgrade-salt.sh", "scripts/cleanup.sh"],
+    "scripts": ["scripts/upgrade-salt.sh", "scripts/cleanup.sh", "scripts/compress.sh" ],
     "execute_command": " echo {{user `ssh_pass`}} | {{.Vars}} sudo -S -E bash '{{.Path}}'"
   }]
 }

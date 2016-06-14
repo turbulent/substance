@@ -1,17 +1,21 @@
-packer-user:
-  user.absent
 
-packer-sudo:
-  file.absent:
-    - name: /etc/sudoers.d/packer
- 
+root-user-passwd:
+  user.present:
+    - name: root
+    - password: $1$TrXYiiww$ND61zlw7wRth3..tzmlYO.
+    - enforce_password: true
+    - uid: 0
+
 substance-user:
   user:
     - name: substance
     - present
     - uid: 1000
+    - password: $1$TrXYiiww$ND61zlw7wRth3..tzmlYO.
+    - enforce_password: true
     - home: /substance
     - shell: /bin/bash
+
 
 substance-user-dotssh:
   file.directory:
@@ -28,7 +32,7 @@ AAAAB3NzaC1yc2EAAAADAQABAAABAQC9KutC+/Zwowb/Tnw+xbjGCKmTlSzTcM4i1BI3MCIZuA5pajVN
 
 /etc/sudoers.d/substance:
   file.managed:
-    - content: "substance ALL=(ALL) NOPASSWD:ALL"
+    - contents: "substance ALL=(ALL) NOPASSWD:ALL"
 
 /etc/sudoers:
   file.append:
