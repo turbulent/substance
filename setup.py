@@ -4,7 +4,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 version = '0.1'
-install_requires = ['setuptools', 'PyYAML', 'tabulate', 'paramiko', 'netaddr', 'requests', 'tinydb', 'python_hosts']
+install_requires = ['setuptools', 'PyYAML', 'tabulate', 'paramiko', 'netaddr', 'requests', 'tinydb', 'python_hosts', 'jinja2']
 
 setup(name='substance',
       version=version,
@@ -19,6 +19,7 @@ setup(name='substance',
       test_suite='tests',
       entry_points={
         'console_scripts': [
-          'substance = substance:cli',
+          'substance = substance.cli:cli',
+          'subenv = substance.subenv.cli:cli'
         ],
       })

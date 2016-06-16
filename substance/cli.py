@@ -1,16 +1,18 @@
+from __future__ import absolute_import
+
 import sys
 import logging
 import traceback
 from importlib import import_module
 from optparse import OptionParser
-from substance.command import Command
-from substance.core import Core
 
-class Substance(Command):
+from substance import (Command, Core)
+
+class SubstanceCLI(Command):
   """Substance CLI command"""
 
   def __init__(self):
-    super(Substance, self).__init__()
+    super(SubstanceCLI, self).__init__()
     self.cmdString = None
     self.commandInput = None
     self.command = None
@@ -60,7 +62,7 @@ Commands:
   #substance deprovision mybox
 
   # Task Control
-  substance task mybox load /projects/myproject/containers.yml
+  substance task mybox load rsi-website
   substance task mybox status -a
   substance task mybox start -a
   substance task mybox stop -a
@@ -150,3 +152,8 @@ Commands:
     (self.options, self.args) = self.parseShellInput()
     self.main()
 
+
+
+def cli():
+  prog = SubstanceCLI()
+  prog.execute(sys.argv)

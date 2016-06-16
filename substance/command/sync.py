@@ -1,12 +1,8 @@
 import os
-import time
-import Queue
 
 from substance.monads import *
 from substance.logs import *
-from substance.engine import Engine
-from substance.command import Command
-from substance.shell import Shell
+from substance import (Command, Engine)
 from substance.exceptions import (SubstanceError)
 from substance.syncher import SubstanceSyncher
 

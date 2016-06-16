@@ -446,7 +446,7 @@ class Engine(object):
       name='devroot',
       mode=devroot.get('mode'),
       hostPath=os.path.expanduser(devroot.get('path')),
-      guestPath='/devroot',
+      guestPath='/substance/devroot',
       uid=1000,
       gid=1000,
       umask="0022",

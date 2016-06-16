@@ -1,8 +1,7 @@
-from substance.command import Command
-from substance.exceptions import (SubstanceError)
 from substance.monads import *
 from substance.logs import *
-from substance.engine import Engine
+from substance import (Command, Engine)
+from substance.exceptions import (SubstanceError)
 
 class Suspend(Command):
   def main(self):

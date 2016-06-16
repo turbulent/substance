@@ -1,8 +1,6 @@
-from substance.shell import Shell
-from substance.command import Command
 from substance.monads import *
 from substance.logs import *
-from substance.engine import Engine
+from substance import (Command, Shell, Engine)
 
 class Stop(Command):
 

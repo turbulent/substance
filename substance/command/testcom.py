@@ -1,9 +1,8 @@
 import logging
 import pprint
-from substance.command import Command
-from substance.engine import Engine
 from substance.monads import *
 from substance.logs import *
+from substance import (Command, Engine)
 
 from substance.driver.virtualbox.machine import *
 from substance.driver.virtualbox.network import *

@@ -1,7 +1,6 @@
 from substance.monads import *
 from substance.logs import *
-from substance.engine import Engine
-from substance.command import Command
+from substance import (Engine, Command)
 from substance.exceptions import (SubstanceError)
 
 class Launch(Command):

@@ -1,9 +1,7 @@
 import logging
 from substance.logs import *
 from substance.monads import *
-from substance.command import Command
-from substance.engine import Engine
-from substance.shell import Shell
+from substance import (Command, Engine, Shell)
 from substance.exceptions import (SubstanceError, EngineNotProvisioned)
 
 class Delete(Command):

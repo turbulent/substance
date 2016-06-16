@@ -1,7 +1,6 @@
 from substance.monads import *
 from substance.logs import *
-from substance.command import (Command)
-from substance.engine import (Engine)
+from substance import (Command, Engine)
 from tabulate import tabulate
 
 class Ls(Command):

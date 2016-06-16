@@ -1,14 +1,7 @@
 import logging
-from substance.command import Command
-from substance.engine import Engine
+from substance import (Command, Engine, Link)
 from substance.monads import *
 from substance.logs import *
-from substance.link import Link
-from pkg_resources import Requirement, resource_filename
-import paramiko
-
-from substance.driver.virtualbox.machine import *
-from substance.driver.virtualbox.network import *
 
 class Connect(Command):
 

@@ -1,8 +1,6 @@
 import os
 from substance.logs import *
-from substance.command import Command
-from substance.box import Box
-from substance.engine import EngineProfile
+from substance import (Command, Box, EngineProfile)
 from substance.exceptions import (InvalidOptionError)
 
 class Init(Command):
