@@ -244,7 +244,7 @@ class Try(Monad):
     return reduce(lambda acc, mv: unshiftM(Try, acc, mv), reversed(monads), Try.of([]))
 
   @staticmethod
-  def attemptWrapper(f, expect=Exception):
+  def attemptDeferred(f, expect=Exception):
     def tryer(*args, **kwargs):
       try:
         return OK(f(*args, **kwargs))
@@ -254,7 +254,7 @@ class Try(Monad):
 
   @staticmethod 
   def attempt(f, *args, **kwargs):
-    return Try.attemptWrapper(f)(*args, **kwargs)
+    return Try.attemptDeferred(f)(*args, **kwargs)
 
   @staticmethod 
   def raiseError(self, err=Exception):

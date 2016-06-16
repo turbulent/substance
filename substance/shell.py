@@ -74,13 +74,17 @@ class Shell(object):
     return OK(path)
 
   @staticmethod
+  def copyFile(src, dst):
+    return Try.attempt(lambda: shutil.copy(src, dst))
+    
+  @staticmethod
   def pathExists(path):
     return OK(path) if os.path.exists(path) else Fail(FileSystemError("Path %s does not exist." % path))
 
   @staticmethod
   def rmFile(path):
     if os.path.isdir(path):
-      Fail(FileSystemError("%s is a directory.") % path)
+      return Fail(FileSystemError("%s is a directory.") % path)
     return OK(os.remove(path))
 
   @staticmethod

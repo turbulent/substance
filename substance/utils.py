@@ -30,6 +30,10 @@ def _dict_constructor(loader, node):
 yaml.add_representer(collections.OrderedDict, _dict_representer)
 yaml.add_constructor(_yaml_mapping_tag, _dict_constructor)
 
+def writeToFile(filename, data):
+  with open(filename, "wb") as fh:
+    fh.write(data)
+ 
 def writeYAML(filename, data):
   try:
     with open(filename, "w") as fileh:
@@ -165,4 +169,14 @@ def mergeDict(a, b, path=None):
       a[key] = b[key]
   return a
 
+def readDotEnv(filepath, env={}):
+  with open(filepath) as f:
+    for line in f:
+      line = line.strip()
+      if not line or line.startswith('#') or '=' not in line:
+        continue
+      k, v = line.split('=', 1)
+      v = v.strip("'").strip('"')
+      env[k] = v
+  return env
 
