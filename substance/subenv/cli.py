@@ -5,6 +5,7 @@ from importlib import import_module
 from optparse import OptionParser
 
 from substance import (Command, Core)
+from substance.subenv import SubenvAPI
 
 class SubenvCLI(Command):
   """Subenv CLI command"""
@@ -25,10 +26,10 @@ class SubenvCLI(Command):
   def getShellOptions(self, optparser):
     Command.getShellOptions(self, optparser)
 
-    optparser.add_option("-f", dest="configFile", help="Override default config file")
     optparser.add_option("-d", dest="debug", help="Activate debugging output", default=False, action="store_true")
     optparser.add_option("-y", dest="assumeYes", help="Assume yes when prompted", default=False, action="store_true")
-
+    optparser.add_option('--base', dest="base", help="Path to the base", default="/substance")
+    optparser.add_option("--devroot", dest="devroot", default="/substance/devroot", help="Path to the devroot directory.")
     return optparser
 
   def getUsage(self):
@@ -42,14 +43,13 @@ Usage: subenv COMMAND [options] [CONTAINERS..]
 subenv - Initialize a substance dockerized environment.
 
 Options:
-  -f    Alternate config file location
   -d    Activate debugging logs
   -y    Assume yes when prompted
 
 Commands:
 
   subenv ls
-  subenv create PATH/TO/PROJECT
+  subenv init PATH/TO/PROJECT
   subenv use PROJECT
   subenv delete PROJECT
  
@@ -85,6 +85,8 @@ Samples:
     try:
 
       core = Core()
+      api = SubenvAPI(self.options.base, self.options.devroot)
+
       if self.options.assumeYes:
         core.setAssumeYes(True)
 
@@ -95,7 +97,7 @@ Samples:
 
       module_ = import_module(moduleName)
       class_ = getattr(module_, className)
-      self.command = class_(core=core)
+      self.command = class_(core=core, api=api)
     except ImportError, err:
       logging.debug("%s", err)
       self.exitError("Unrecognized command %s" % self.cmdString)
@@ -127,6 +129,7 @@ Samples:
     self.commandInput = extraArgs
 
     (self.options, self.args) = self.parseShellInput()
+
     self.main()
 
 def cli():

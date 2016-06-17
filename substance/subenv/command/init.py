@@ -3,24 +3,20 @@ import logging
 import shlex
 
 from substance.logs import *
-from substance import Command
 from substance.exceptions import (InvalidOptionError)
 
-from substance.subenv import (SPECDIR, SubenvAPI)
+from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
 
-class Init(Command):
+class Init(SubenvCommand):
 
   def getShellOptions(self, optparser):
-    optparser.add_option('--base', "-b", dest="base", help="Path to the base", default="/substance")
-    optparser.add_option("--devroot", "-d", dest="devroot", help="Path to the devroot directory.")
-    optparser.add_option("--define", "-D", dest="define", default=[], action='append', help="Define a variable for the environment")
     optparser.add_option("--name", type="str", dest="name", help="Envrionment name")
+    optparser.add_option("--define", "-D", dest="define", default=[], action='append', help="Define a variable for the environment")
     return optparser
 
   def main(self):
-    api = SubenvAPI(self.options.base, self.options.devroot)
     return Try.sequence([ self.readInputPath(), self.readInputEnv() ]) \
-      .bind(lambda l: api.init(*l)) \
+      .bind(lambda l: self.api.init(*l)) \
       .catch(self.exitError) \
       .bind(lambda e: logging.info("Environment '%s' initialized." % e.name)) 
 
@@ -37,5 +33,5 @@ class Init(Command):
   def readInputPath(self):
     if len(self.args) <= 0:
       return Fail(InvalidOptionError("Please specify a path to a '%s' folder." % SPECDIR))
-    path = self.args[0]
+    path = os.path.abspath(os.path.normpath(self.args[0]))
     return OK(path)

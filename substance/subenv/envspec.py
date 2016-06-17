@@ -1,23 +1,50 @@
 import os
+import time
+from collections import OrderedDict
 from substance.monads import *
 from substance.constants import *
-from substance.utils import readDotEnv, writeToFile
+from substance.utils import readDotEnv, writeToFile, makeSymlink
 from substance import Shell
-from substance.subenv import (SPECDIR, ENVFILE)
+from substance.subenv import (SPECDIR, ENVFILE, CODELINK)
 import jinja2
 
 class SubenvSpec(object):
-  def __init__(self, specPath, basePath, name=None, vars={}):
+  def __init__(self, specPath, basePath, name=None, vars={}, lastApplied=None):
     self.specPath = specPath
     self.basePath = basePath
     self.envPath = None
     self.name = name
     self.envFiles = []
     self.overrides = vars
-    self.vars = {}
+    self.vars = OrderedDict()
+    self.lastApplied = lastApplied
 
   @staticmethod
-  def fromPath(path, vars={}):
+  def fromEnvPath(path):
+    if not os.path.isdir(path):
+      return Fail(InvalidOptionError("Specified path '%s' does not exist." % path))
+
+    envPath = path
+    name = os.path.basename(envPath)
+
+    envVars = Try.attempt(readDotEnv, os.path.join(envPath, ENVFILE))
+    if envVars.isFail():
+      return envVars
+    envVars = envVars.getOK()
+
+    vars = envVars.copy()
+    for k in vars.keys():
+      if k.startswith('subenv.'):
+        del vars[k]
+
+    lastApplied = None   
+    if 'subenv.lastApplied' in envVars:
+      lastApplied = envVars['subenv.lastApplied']
+    
+    return SubenvSpec(envVars['subenv.specPath'], envVars['subenv.basePath'], envVars['subenv.name'], vars, lastApplied)
+
+  @staticmethod
+  def fromSpecPath(path, vars={}):
     if not os.path.isdir(path):
       return Fail(InvalidOptionError("Specified path '%s' does not exist." % path))
 
@@ -27,6 +54,11 @@ class SubenvSpec(object):
 
     return SubenvSpec(specPath, path, os.path.basename(path), vars).scan()
 
+  def getLastAppliedDateTime(self, fmt='%Y-%m-%d %H:%M:%S'):
+    if self.lastApplied:
+      return time.strftime(fmt, time.localtime(float(self.lastApplied)))
+    return None
+ 
   def scan(self):
     return self.loadEnvVars(self.overrides) \
       .then(self.loadEnvStruct)
@@ -36,12 +68,27 @@ class SubenvSpec(object):
     return self.applyDirs() \
       .then(self.applyFiles)  \
       .then(self.writeEnv) \
+      .then(self.linkCode) \
       .then(lambda: OK(self))
 
+  def linkCode(self):
+    return Try.sequence([
+      Try.attempt(makeSymlink, self.basePath, os.path.join(self.envPath, CODELINK), True),
+      Try.attempt(makeSymlink, self.specPath, os.path.join(self.envPath, SPECDIR), True)
+    ])
+    
   def writeEnv(self):
     dotenv = os.path.join(self.envPath, ENVFILE)
     logging.debug("Writing environment to: %s" % dotenv)
-    env = "\n".join([ "%s=\"%s\"" % (k,v) for k,v in self.vars.iteritems() ])
+    envVars = OrderedDict(**self.vars)
+    envVars.update({
+      'subenv.name': self.name, 
+      'subenv.basePath': self.basePath, 
+      'subenv.specPath': self.specPath,
+      'subenv.lastApplied': time.time()
+    })
+
+    env = "\n".join([ "%s=\"%s\"" % (k,v) for k,v in envVars.iteritems() ])
     return Try.attempt(writeToFile, dotenv, env)
   
   def applyDirs(self):
@@ -77,7 +124,6 @@ class SubenvSpec(object):
       tplVars = vars.copy()
       tplVars.update({'subenv':self})
 
-      logging.debug("%s" %tplVars)
       with open(dest, 'wb') as fh:
         fh.write(tpl.render(**tplVars))
       return OK(None)
@@ -118,7 +164,7 @@ class SubenvSpec(object):
 
     map(lambda x: logging.info("Loading dotenv file: '%s'" % x), self.envFiles)
     return Try.sequence(map(Try.attemptDeferred(readDotEnv), self.envFiles))  \
-      .map(lambda envs: reduce(lambda acc,x: dict(acc, **x), envs))
+      .map(lambda envs: reduce(lambda acc,x: dict(acc, **x), envs, {}))
 
   def __repr__(self):
     return "SubEnvSpec(%(name)s) spec:%(specPath)s base:%(basePath)s envFile:%(envFiles)s vars:%(vars)s files:%(struct)s" % self.__dict__

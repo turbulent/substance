@@ -29,9 +29,28 @@ class SubenvAPI(object):
 
   def init(self, path, env={}):
     logging.info("Initializing subenv from: %s" % path)
-    return SubenvSpec.fromPath(path, env) \
+    return SubenvSpec.fromSpecPath(path, env) \
       .bind(self._applyEnv)
 
+  def exists(self, name):
+    if os.path.isdir(os.path.join(self.envsPath, name)):
+      return OK(True)
+    return OK(False)
+
+  def delete(self, name):
+    envPath = os.path.normpath(os.path.join(self.envsPath, name))
+    if not os.path.isdir(envPath):
+      return Fail(InvalidOptionError("Environment '%s' does not exist."))
+    return Shell.nukeDirectory(envPath)
+    
+  def ls(self):
+    envs = []
+    for f in os.listdir(self.envsPath):
+      path = os.path.join(self.envsPath, f)
+      if os.path.isdir(path):
+        envs.append(SubenvSpec.fromEnvPath(path))
+    return OK(envs)
+       
   def _applyEnv(self, envSpec):
     envPath = os.path.join(self.envsPath, envSpec.name)
     logging.info("Applying environment to: %s" % envPath)

@@ -5,7 +5,7 @@ import tempfile
 import shutil
 import logging
 import collections
-import os
+import os, errno
 import hashlib
 import tarfile
 from time import time
@@ -183,3 +183,12 @@ def readDotEnv(filepath, env={}):
       env[k] = v
   return env
 
+def makeSymlink(source, link, force=False):
+  try:
+    os.symlink(source, link)
+  except OSError, e:
+    if e.errno == errno.EEXIST and force:
+      os.remove(link)
+      os.symlink(source, link)
+    else:
+      raise e
