@@ -136,8 +136,11 @@ class SubenvSpec(object):
   def scanEnvStruct(self):
     struct = {'dirs':[], 'files':[]}
     for root, dirs, files in os.walk(self.specPath):
-      struct['dirs'].extend(dirs)
-      struct['files'].extend(files)
+      relPath = os.path.relpath(root, self.specPath).strip('./').strip('/')
+      for dir in dirs:
+        struct['dirs'].append(os.path.join(relPath, dir))
+      for file in files:
+        struct['files'].append(os.path.join(relPath, file))
     return OK(struct)
        
   def setEnvStruct(self, struct):

@@ -15,6 +15,7 @@ class SubenvCLI(Command):
     self.cmdString = None
     self.commandInput = None
     self.command = None
+    self.commands = ['init','delete','ls']
 
   def setupLogging(self):
     log_level = logging.DEBUG if self.options.debug else logging.INFO
@@ -26,10 +27,9 @@ class SubenvCLI(Command):
   def getShellOptions(self, optparser):
     Command.getShellOptions(self, optparser)
 
-    optparser.add_option("-d", dest="debug", help="Activate debugging output", default=False, action="store_true")
-    optparser.add_option("-y", dest="assumeYes", help="Assume yes when prompted", default=False, action="store_true")
-    optparser.add_option('--base', dest="base", help="Path to the base", default="/substance")
-    optparser.add_option("--devroot", dest="devroot", default="/substance/devroot", help="Path to the devroot directory.")
+    optparser.add_option("-d", '--debug',  dest="debug", help="Activate debugging output", default=False, action="store_true")
+    optparser.add_option('--yes', "-y", dest="assumeYes", help="Assume yes when prompted", default=False, action="store_true")
+    optparser.add_option('-b', '--base', type="str", dest="base", help="Path to the base", default="/substance")
     return optparser
 
   def getUsage(self):
@@ -57,7 +57,6 @@ Samples:
 
   subenv create 
     -b /substance
-    -d /substance/devroot
     -e envfile
     -D VAR=value
     -D VAR1=value
@@ -85,7 +84,7 @@ Samples:
     try:
 
       core = Core()
-      api = SubenvAPI(self.options.base, self.options.devroot)
+      api = SubenvAPI(self.options.base)
 
       if self.options.assumeYes:
         core.setAssumeYes(True)
@@ -119,13 +118,12 @@ Samples:
         extraArgs.append(arg)
         continue
 
-      if arg[0] == '-' or arg[0:2] == '--':
-        parsed.append(arg)
+      if arg in self.commands:
+        i += 1
       else:
         parsed.append(arg)
-        i += 1
 
-    self.input = parsed
+    self.input = args
     self.commandInput = extraArgs
 
     (self.options, self.args) = self.parseShellInput()

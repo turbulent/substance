@@ -8,10 +8,9 @@ class SubenvAPI(object):
   '''
     Subenv API
   '''
-  def __init__(self, basePath="/substance", devroot="/substance/devroot"):
+  def __init__(self, basePath="/substance"):
     self.basePath = basePath
     self.envsPath = os.path.join(self.basePath, "envs")
-    self.devroot = devroot
     self.assumeYes = False
     self.struct = {'dirs':[], 'files':[]}
 
@@ -25,7 +24,7 @@ class SubenvAPI(object):
     return self.assertPaths()
 
   def assertPaths(self):
-    return OK([self.basePath, self.envsPath, self.devroot]).mapM(Shell.makeDirectory)
+    return OK([self.basePath, self.envsPath]).mapM(Shell.makeDirectory)
 
   def init(self, path, env={}):
     logging.info("Initializing subenv from: %s" % path)

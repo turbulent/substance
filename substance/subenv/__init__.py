@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-SPECDIR = '.subenv'
+SPECDIR = '.substance'
 ENVFILE = '.env'
 CODELINK = 'code'
 
