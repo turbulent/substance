@@ -129,8 +129,6 @@ Samples:
     (self.options, self.args) = self.parseShellInput()
     self.main()
 
-
-
 def cli():
   prog = SubenvCLI()
   prog.execute(sys.argv)

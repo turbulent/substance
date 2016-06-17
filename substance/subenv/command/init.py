@@ -6,7 +6,7 @@ from substance.logs import *
 from substance import Command
 from substance.exceptions import (InvalidOptionError)
 
-from substance.subenv import SubenvAPI
+from substance.subenv import (SPECDIR, SubenvAPI)
 
 class Init(Command):
 
@@ -21,7 +21,8 @@ class Init(Command):
     api = SubenvAPI(self.options.base, self.options.devroot)
     return Try.sequence([ self.readInputPath(), self.readInputEnv() ]) \
       .bind(lambda l: api.init(*l)) \
-      .catch(self.exitError)
+      .catch(self.exitError) \
+      .bind(lambda e: logging.info("Environment '%s' initialized." % e.name)) 
 
   def readInputEnv(self): 
     env = {}
@@ -35,7 +36,6 @@ class Init(Command):
 
   def readInputPath(self):
     if len(self.args) <= 0:
-      return Fail(InvalidOptionError("Please specify a path to a %s folder." % SubenvAPI.DIR))
+      return Fail(InvalidOptionError("Please specify a path to a '%s' folder." % SPECDIR))
     path = self.args[0]
     return OK(path)
-

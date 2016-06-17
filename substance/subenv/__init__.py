@@ -1,4 +1,8 @@
 from __future__ import absolute_import
 
-from .api import SubenvAPI
+SPECDIR = '.subenv'
+ENVFILE = '.env'
+
 from .cli import SubenvCLI
+from .envspec import SubenvSpec
+from .api import SubenvAPI

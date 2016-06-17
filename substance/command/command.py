@@ -4,11 +4,10 @@ import sys
 import os
 import re
 import logging
-
-from substance import Shell
-
 from optparse import OptionParser
 from getpass import getpass
+
+from substance import Shell
 
 class Command(object):
 
