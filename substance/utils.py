@@ -174,13 +174,16 @@ def mergeDict(a, b, path=None):
 
 def readDotEnv(filepath, env={}):
   with open(filepath) as f:
-    for line in f:
-      line = line.strip()
-      if not line or line.startswith('#') or '=' not in line:
-        continue
-      k, v = line.split('=', 1)
-      v = v.strip("'").strip('"')
-      env[k] = v
+    return parseDotEnv(f, env)
+
+def parseDotEnv(dotenvdata, env={}):
+  for line in dotenvdata:
+    line = line.strip()
+    if not line or line.startswith('#') or '=' not in line:
+      continue
+    k, v = line.split('=', 1)
+    v = v.strip("'").strip('"')
+    env[k] = v
   return env
 
 def makeSymlink(source, link, force=False):

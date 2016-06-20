@@ -20,7 +20,7 @@ class TestVirtualBox(tests.TestBase):
   basePath = None
   projectsPath = None
 
-  vmTest = True
+  vmTest = False
   vmName = "testVbox"
   vmUUID = None
 
