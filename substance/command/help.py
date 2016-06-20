@@ -5,6 +5,12 @@ from substance.exceptions import (SubstanceError)
 
 class Help(Command):
 
+  def getUsage(self):
+    return "substance help [command?]"
+  
+  def getHelpTitle(self):
+    return "Print help for a specific substance command"
+
   def getShellOptions(self, optparser):
     return optparser
 

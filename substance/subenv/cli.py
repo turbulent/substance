@@ -1,11 +1,12 @@
 import sys
 import logging
 import traceback
+import pkgutil
+from collections import OrderedDict
 from importlib import import_module
-from optparse import OptionParser
-
 from substance import (Command, Core)
 from substance.subenv import SubenvAPI
+import substance.subenv.command
 
 class SubenvCLI(Command):
   """Subenv CLI command"""
@@ -38,15 +39,9 @@ class SubenvCLI(Command):
     return "Initialize a substance project environment"
 
   def getHelpDetails(self):
-    helpUsage = """
-Commands:
-
-  ls             List substance environments
-  init           Initialize or refresh a substance environment
-  delete         Delete an existing substance environment
-  use            Select which environment is active and in use.
- 
-"""
+    helpUsage = "Commands:\n\n"
+    for name, command in self.getCommandModules().iteritems():
+      helpUsage += "  %-20s%s\n" % (name, command.getHelpTitle())
     return helpUsage
 
   def main(self):
@@ -79,6 +74,17 @@ Commands:
     self.input = args
     (self.options, self.args) = self.parseShellInput(False)
     self.main()
+
+  def getCommandModules(self):
+    package = substance.subenv.command
+    names = []
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
+      if modname != 'command':
+        names.append(modname)
+    names.sort()
+    classes = map(lambda x: self.findCommandClass(x, package='substance.subenv.command')(), names)
+    mods = OrderedDict(zip(names, classes))
+    return mods
 
 def cli():
   prog = SubenvCLI()

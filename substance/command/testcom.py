@@ -12,6 +12,9 @@ class Testcom(Command):
   vboxManager = None
   vbox = None
 
+  def getHelpTitle(self):
+    return "XXX Test command"
+
   def getShellOptions(self, optparser):
     optparser.add_option("-v", dest="val", help="Single Val", default=False)
     optparser.add_option("--longval", dest="longval", help="Long Val", default=False)

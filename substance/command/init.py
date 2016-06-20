@@ -8,6 +8,9 @@ class Init(Command):
   def getUsage(self):
     return "substance init [options] [ENGINE NAME]"
 
+  def getHelpTitle(self):
+    return "Initialize a new engine configuration"
+
   def getShellOptions(self, optparser):
     optparser.set_description("Initialize a new substance engine")
     optparser.add_option("--devroot", dest="devroot", help="Path to local devroot directory.")

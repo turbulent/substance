@@ -3,9 +3,10 @@ from __future__ import absolute_import
 import sys
 import logging
 import traceback
-from optparse import OptionParser
-
+import pkgutil
+from collections import OrderedDict
 from substance import (Command, Core)
+import substance.command
 
 class SubstanceCLI(Command):
   """Substance CLI command"""
@@ -39,45 +40,9 @@ class SubstanceCLI(Command):
     return "Local docker-based development environments"
 
   def getHelpDetails(self):
-    helpUsage = """
-Commands:
-
-  # Engine commands
-
-  ls              List engines
-  init            Initialize a new engine
-  delete          Delete an engine
-  launch          Launch an existing engine
-  stop            Stop a running engine
-  suspend         Suspend a running engine
-  deprovision     Destroy the VM associated with an engine
-  ssh             Open an interactive shell with SSH on an engine
-  sshinfo         Output SSH connection info for an engine
-  env             Output the shell variables for connecting to the engine's docker daemon.
-
-  help            Help and usage information on commands
-   
-  # Task Control
-  substance task mybox load rsi-website
-  substance task mybox status -a
-  substance task mybox start -a
-  substance task mybox stop -a
-  substance task mybox remove -a
-  substance task mybox recreate -a
-  substance enter mybox myboxweb
-  
-
-  #Porcelain
-  substance spawn -c client -p project 
-  substance make mybox mytask
-  substance watch mybox mytask
-  substance test mybox mytask
-  substance exec mybox mytask "make.sh"
- 
-  # Logs
-  substance logs mybox taskname
-
-"""
+    helpUsage = "Commands:\n\n"
+    for name, command in self.getCommandModules().iteritems():
+      helpUsage += "  %-20s%s\n" % (name, command.getHelpTitle())
     return helpUsage
 
   def main(self):
@@ -111,6 +76,17 @@ Commands:
     self.main()
 
 
+  def getCommandModules(self):
+    package = substance.command
+    names = []
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
+      if modname != 'command':
+        names.append(modname)
+    names.sort()
+    classes = map(lambda x: self.findCommandClass(x)(), names)
+    mods = OrderedDict(zip(names, classes))
+    return mods
+  
 def cli():
   prog = SubstanceCLI()
   prog.execute(sys.argv)
