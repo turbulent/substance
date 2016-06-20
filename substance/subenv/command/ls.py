@@ -10,6 +10,12 @@ from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
 
 class Ls(SubenvCommand):
 
+  def getUsage(self):
+    return "subenv ls [options]"
+
+  def getHelpTitle(self):
+    return "Print a list of substance project environments."
+
   def getShellOptions(self, optparser):
     return optparser
 
@@ -21,9 +27,9 @@ class Ls(SubenvCommand):
       .bind(logging.info) 
 
   def tabulateEnv(self, env):
-    return OK([env.name, env.basePath, env.getLastAppliedDateTime('%B %d %Y, %H:%M:%S'), "X" if env.current else ""])
+    return OK([env.name, "X" if env.current else "", env.basePath, env.getLastAppliedDateTime('%B %d %Y, %H:%M:%S')])
 
   def tabulateEnvs(self, envs):
-    headers = ["NAME", "BASEPATH", "MODIFIED", "CURRENT"]
+    headers = ["NAME", "CURRENT", "BASEPATH", "MODIFIED"]
     table = tabulate(envs, headers=headers, tablefmt="plain")
     return OK(table)

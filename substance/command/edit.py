@@ -7,6 +7,12 @@ from substance.exceptions import (EngineNotFoundError)
 
 class Edit(Command):
 
+  def getUsage(self):
+    return "substance edit [ENGINE NAME]"
+
+  def getHelpTitle(self):
+    return "Edit an engine configuration"
+
   def main(self):
 
     name = self.getInputName()

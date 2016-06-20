@@ -5,8 +5,14 @@ from tabulate import tabulate
 
 class Ls(Command):
   def getShellOptions(self, optparser):
-    optparser.add_option("-a", dest="all", help="Single Val", action="store_true", default=False)
+    #optparser.add_option("-a", dest="all", help="Single Val", action="store_true", default=False)
     return optparser
+
+  def getUsage(self):
+    return "substance ls [options]"
+
+  def getHelpTitle(self):
+    return "List substance engines"
 
   def main(self):
     self.core.initialize() \

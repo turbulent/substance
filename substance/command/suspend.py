@@ -4,6 +4,12 @@ from substance import (Command, Engine)
 from substance.exceptions import (SubstanceError)
 
 class Suspend(Command):
+  def getUsage(self):
+    return "substance suspend [ENGINE NAME]"
+ 
+  def getHelpTitle(self):
+    return "Suspend an engine gracefully."
+
   def main(self):
     name = self.getInputName()
 

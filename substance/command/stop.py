@@ -4,6 +4,12 @@ from substance import (Command, Shell, Engine)
 
 class Stop(Command):
 
+  def getUsage(self):
+    return "substance stop [ENGINE NAME]"
+
+  def getHelpTitle(self):
+    return "Stop an engine's vm gracefully or forcefully."
+
   def getShellOptions(self, optparser):
     optparser.add_option("-f", "--force", dest="force", help="Force power off", action="store_true")
     return optparser

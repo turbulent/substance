@@ -5,6 +5,12 @@ from substance.exceptions import (SubstanceError)
 
 class Launch(Command):
 
+  def getUsage(self):
+    return "substance launch [ENGINE NAME]"
+   
+  def getHelpTitle(self):
+    return "Launch an engine's virtual machine"
+
   def getShellOptions(self, optparser):
     return optparser
 

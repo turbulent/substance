@@ -5,6 +5,12 @@ from substance.exceptions import (SubstanceError)
 
 class Sshinfo(Command):
 
+  def getUsage(self):
+    return "substance sshinfo [ENGINE NAME]"
+  
+  def getHelpTitle(self):
+    return "Obtain the ssh info configuration for connecting to an engine"
+
   def getShellOptions(self, optparser):
     return optparser
 

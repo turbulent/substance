@@ -9,9 +9,15 @@ from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
 
 class Init(SubenvCommand):
 
+  def getUsage(self):
+    return "subenv init [PATH TO PROJECT]"
+
+  def getHelpTitle(self):
+    return "Initialize or apply a project environment"
+
   def getShellOptions(self, optparser):
-    optparser.add_option("--name", type="str", dest="name", help="Envrionment name")
-    optparser.add_option("--define", "-D", dest="define", default=[], action='append', help="Define a variable for the environment")
+    optparser.add_option("-n", "--name", type="str", dest="name", help="Envrionment name")
+    optparser.add_option("-D", "--define", dest="define", default=[], action='append', help="Define a variable for the environment")
     return optparser
 
   def main(self):

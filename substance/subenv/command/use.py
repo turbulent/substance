@@ -9,6 +9,12 @@ from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
 
 class Use(SubenvCommand):
 
+  def getUsage(self):
+    return "subenv use [ENV NAME]"
+
+  def getHelpTitle(self):
+    return "Set a project environment as current"
+
   def getShellOptions(self, optparser):
     return optparser
 

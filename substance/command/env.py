@@ -5,6 +5,12 @@ from substance.exceptions import (SubstanceError)
 
 class Env(Command):
 
+  def getUsage(self):
+    return "substance env [ENGINE NAME]"
+ 
+  def getHelpTitle(self):
+    return "Print the shell envvars required to connect to this engine's docker daemon"
+
   def getShellOptions(self, optparser):
     return optparser
 

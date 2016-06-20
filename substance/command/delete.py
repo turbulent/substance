@@ -6,13 +6,17 @@ from substance.exceptions import (SubstanceError, EngineNotProvisioned)
 
 class Delete(Command):
 
+  def getUsage(self):
+    return "substance delete [ENGINE NAME]"
+
+  def getHelpTitle(self):
+    return "Permanently delete an engine and it's associated machine."
+
   def getShellOptions(self, optparser):
     return optparser
 
   def main(self):
-
     name = self.getInputName()
-
     self.core.initialize() \
       .then(defer(self.ask, "You are about to delete engine \"%s\"" % name)) \
       .then(defer(self.core.loadEngine, name)) \

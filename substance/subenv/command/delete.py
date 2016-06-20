@@ -9,9 +9,13 @@ from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
 
 class Delete(SubenvCommand):
 
+  def getUsage(self):
+    return "subenv delete [ENV NAME]"
+
+  def getHelpTitle(self):
+    return "Permanently delete a project environment"
+
   def getShellOptions(self, optparser):
-    optparser.add_option("--name", type="str", dest="name", help="Envrionment name")
-    optparser.add_option("--define", "-D", dest="define", default=[], action='append', help="Define a variable for the environment")
     return optparser
 
   def main(self):

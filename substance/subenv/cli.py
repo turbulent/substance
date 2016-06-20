@@ -15,7 +15,6 @@ class SubenvCLI(Command):
     self.cmdString = None
     self.commandInput = None
     self.command = None
-    self.commands = ['init','delete','ls', 'use']
 
   def setupLogging(self):
     log_level = logging.DEBUG if self.options.debug else logging.INFO
@@ -28,26 +27,18 @@ class SubenvCLI(Command):
     Command.getShellOptions(self, optparser)
 
     optparser.add_option("-d", '--debug',  dest="debug", help="Activate debugging output", default=False, action="store_true")
-    optparser.add_option('--yes', "-y", dest="assumeYes", help="Assume yes when prompted", default=False, action="store_true")
+    optparser.add_option('-y', "--yes", dest="assumeYes", help="Assume yes when prompted", default=False, action="store_true")
     optparser.add_option('-b', '--base', type="str", dest="base", help="Path to the base", default="/substance")
     return optparser
 
   def getUsage(self):
-    return "substance [options] COMMAND [command-options]"
+    return "subenv [options] COMMAND [command-options]"
 
-  def getHelp(self):
-    """Retrieve the help string for this command"""
+  def getHelpTitle(self):
+    return "Initialize a substance project environment"
+
+  def getHelpDetails(self):
     helpUsage = """
-
-subenv - Initialize a substance project environment.
-
-Usage: subenv [options] COMMAND [command-options] 
-
-Options:
-  -d, --debug       Activate debugging logs
-  -y, --yes         Assume yes when prompted
-  -b, --base        Use a different subenv base path. (default: /substance)
-
 Commands:
 
   ls             List substance environments
@@ -64,34 +55,20 @@ Commands:
     self.setupEnv()
 
     if not len(self.args) > 0:
-      self.exitHelp("Please provide a command.")
-
-    if self.getOption('help'):
-      return self.exitHelp()
+      self.exitError("Please provide a command.\n\nCheck 'subenv help' for available commands.")
 
     self.cmdString = self.args[0]
+    self.commandInput = self.args[1:]
 
     try:
-
       core = Core()
       api = SubenvAPI(self.options.base)
 
       if self.options.assumeYes:
         core.setAssumeYes(True)
 
-      moduleName = 'substance.subenv.command.' + self.cmdString
-      className = self.cmdString.title()
-
-      logging.debug("Import %s, ClassName: %s", moduleName, className)
-
-      module_ = import_module(moduleName)
-      class_ = getattr(module_, className)
-      self.command = class_(core=core, api=api)
-    except ImportError, err:
-      logging.debug("%s", err)
-      self.exitError("Unrecognized command %s" % self.cmdString)
-
-    try:
+      commandClass = self.findCommandClass(self.cmdString, package='substance.subenv.command')
+      self.command = commandClass(core=core, api=api)
       self.command.execute(self.commandInput)
     except Exception as err:
       logging.error(traceback.format_exc())
@@ -99,25 +76,8 @@ Commands:
 
   def execute(self, args=None):
     args.pop(0)
-
-    parsed = []
-    extraArgs = []
-    i = 0
-    for arg in args:
-      if i >= 1:
-        extraArgs.append(arg)
-        continue
-
-      if arg in self.commands:
-        i += 1
-      else:
-        parsed.append(arg)
-
     self.input = args
-    self.commandInput = extraArgs
-
     (self.options, self.args) = self.parseShellInput(False)
-
     self.main()
 
 def cli():

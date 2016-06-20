@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import sys
 import logging
 import traceback
-from importlib import import_module
 from optparse import OptionParser
 
 from substance import (Command, Core)
@@ -36,31 +35,28 @@ class SubstanceCLI(Command):
   def getUsage(self):
     return "substance [options] COMMAND [command-options]"
 
-  def getHelp(self):
-    """Retrieve the help string for this command"""
+  def getHelpTitle(self):
+    return "Local docker-based development environments"
+
+  def getHelpDetails(self):
     helpUsage = """
-Usage: substance COMMAND [options] [CONTAINERS..]
-
-substance - Local dockerized development environment.
-
-Options:
-  -f    Alternate config file location
-  -d    Activate debugging logs
-  -y    Assume yes when prompted
-
 Commands:
 
-  # Engine List, Init and Delete
-  #substance ls
-  #substance init mybox
-  #substance init mybox --box turbulent/substance-box:0.1
-  #substance delete mybox
+  # Engine commands
 
-  # Engine Control
-  #substance launch mybox
-  #substance stop mybox
-  #substance deprovision mybox
+  ls              List engines
+  init            Initialize a new engine
+  delete          Delete an engine
+  launch          Launch an existing engine
+  stop            Stop a running engine
+  suspend         Suspend a running engine
+  deprovision     Destroy the VM associated with an engine
+  ssh             Open an interactive shell with SSH on an engine
+  sshinfo         Output SSH connection info for an engine
+  env             Output the shell variables for connecting to the engine's docker daemon.
 
+  help            Help and usage information on commands
+   
   # Task Control
   substance task mybox load rsi-website
   substance task mybox status -a
@@ -68,12 +64,8 @@ Commands:
   substance task mybox stop -a
   substance task mybox remove -a
   substance task mybox recreate -a
-
   substance enter mybox myboxweb
   
-  #substance env mybox
-  #substance ssh mybox
-  #substance sshinfo mybox
 
   #Porcelain
   substance spawn -c client -p project 
@@ -94,33 +86,19 @@ Commands:
     self.setupEnv()
 
     if not len(self.args) > 0:
-      self.exitHelp("Please provide a command.")
-
-    if self.getOption('help'):
-      return self.exitHelp()
+      self.exitError("Please provide a command.\n\nCheck 'substance help' for available commands.")
 
     self.cmdString = self.args[0]
+    self.commandInput = self.args[1:]
 
     try:
-
       core = Core()
 
       if self.options.assumeYes:
         core.setAssumeYes(True)
 
-      moduleName = 'substance.command.'+self.cmdString
-      className = self.cmdString.title()
-
-      logging.debug("Import %s, ClassName: %s", moduleName, className)
-
-      module_ = import_module(moduleName)
-      class_ = getattr(module_, className)
-      self.command = class_(core=core)
-    except ImportError, err:
-      logging.debug("%s", err)
-      self.exitError("Unrecognized command %s" % self.cmdString)
-
-    try:
+      commandClass = self.findCommandClass(self.cmdString)
+      self.command = commandClass(core=core)
       self.command.execute(self.commandInput)
     except Exception as err:
       logging.error(traceback.format_exc())
@@ -128,30 +106,9 @@ Commands:
 
   def execute(self, args=None):
     args.pop(0)
-
-    parsed = []
-    extraArgs = []
-    i = 0
-    for arg in args:
-      if i >= 1:
-        extraArgs.append(arg)
-        continue
-
-      if arg[0] == '-' or arg[0:2] == '--':
-        parsed.append(arg)
-      else:
-        parsed.append(arg)
-        i += 1
-
-    #print("Top Level Input: %s" % parsed)
-    #print("Command Input: %s" % extraArgs)
-
-    self.input = parsed
-    self.commandInput = extraArgs
-
-    (self.options, self.args) = self.parseShellInput()
+    self.input = args
+    (self.options, self.args) = self.parseShellInput(False)
     self.main()
-
 
 
 def cli():

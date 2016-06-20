@@ -8,6 +8,12 @@ from substance import (Engine, Command, Shell)
 from substance.exceptions import (SubstanceError)
 
 class Deprovision(Command):
+  def getUsage(self):
+    return "substance deprovision [ENGINE NAME]"
+
+  def getHelpTitle(self):
+    return "Destroy an engine's assocaited virtual machine"
+
   def main(self):
     name = self.getInputName()
     self.core.initialize() \

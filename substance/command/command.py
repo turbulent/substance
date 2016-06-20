@@ -4,10 +4,18 @@ import sys
 import os
 import re
 import logging
+from importlib import import_module
 from optparse import OptionParser
 from getpass import getpass
 
 from substance import Shell
+
+class Parser(OptionParser):
+  pass
+#  def format_description(self, formatter):
+#    return self.description if self.description else ""
+  def format_epilog(self, formatter):
+    return "\n"+self.epilog if self.epilog else ""
 
 class Command(object):
 
@@ -18,16 +26,22 @@ class Command(object):
     self.core = core
     self.parser = None
 
-  def help(self):
+  def getHelp(self):
     """Returns the help description for this particular command"""
-    pass
+    return self.getParser().format_help()
+
+  def getHelpTitle(self):
+    return ""
+
+  def getHelpDetails(self):
+    return ""
 
   def getUsage(self):
     return "command: USAGE [options]"
 
   def getParser(self, interspersed=True):
     usage = self.getUsage()
-    parser = OptionParser(usage=usage, conflict_handler="resolve")
+    parser = Parser(usage=usage, conflict_handler="resolve", add_help_option=False, description=self.getHelpTitle(), epilog=self.getHelpDetails())
     self.getShellOptions(parser)
     if interspersed:
       parser.enable_interspersed_args()
@@ -43,7 +57,7 @@ class Command(object):
     return (opts, args)
 
   def getShellOptions(self, optparser):
-    optparser.add_option("-h", "--help", dest="help", help="Help about this command", action="store_true", default=False)
+    #optparser.add_option("-h", "--help", dest="help", help="Help about this command", action="store_true", default=False)
     return optparser
 
   def main(self):
@@ -95,7 +109,8 @@ class Command(object):
   def exitHelp(self, msg=None, code=1):
     logging.info(self.getHelp())
     logging.info("")
-    logging.info(msg)
+    if msg:
+      logging.info(msg)
     sys.exit(1)
 
   def exitError(self, msg=None, code=1):
@@ -140,4 +155,15 @@ class Command(object):
     except ValueError:
       return False
 
+  def findCommandClass(self, command, package='substance.command', className=None):
+    try:
+      moduleName = package+'.'+command
+      if not className:
+        className = command.title()
+      module_ = import_module(moduleName)
+      class_ = getattr(module_, className)
+      return class_
+    except ImportError, err:
+      logging.debug("%s", err)
+      return self.exitError("Unrecognized command %s" % command)
 
