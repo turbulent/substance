@@ -74,6 +74,7 @@ class Engine(object):
     defaults['name'] = 'default'
     defaults['driver'] = 'virtualbox'
     defaults['id'] = None
+    defaults['box'] = 'turbulent/substance-box:0.2'
     defaults['profile'] = EngineProfile().__dict__
     defaults['docker'] = OrderedDict()
     defaults['docker']['port'] = 2375
@@ -99,8 +100,13 @@ class Engine(object):
     ops.append(self.core.validateDriver(config.get('driver', None)))
     ops.append(self.confValidateDevroot(config.get('devroot', {})))
 
+    def dd(err):
+      print("%s" % err)
+      return ConfigValidationError(err.message)
+
+#lambda err: ConfigValidationError(err.message) if print("%s" % err.message) else None ) \
     return Try.sequence(ops) \
-      .catch(lambda err: ConfigValidationError(err.message)) \
+      .catch(dd) \
       .then(lambda: OK(config.getConfig()))
 
   def confValidateName(self, name):

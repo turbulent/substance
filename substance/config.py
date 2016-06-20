@@ -3,7 +3,7 @@ import logging
 from substance.monads import *
 from substance.shell import Shell
 from substance.utils import (readYAML, writeYAML, mergeDict)
-from substance.exceptions import (FileSystemError, FileDoesNotExist)
+from substance.exceptions import (FileSystemError, FileDoesNotExist, ConfigValidationError)
 
 from collections import namedtuple
 
@@ -49,6 +49,6 @@ class Config(object):
     return self.readConfigFile() >> self.setConfig
   
   def validateFieldsPresent(self, block, fields):
-    reducer = lambda acc,x: Fail("Property does not exist in configuration: %s" % x) if not x in block else OK(None)
+    reducer = lambda acc,x: Fail(ConfigValidationError("Property does not exist in configuration: %s" % x)) if not x in block else OK(None)
     return reduce(reducer, fields, OK(None))
 
