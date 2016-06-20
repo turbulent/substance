@@ -16,6 +16,7 @@ class Command(object):
     self.args = []
     self.input = None
     self.core = core
+    self.parser = None
 
   def help(self):
     """Returns the help description for this particular command"""
@@ -24,15 +25,21 @@ class Command(object):
   def getUsage(self):
     return "command: USAGE [options]"
 
-  def parseShellInput(self):
-    """Return the options and arguments for this command as a tuple"""
-
+  def getParser(self, interspersed=True):
     usage = self.getUsage()
     parser = OptionParser(usage=usage, conflict_handler="resolve")
     self.getShellOptions(parser)
-
+    if interspersed:
+      parser.enable_interspersed_args()
+    else:
+      parser.disable_interspersed_args()
+    return parser
+  
+  def parseShellInput(self, interspersed=True):
+    """Return the options and arguments for this command as a tuple"""
+    usage = self.getUsage()
+    parser = self.getParser(interspersed)
     (opts, args) = parser.parse_args(self.input)
-
     return (opts, args)
 
   def getShellOptions(self, optparser):

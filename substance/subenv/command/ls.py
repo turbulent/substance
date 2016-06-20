@@ -21,9 +21,9 @@ class Ls(SubenvCommand):
       .bind(logging.info) 
 
   def tabulateEnv(self, env):
-    return OK([env.name, env.basePath, env.getLastAppliedDateTime('%B %d %Y, %H:%M:%S')])
+    return OK([env.name, env.basePath, env.getLastAppliedDateTime('%B %d %Y, %H:%M:%S'), "X" if env.current else ""])
 
   def tabulateEnvs(self, envs):
-    headers = ["NAME", "BASEPATH", "MODIFIED"]
+    headers = ["NAME", "BASEPATH", "MODIFIED", "CURRENT"]
     table = tabulate(envs, headers=headers, tablefmt="plain")
     return OK(table)

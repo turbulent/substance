@@ -7,19 +7,16 @@ from substance.exceptions import (InvalidOptionError)
 
 from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
 
-class Delete(SubenvCommand):
+class Use(SubenvCommand):
 
   def getShellOptions(self, optparser):
-    optparser.add_option("--name", type="str", dest="name", help="Envrionment name")
-    optparser.add_option("--define", "-D", dest="define", default=[], action='append', help="Define a variable for the environment")
     return optparser
 
   def main(self):
     name = self.readInputName().catch(self.exitError).getOK()
     return self.api.exists(name) \
       .thenIfFalse(defer(self.exitError, "Environment '%s' does not exist." %  name)) \
-      .then(defer(self.ask, "You are about to delete subenv \"%s\"" % name)) \
-      .then(defer(self.api.delete, name)) \
+      .then(defer(self.api.use, name))  \
       .catch(self.exitError)
 
   def readInputName(self):

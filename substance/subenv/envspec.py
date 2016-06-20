@@ -18,6 +18,8 @@ class SubenvSpec(object):
     self.overrides = vars
     self.vars = OrderedDict()
     self.lastApplied = lastApplied
+    self.current = False
+    self.struct = {'files': [], 'dirs': []}
 
   @staticmethod
   def fromEnvPath(path):
@@ -41,10 +43,12 @@ class SubenvSpec(object):
     if 'subenv.lastApplied' in envVars:
       lastApplied = envVars['subenv.lastApplied']
     
-    return SubenvSpec(envVars['subenv.specPath'], envVars['subenv.basePath'], envVars['subenv.name'], vars, lastApplied)
+    env = SubenvSpec(envVars['subenv.specPath'], envVars['subenv.basePath'], envVars['subenv.name'], vars, lastApplied)
+    env.envPath = envPath
+    return env
 
   @staticmethod
-  def fromSpecPath(path, vars={}):
+  def fromSpecPath(path, vars={}, name=None):
     if not os.path.isdir(path):
       return Fail(InvalidOptionError("Specified path '%s' does not exist." % path))
 
@@ -52,7 +56,9 @@ class SubenvSpec(object):
       return Fail(InvalidOptionError("Invalid path specified. Please pass a path to a folder with a %s directory." % SPECDIR))
     specPath = os.path.join(path, SPECDIR)
 
-    return SubenvSpec(specPath, path, os.path.basename(path), vars).scan()
+    name = os.path.basename(path) if name is None else name
+
+    return SubenvSpec(specPath, path, name, vars).scan()
 
   def getLastAppliedDateTime(self, fmt='%Y-%m-%d %H:%M:%S'):
     if self.lastApplied:

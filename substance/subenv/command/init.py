@@ -15,7 +15,11 @@ class Init(SubenvCommand):
     return optparser
 
   def main(self):
-    return Try.sequence([ self.readInputPath(), self.readInputEnv() ]) \
+    params = [ self.readInputPath(), self.readInputEnv() ]
+    if self.options.name:
+      params.append(OK(os.path.normpath(self.options.name)))
+
+    return Try.sequence(params) \
       .bind(lambda l: self.api.init(*l)) \
       .catch(self.exitError) \
       .bind(lambda e: logging.info("Environment '%s' initialized." % e.name)) 
@@ -35,3 +39,9 @@ class Init(SubenvCommand):
       return Fail(InvalidOptionError("Please specify a path to a '%s' folder." % SPECDIR))
     path = os.path.abspath(os.path.normpath(self.args[0]))
     return OK(path)
+
+  def readInputName(self):
+    
+    name = os.path.normpath(self.options.name)
+    return OK(name)
+

@@ -195,3 +195,6 @@ def makeSymlink(source, link, force=False):
       os.symlink(source, link)
     else:
       raise e
+
+def readSymlink(link):
+  return os.readlink(link)

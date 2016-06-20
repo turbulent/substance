@@ -15,7 +15,7 @@ class SubenvCLI(Command):
     self.cmdString = None
     self.commandInput = None
     self.command = None
-    self.commands = ['init','delete','ls']
+    self.commands = ['init','delete','ls', 'use']
 
   def setupLogging(self):
     log_level = logging.DEBUG if self.options.debug else logging.INFO
@@ -38,32 +38,22 @@ class SubenvCLI(Command):
   def getHelp(self):
     """Retrieve the help string for this command"""
     helpUsage = """
-Usage: subenv COMMAND [options] [CONTAINERS..]
 
-subenv - Initialize a substance dockerized environment.
+subenv - Initialize a substance project environment.
+
+Usage: subenv [options] COMMAND [command-options] 
 
 Options:
-  -d    Activate debugging logs
-  -y    Assume yes when prompted
+  -d, --debug       Activate debugging logs
+  -y, --yes         Assume yes when prompted
+  -b, --base        Use a different subenv base path. (default: /substance)
 
 Commands:
 
-  subenv ls
-  subenv init PATH/TO/PROJECT
-  subenv use PROJECT
-  subenv delete PROJECT
- 
-Samples: 
-
-  subenv create 
-    -b /substance
-    -e envfile
-    -D VAR=value
-    -D VAR1=value
-    -D VAR2=value
-    -D VAR3=value
-    -n project-name
-    project-name
+  ls             List substance environments
+  init           Initialize or refresh a substance environment
+  delete         Delete an existing substance environment
+  use            Select which environment is active and in use.
  
 """
     return helpUsage
@@ -126,7 +116,7 @@ Samples:
     self.input = args
     self.commandInput = extraArgs
 
-    (self.options, self.args) = self.parseShellInput()
+    (self.options, self.args) = self.parseShellInput(False)
 
     self.main()
 
