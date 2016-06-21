@@ -39,7 +39,10 @@
     },
     {
       "type": "shell",
-      "scripts": [ "scripts/cleanup.sh", "scripts/compress.sh" ],
+      "scripts": [ 
+        "scripts/cleanup.sh",
+        "scripts/compress.sh" 
+       ],
       "execute_command": " echo {{user `ssh_pass`}} | {{.Vars}} sudo -S -E bash '{{.Path}}'"
     }
   ]

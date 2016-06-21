@@ -76,6 +76,9 @@ class Core(object):
     defaults['virtualbox'] = OrderedDict()
     defaults['virtualbox']['network'] = "172.21.21.0/24"
     defaults['virtualbox']['interface'] = None
+    defaults['current'] = OrderedDict()
+    defaults['engine'] = None
+    defaults['subenv'] = None
     return defaults
     
   def makeDefaultConfig(self, data=None):
@@ -85,7 +88,24 @@ class Core(object):
       self.config.set(kkk, vvv)
     self.config.set("basePath", self.basePath)
     return self.config.saveConfig()
- 
+
+  #-- Use
+
+  def setUse(self, engine, subenvName=None):
+    current = self.config.get('current')
+    current.update({'engine':engine.name, 'subenv': subenvName})
+    self.config.set('current', current)
+    return OK(self)
+
+  def loadCurrentEngine(self, name=None):
+    if name:
+      return self.loadEngine(name)
+    current = self.config.get('current', {}) 
+    if current.get('engine'):
+      return self.loadEngine(current.get('engine'))
+    else:
+      return Fail(EngineNotFoundError("No current engine is specified. Check the 'use' command for details."))
+
   #-- Runtime
 
   def setAssumeYes(self, ay):

@@ -4,10 +4,10 @@ import shlex
 
 from substance.logs import *
 from substance.exceptions import (InvalidOptionError)
+from substance import Command
+from substance.subenv import (SPECDIR, SubenvAPI)
 
-from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
-
-class Use(SubenvCommand):
+class Use(Command):
 
   def getUsage(self):
     return "subenv use [ENV NAME]"

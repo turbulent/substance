@@ -9,7 +9,7 @@ class Env(Command):
     return "substance env [ENGINE NAME]"
  
   def getHelpTitle(self):
-    return "Print the shell envvars required to connect to this engine's docker daemon"
+    return "Print the shell variables to set up the local docker client environment"
 
   def getShellOptions(self, optparser):
     return optparser

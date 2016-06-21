@@ -444,7 +444,16 @@ class Engine(object):
     cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (echoCmd, hostCmd, hostsCmd, serviceCmd)
     cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
     return Try.sequence(cmds) 
- 
+
+  def switch(self, subenvName):
+    logging.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
+    cmd = "subenv use '%s'" % subenvName
+    return self.readLink().bind(Link.runCommand, cmd, stream=True, sudo=False)
+  
+  def docker(self, cmd):
+    cmd = "docker %s" % cmd
+    return self.readLink().bind(Link.runCommand, cmd, stream=True, sudo=False)
+      
   def getEngineFolders(self):
     #XXX Dynamic mounts / remove hardcoded values.
     devroot = self.config.get('devroot')

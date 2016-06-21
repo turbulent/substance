@@ -4,10 +4,10 @@ import shlex
 
 from substance.logs import *
 from substance.exceptions import (InvalidOptionError)
+from substance import Command
+from substance.subenv import (SPECDIR, SubenvAPI)
 
-from substance.subenv import (SubenvCommand, SPECDIR, SubenvAPI)
-
-class Init(SubenvCommand):
+class Init(Command):
 
   def getUsage(self):
     return "subenv init [PATH TO PROJECT]"

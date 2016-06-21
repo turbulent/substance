@@ -17,3 +17,5 @@ from .driver import Driver
 from .link import Link
 
 from .command.command import Command
+from .command.command import Program
+from .command.command import SubProgram

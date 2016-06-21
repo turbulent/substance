@@ -10,6 +10,11 @@ class SubstanceError(Exception):
     super(SubstanceError, self).__init__(message)
     self.errorLabel = message
 
+class InvalidCommandError(SubstanceError):
+  '''
+  Raised when an invalid command is passed to CLI
+  '''
+
 class InvalidOptionError(SubstanceError):
   '''
   Raised when an invalid option is passed to CLI

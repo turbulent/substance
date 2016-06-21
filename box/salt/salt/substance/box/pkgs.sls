@@ -17,6 +17,11 @@ python-pip:
   pkg:
     - installed
 
+python-dev:
+  pkg:
+    - installed
+
 rsync:
   pkg:
     - installed
+

@@ -8,6 +8,7 @@ from time import time
 from collections import namedtuple
 from substance.monads import *
 from substance.exceptions import *
+from subprocess import check_output
 
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
@@ -49,7 +50,8 @@ class Link(object):
       if tries >= maxtries:
         return Fail(LinkRetriesExceeded("Max retries exceeded"))
       tries += 1
-  
+ 
+    self.connected = True 
     return OK(self)
  
   def connectEngine(self, engine):
@@ -178,37 +180,52 @@ class Link(object):
 
   def _posixShell(self):
     import select
- 
-    channel = self.client.invoke_shell()
-    forward = paramiko.agent.AgentRequestHandler(channel)
-         
+
     sys.stdout.write('\r\n*** Begin interactive session.\r\n')
     oldtty = termios.tcgetattr(sys.stdin)
+
+    channel = self.client.invoke_shell()
+    forward = paramiko.agent.AgentRequestHandler(channel)
+
+    def resize_pty():
+      tty_height, tty_width = check_output(['stty', 'size']).split()
+
+      # try to resize, and catch it if we fail due to a closed connection
+      try:
+        channel.resize_pty(width=int(tty_width), height=int(tty_height))
+      except paramiko.ssh_exception.SSHException:
+        pass
+ 
     try:
       tty.setraw(sys.stdin.fileno())
       tty.setcbreak(sys.stdin.fileno())
       channel.settimeout(0.0)
 
-      while True:
+      isAlive = True
+      resize_pty()
+      while isAlive:
         r, w, e = select.select([channel, sys.stdin], [], [])
         if channel in r:
           try:
             x = u(channel.recv(1024))
             if len(x) == 0:
-              sys.stdout.write('\r\n*** End of interactive session.\r\n')
-              break
-            sys.stdout.write(x)
-            sys.stdout.flush()
+              isAlive = False
+            else:
+              sys.stdout.write(x)
+              sys.stdout.flush()
           except socket.timeout:
             pass
-        if sys.stdin in r:
-          x = sys.stdin.read(1)
+        if sys.stdin in r and isAlive:
+          x = os.read(sys.stdin.fileno(), 1)
           if len(x) == 0:
-            break
-          channel.send(x)
+            isAlive = False
+          else:
+            channel.send(x)
+      channel.shutdown(2)
 
     finally:
       termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
+      sys.stdout.write('\r\n*** End of interactive session.\r\n')
 
   def _windowsShell(self):
     import threading
