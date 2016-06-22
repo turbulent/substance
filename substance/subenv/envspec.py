@@ -4,6 +4,7 @@ from collections import OrderedDict
 from substance.monads import *
 from substance.constants import *
 from substance.utils import readDotEnv, writeToFile, makeSymlink
+from substance.exceptions import (InvalidEnvError, InvalidOptionError)
 from substance import Shell
 from substance.subenv import (SPECDIR, ENVFILE, CODELINK)
 import jinja2
