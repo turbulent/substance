@@ -151,7 +151,7 @@ class SubenvError(SubstanceError):
   Subenv errors
   '''
 
-class InvalidEnv(SubenvError):
+class InvalidEnvError(SubenvError):
   '''
   Raised when an invalid env is specified
   '''
