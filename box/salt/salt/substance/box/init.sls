@@ -3,5 +3,6 @@ include:
   - .network
   - .user
   - .docker
+  - .vboxguestadd
   - .tools
   - .cleanup
