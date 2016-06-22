@@ -58,7 +58,7 @@ class Link(object):
     connectDetails = engine.getConnectInfo()
     self.hostname = connectDetails.get('hostname')
     self.port = connectDetails.get('port')
-    logging.info("Connecting to engine %s via %s:%s" % (engine.name, self.hostname, self.port))
+    logging.debug("Connecting to engine %s via %s:%s" % (engine.name, self.hostname, self.port))
     return self.loadKey().then(self.waitForConnect)
 
   def connectHost(self, host, port):
@@ -131,20 +131,27 @@ class Link(object):
     try:
       channel = self.client.get_transport().open_session()
       forward = paramiko.agent.AgentRequestHandler(channel)
-      stdin = channel.makefile('wb', -1)
-      stdout = channel.makefile('rb', -1)
-      stderr = channel.makefile('rb', -1)
+      stdin = ''
+      stdout = ''
+      stderr = ''
       channel.exec_command(cmd, *args, **kwargs)
       while True:
         if channel.exit_status_ready():
           break
         if channel.recv_ready() and stream:
-          sys.stdout.write(channel.recv(1024))
-         
+          d = channel.recv(1024)
+          sys.stdout.write(d)
+          stdout += d
+
         if channel.recv_stderr_ready() and stream:
-          sys.stdout.write(channel.recv_stderr(1024))
+          d = channel.recv_stderr(1024)
+          sys.stderr.write(d)
+          stderr += d
 
       code = channel.recv_exit_status()
+
+      if code != 0:
+        return Fail(LinkCommandError(cmd=cmd, message="An error occured when running command." , stdout=stdout, stderr=stderr, code=code, link=self))
 
       return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=code))
     except Exception as err:
