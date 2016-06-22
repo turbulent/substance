@@ -25,7 +25,7 @@ build/$(BOX_NAME)/substance-disk1.vmdk: $(BOX_NAME).packer.json
 	@echo ""
 	packer build -force $<
 
-build/$(BOX_NAME)-$(BOX_VERSION).box:
+build/$(BOX_NAME)-$(BOX_VERSION).box: build/$(BOX_NAME)/substance-disk1.vmdk
 	@echo ""
 	@echo "Producing box artifact $(BOX_NAME)-$(BOX_VERSION).box"
 	@echo ""

@@ -21,14 +21,12 @@ class InvalidOptionError(SubstanceError):
   '''
 
 class ShellCommandError(SubstanceError):
-  code = None
-  stdout = None
-  stderr = None
-  def __init__(self, code=None, message='', stdout='', stderr=''):
+  def __init__(self, code=None, message='', stdout='', stderr='', cmd=''):
     super(SubstanceError, self).__init__(message)
     self.code = code
     self.stdout = stdout
     self.stderr = stderr
+    self.cmd = cmd
 
 class UserInterruptError(SubstanceError):
   '''
@@ -121,6 +119,17 @@ class LinkRetriesExceeded(SubstanceError):
   '''
   Link retries exceeded
   '''
+class LinkCommandError(ShellCommandError):
+  '''
+  Link command error
+  '''
+  def __init__(self, code=None, message='', stdout='', stderr='', cmd='', link=None):
+    super(SubstanceError, self).__init__(message)
+    self.code = code
+    self.stdout = stdout
+    self.stderr = stderr
+    self.cmd = cmd
+    self.link = link
 
 class BoxError(SubstanceError):
   '''

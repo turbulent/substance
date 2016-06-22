@@ -21,7 +21,19 @@ python-dev:
   pkg:
     - installed
 
+libffi-dev:
+  pkg:
+    - installed
+
+libssl-dev:
+  pkg:
+    - installed
+
 rsync:
   pkg:
     - installed
+
+setuptools:
+  cmd.run:
+    - name: pip install --upgrade setuptools 
 
