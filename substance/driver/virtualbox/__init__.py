@@ -134,6 +134,9 @@ class VirtualBoxDriver(Driver):
     else:
       return machine.start(uuid) 
 
+  def readMachineWaitForNetwork(self, uuid, timeout=5000):
+    return machine.readWaitGuestProperty(uuid, "/VirtualBox/GuestInfo/Net", timeout)
+
   def readMachineNetworkInfo(self, uuid):
     def format(res):
       info = OrderedDict()

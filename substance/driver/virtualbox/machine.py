@@ -144,6 +144,10 @@ def readMachineState(uuid):
     .catch(lambda err: OK("inexistent") if err.code == "VBOX_E_OBJECT_NOT_FOUND" else Fail(err)) \
     .bind(parseMachineState)
 
+def readWaitGuestProperty(uuid, pattern, timeout=1000):
+  logging.debug("Read wait(%ss) on pattern %s on %s" % (timeout, pattern, uuid))
+  return vboxManager("guestproperty", "wait %s %s --timeout %s" % (uuid, pattern, timeout)) 
+  
 def readGuestProperty(uuid, prop):
   logging.debug("Read guest property %s on %s" % (prop, uuid))
   return vboxManager("guestproperty", "get %s %s" % (uuid, prop)) \

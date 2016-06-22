@@ -314,6 +314,7 @@ class Engine(object):
       .then(self.mountFolders)
  
   def saveDriverNetworkInfo(self, info):
+    logging.debug("Network information for machine: %s" % info)
     net = self.config.get('network', OrderedDict())
     net.update(info) 
     self.config.set('network', net)
@@ -334,6 +335,7 @@ class Engine(object):
         .then(self.updateNetworkInfo) \
         .then(self.__start) \
         .then(self.__waitForReady) \
+        .then(self.__waitForNetwork) \
         .then(self.postLaunch)
 
   def readBox(self):
@@ -430,6 +432,10 @@ class Engine(object):
 
   def shell(self):
     return self.readLink() >> Link.interactive
+
+  def __waitForNetwork(self):
+    logging.info("Waiting for machine network...")
+    return self.getDriver().readMachineWaitForNetwork(self.getDriverID())
 
   def __waitForReady(self):
     logging.info("Waiting for machine to boot...")

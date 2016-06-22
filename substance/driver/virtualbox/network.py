@@ -247,12 +247,6 @@ def removeHostOnlyInterface(hoif):
     .catch(lambda x: OK(hoif)) \
     .then(defer(vboxManager, "hostonlyif", "remove \"%s\"" % hoif.name))
 
-#VBoxManage hostonlyif create
-#VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1
-#VBoxManage dhcpserver add --ifname vboxnet0 --ip 192.168.56.1 --netmask 255.255.255.0 --lowerip 192.168.56.100 --upperip 192.168.56.200
-#VBoxManage dhcpserver modify --ifname vboxnet0 --enable
-
-
 # -- Private helpers
 
 def _ipFrom(ip):
