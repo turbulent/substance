@@ -146,3 +146,12 @@ class BoxArchiveHashMismatch(BoxError):
   Raised when a box archive hash does not match the registry.
   '''
 
+class SubenvError(SubstanceError):
+  '''
+  Subenv errors
+  '''
+
+class InvalidEnv(SubenvError):
+  '''
+  Raised when an invalid env is specified
+  '''

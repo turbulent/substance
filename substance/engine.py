@@ -453,8 +453,9 @@ class Engine(object):
 
   def switch(self, subenvName):
     logging.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
-    cmd = "subenv use '%s'" % subenvName
-    return self.readLink().bind(Link.runCommand, cmd, stream=True, sudo=False)
+    cmd = "subenv init '%s' && subenv use '%s'" % (subenvName, subenvName)
+    return self.readLink() \
+      .bind(Link.runCommand, cmd, stream=True, sudo=False) 
   
   def docker(self, cmd):
     cmd = "docker %s" % cmd

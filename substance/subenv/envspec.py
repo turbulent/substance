@@ -50,7 +50,7 @@ class SubenvSpec(object):
   @staticmethod
   def fromSpecPath(path, vars={}, name=None):
     if not os.path.isdir(path):
-      return Fail(InvalidOptionError("Specified path '%s' does not exist." % path))
+      return Fail(InvalidEnvError("Specified path '%s' does not exist." % path))
 
     if os.path.basename(path) == SPECDIR or not os.path.isdir(os.path.join(path, SPECDIR)):
       return Fail(InvalidOptionError("Invalid path specified. Please pass a path to a folder with a %s directory." % SPECDIR))
