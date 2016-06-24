@@ -142,16 +142,20 @@ class TestMonads(unittest.TestCase):
 
     self.assertEqual(OK(40), attemptCatchOK)
 
-  def testTryThenIf(self):
+  def testTryThenIfBool(self):
     valError = ValueError()
-    self.assertEqual(OK(10).thenIf(lambda *x: OK(20), lambda *x: Fail(valError)), Fail(valError))
-    self.assertEqual(OK(True).thenIf(lambda *x: OK(20), lambda *x: Fail(valError)), OK(20))
-    self.assertEqual(OK(False).thenIf(lambda *x: OK(20), lambda *x: Fail(valError)), Fail(valError))
-    self.assertEqual(Fail(valError).thenIf(lambda *x: OK(20), lambda *x: OK(20)), Fail(valError))
+    self.assertEqual(OK(10).thenIfBool(lambda *x: OK(20), lambda *x: Fail(valError)), Fail(valError))
+    self.assertEqual(OK(True).thenIfBool(lambda *x: OK(20), lambda *x: Fail(valError)), OK(20))
+    self.assertEqual(OK(False).thenIfBool(lambda *x: OK(20), lambda *x: Fail(valError)), Fail(valError))
+    self.assertEqual(Fail(valError).thenIfBool(lambda *x: OK(20), lambda *x: OK(20)), Fail(valError))
     self.assertEqual(OK(True).thenIfTrue(lambda *x: OK(10)), OK(10))
     self.assertEqual(OK(True).thenIfFalse(lambda *x: OK(10)), OK(True))
     self.assertEqual(OK(False).thenIfTrue(lambda *x: OK(10)), OK(False))
     self.assertEqual(OK(False).thenIfFalse(lambda *x: OK(10)), OK(10))
+
+  def testTryThenIfNone(self):
+    self.assertEqual(OK(10).thenIfNone(lambda *x: OK(20)), OK(10))
+    self.assertEqual(OK(None).thenIfNone(lambda *x: OK(20)), OK(20))
 
   def testTryBindIf(self):
     valError = ValueError()

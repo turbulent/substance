@@ -168,12 +168,20 @@ class Try(Monad):
     return OK(f(self.getOK()))
 
   def thenIfTrue(self, f):
-    return self.thenIf(f, lambda: OK(False))
+    return self.thenIfBool(f, lambda: OK(False))
 
   def thenIfFalse(self, f):
-    return self.thenIf(lambda: OK(True), f)
+    return self.thenIfBool(lambda: OK(True), f)
 
-  def thenIf(self, fTrue, fFalse):
+  def thenIfNone(self, f):
+    if self.isFail():
+      return self
+    if self.getOK() is None:
+      return self.then(f)
+    else:
+      return self
+        
+  def thenIfBool(self, fTrue, fFalse):
     if self.isFail():
       return self
     if self.getOK() is True:
