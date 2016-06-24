@@ -10,33 +10,42 @@ substance then allows you to switch from project to project simply by having a s
 
 # Engine commands
 
-substance engine ls
-substance engine init
-substance engine delete
-substance engine launch
-substance engine stop
-substance engine suspend
-substance engine deprovision
-substance engine ssh
-substance engine sshinfo
-substance engine env
+[x] substance engine ls
+[x] substance engine init
+[x] substance engine delete
+[x] substance engine launch
+[x] substance engine stop
+[x] substance engine suspend
+[x] substance engine deprovision
+[x] substance engine ssh
+[x] substance engine sshinfo
+[x] substance engine env
 
-substance help
+[x] substance help
 
 
 # Utility
 
-x substance use enginename project
-x substance switch project --restart
-substance status
+[] substance use enginename
+[x] substance switch project [--restart]
+[x] substance status [--full]
 substance logs -f web*nginx*access*.log -n 100
 substance docker command
 
 # Project commands
 
-substance start -a
-substance start container
-substance stop container
+[x] substance start [-e ENGINE] [CONTAINER...] --reset
+[x] substance stop [-e ENGINE] [CONTAINER...] 
+substance enter CONTAINER
+substance exec CONTAINER command...
 
-substance enter container
-substance exec container command
+[] Porcelain spawn
+[] Porcelain hatch
+
+# TODO
+
+[] Doc: How it works
+[] Doc: How to use
+[] Doc: Box guide
+[] Speed-up import @ python start
+[] Refactor CLI with functional
