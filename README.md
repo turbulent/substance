@@ -26,7 +26,7 @@ substance then allows you to switch from project to project simply by having a s
 
 # Utility
 
-- [] substance use enginename
+- [ ] substance use enginename
 - [x] substance switch project [--restart]
 - [x] substance status [--full]
 substance logs -f web*nginx*access*.log -n 100
@@ -39,13 +39,13 @@ substance docker command
 substance enter CONTAINER
 substance exec CONTAINER command...
 
-- [] Porcelain spawn
-- [] Porcelain hatch
+- [ ] Porcelain spawn
+- [ ] Porcelain hatch
 
 # TODO
 
-- [] Doc: How it works
-- [] Doc: How to use
-- [] Doc: Box guide
-- [] Speed-up import @ python start
-- [] Refactor CLI with functional
+- [ ] Doc: How it works
+- [ ] Doc: How to use
+- [ ] Doc: Box guide
+- [ ] Speed-up import @ python start
+- [ ] Refactor CLI with functional
