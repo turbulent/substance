@@ -26,10 +26,10 @@ substance help
 
 # Utility
 
-substance use enginename project
-substance switch project
-substance info
-substance logs -f web*nginx*access*.log
+x substance use enginename project
+x substance switch project --restart
+substance status
+substance logs -f web*nginx*access*.log -n 100
 substance docker command
 
 # Project commands

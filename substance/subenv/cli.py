@@ -36,6 +36,8 @@ class SubenvCLI(Program):
       core.setAssumeYes(True)
     command.core = core
 
+    core.initialize().catch(self.exitError)
+
     api = SubenvAPI(self.getOption('base'))
     command.api = api
 

@@ -15,6 +15,9 @@ class SubstanceCLI(Program):
     self.addCommand('engine', 'substance.command.engine')
     self.addCommand('use', 'substance.command.use')
     self.addCommand('switch', 'substance.command.switch')
+    self.addCommand('start', 'substance.command.start')
+    self.addCommand('stop', 'substance.command.stop')
+    self.addCommand('status', 'substance.command.status')
     return self
 
   def getShellOptions(self, optparser):
@@ -33,6 +36,9 @@ class SubstanceCLI(Program):
     core = Core()
     if self.getOption('assumeYes'):
       core.setAssumeYes(True)
+
+    core.initialize().catch(self.exitError)
+
     command.core = core
     return command
 

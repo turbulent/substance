@@ -50,7 +50,9 @@ class Link(object):
       if tries >= maxtries:
         return Fail(LinkRetriesExceeded("Max retries exceeded"))
       tries += 1
- 
+
+    end = time()
+    logging.debug("Connect time: %ss" % (end-start)) 
     self.connected = True 
     return OK(self)
  
@@ -138,14 +140,18 @@ class Link(object):
       while True:
         if channel.exit_status_ready():
           break
-        if channel.recv_ready() and stream:
+        if channel.recv_ready():
           d = channel.recv(1024)
-          sys.stdout.write(d)
+          if stream:
+            sys.stdout.write(d)
+            sys.stdout.flush()
           stdout += d
 
-        if channel.recv_stderr_ready() and stream:
+        if channel.recv_stderr_ready():
           d = channel.recv_stderr(1024)
-          sys.stderr.write(d)
+          if stream:
+            sys.stderr.write(d)
+            sys.stderr.flush()
           stderr += d
 
       code = channel.recv_exit_status()

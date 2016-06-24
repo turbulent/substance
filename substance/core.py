@@ -10,7 +10,7 @@ from substance.engine import Engine
 from substance.link import Link
 from substance.box import Box
 from substance.db import DB
-from substance.constants import Tables
+from substance.constants import Tables, EngineStates
 from substance.utils import (
   readYAML,
   writeYAML,
@@ -26,7 +26,8 @@ from substance.exceptions import (
   FileSystemError,
   FileDoesNotExist,
   EngineNotFoundError,
-  EngineExistsError
+  EngineExistsError,
+  EngineNotRunning
 )
 import requests
 
@@ -46,6 +47,7 @@ class Core(object):
     self.insecurePubKey = None
 
     self.assumeYes = False
+    self.initialized = False
 
   def getBasePath(self):
     return self.basePath
@@ -60,7 +62,12 @@ class Core(object):
     return self.dbFile
 
   def initialize(self):
-    return self.assertPaths().then(self.assertConfig).then(self.initializeDB)
+    if self.initialized:
+      return OK(None)
+    return self.assertPaths().then(self.assertConfig).then(self.initializeDB).then(defer(self.setInitialized, b=True))
+
+  def setInitialized(self, b):
+    self.initialized = b
 
   def assertPaths(self):
     return OK([self.basePath, self.enginesPath, self.boxesPath]).mapM(Shell.makeDirectory)
@@ -98,13 +105,20 @@ class Core(object):
     return OK(self)
 
   def loadCurrentEngine(self, name=None):
-    if name:
-      return self.loadEngine(name)
     current = self.config.get('current', {}) 
-    if current.get('engine'):
-      return self.loadEngine(current.get('engine'))
-    else:
+    engineName = current.get('engine', name)
+    if not engineName:
       return Fail(EngineNotFoundError("No current engine is specified. Check the 'use' command for details."))
+
+    engine = self.loadEngine(engineName) \
+      .bind(Engine.loadConfigFile) \
+      .bind(Engine.loadState) \
+      .getOK()
+
+    if engine.state is not EngineStates.RUNNING:
+      return Fail(EngineNotRunning("Engine '%s' is not running." % engine.name))
+
+    return OK(engine)
 
   #-- Runtime
 

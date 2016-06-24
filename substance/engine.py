@@ -21,6 +21,7 @@ from substance.exceptions import (
   EngineExistsError, 
   EngineNotProvisioned,
   EngineProvisioned,
+  EnvNotFoundError
 )
 
 class EngineProfile(object):
@@ -65,7 +66,7 @@ class Engine(object):
     self.name = name
     self.enginePath = enginePath
     self.core = core
-    self.link = core.getLink()
+    self.link = None
     configFile = os.path.join(self.enginePath, "engine.yml")
     self.config = Config(configFile)
 
@@ -405,9 +406,20 @@ class Engine(object):
     return operation.map(self.chainSelf)
      
   def readLink(self):
-    if not self.link:
-      self.link = self.core.getLink()
-    return self.link.connectEngine(self)
+    if self.link is not None:
+      return OK(self.link)
+    link = self.core.getLink()
+    return link.connectEngine(self).map(self.__cacheLink)
+
+  def __cacheCurrentEnv(self, lr):
+    env = lr.stdout.strip()
+    logging.debug("Current environment: '%s'" % (env))
+    self.currentEnv = env
+    return lr
+
+  def __cacheLink(self, link):
+    self.link = link
+    return link
 
   def __start(self, *args):
     return self.getDriver().startMachine(self.getDriverID()).map(self.chainSelf)
@@ -451,12 +463,73 @@ class Engine(object):
     cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
     return Try.sequence(cmds) 
 
-  def switch(self, subenvName):
+  def envSwitch(self, subenvName, restart=False):
     logging.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
-    cmd = "subenv init '%s' && subenv use '%s'" % (subenvName, subenvName)
+    cmds = [
+      "subenv init '/substance/devroot/%s'" % (subenvName),
+      "subenv use '%s'" % (subenvName),
+      "dockwrkr -y reset"
+    ]
+
+    if restart:
+      cmds.append("cd /substance/current")
+      cmds.append("dockwrkr start -a")
+
     return self.readLink() \
-      .bind(Link.runCommand, cmd, stream=True, sudo=False) 
+      .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
+
+  def envLoadCurrent(self):
+    cmds = [ "subenv current" ]
+    return self.readLink() \
+      .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False) \
+      .map(self.__cacheCurrentEnv) \
+      .catch(lambda err: Fail(EnvNotFoundError("No current subenv is set. Check 'switch' for detais."))) \
+      .then(lambda: self)
+
+ 
+  def envStart(self, reset=False, containers=[]):
+    cmds = []
+    if reset:
+      cmds.append("dockwrkr -y reset")
+
+    if len(containers) > 0:
+      logging.info("Starting %s containers for '%s'" % (' '.join(containers), self.currentEnv))
+      cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
+    else:
+      logging.info("Starting all containers for '%s'" % self.currentEnv) 
+      cmds.append('subenv run dockwrkr start -a')
+
+    return self.readLink() \
+      .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
+
+  def envStop(self, containers=[]):
+    cmds = []
+    if len(containers) > 0:
+      logging.info("Stopping %s containers for '%s'" % (' '.join(containers), self.currentEnv))
+      cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
+    else:
+      logging.info("Stopping containers for '%s'" % self.currentEnv) 
+      cmds.append('subenv run dockwrkr start -a')
+
+    return self.readLink() \
+      .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
+
+  def envStatus(self, full=False):
+    if full:
+      cmds = []
+      cmds.append('subenv run dockwrkr status -a')
+      return self.readLink() \
+        .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False) \
+        .map(self.__envStatus)
+    else:
+      return OK(self.__envStatus())
   
+  def __envStatus(self, containers=None):
+    return {
+      'engine': self,
+      'containers': containers.stdout + containers.stderr if containers else None
+    }
+     
   def docker(self, cmd):
     cmd = "docker %s" % cmd
     return self.readLink().bind(Link.runCommand, cmd, stream=True, sudo=False)

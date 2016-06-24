@@ -95,6 +95,11 @@ class EngineNotRunning(EngineError):
   Engine VM is not running.
   '''
 
+class EnvNotFoundError(EngineError):
+  '''
+  Raised when an env is not found
+  '''
+  
 class SubstanceDriverError(SubstanceError):
   '''
   Driver-specific raised error
