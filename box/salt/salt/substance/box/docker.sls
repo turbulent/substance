@@ -30,10 +30,14 @@ substance-docker-defaults:
     - show_changes: True
     - append_if_not_found: True
 
-/etc/profile.d/docker.sh:
-  file.managed:
-    - contents: export DOCKER_HOST="tcp://127.0.0.1:2375"
-    - mode: 755
+substance-docker-env:
+  file.blockreplace:
+    - name: /etc/environment
+    - marker_start: "# BLOCK SALT/SUBSTANCE : docker options"
+    - marker_end: "# /BLOCK SALT/SUBSTANCE : docker options"
+    - content: DOCKER_HOST="tcp://127.0.0.1:2375"
+    - show_changes: True
+    - append_if_not_found: True
 
 substance-docker-restart:
   cmd.run: 
