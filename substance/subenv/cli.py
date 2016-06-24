@@ -27,6 +27,8 @@ class SubenvCLI(Program):
     self.addCommand('init', 'substance.subenv.command.init')
     self.addCommand('delete', 'substance.subenv.command.delete')
     self.addCommand('use', 'substance.subenv.command.use')
+    self.addCommand('current', 'substance.subenv.command.current')
+    self.addCommand('run', 'substance.subenv.command.run')
 
   def initCommand(self, command):
     core = Core()

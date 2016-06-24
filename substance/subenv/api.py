@@ -54,7 +54,18 @@ class SubenvAPI(object):
   
     return Try.attempt(makeSymlink, envSpec.envPath, current, True) \
       .then(dinfo("Current substance environment now: '%s'" % envSpec.name))
-    
+
+  def current(self):
+    current = self._getCurrentEnv()
+    return OK(current) 
+  
+  def run(self, cmd):
+    current = self._getCurrentEnv()
+    if not current:
+      return Fail(InvalidEnvError("No env is currently active."))
+
+    return Shell.streamCommand(cmd, cwd=current.envPath)
+     
   def ls(self):
     envs = []
     current = self._getCurrentEnv()
