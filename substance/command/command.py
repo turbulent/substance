@@ -182,6 +182,11 @@ class Program(CLI):
   def setupLogging(self):
     log_level = logging.DEBUG if self.options.debug else logging.INFO
     logging.basicConfig(format='%(message)s', level=log_level)
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(log_level)
+    formatter = logging.Formatter('%(message)s')
+    ch.setFormatter(formatter)
+    logging.getLogger().addHandler(ch)
 
   def setupEnv(self):
     """Setup the Environment """
