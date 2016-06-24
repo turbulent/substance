@@ -6,7 +6,6 @@ from tabulate import tabulate
 class Stop(Command):
   def getShellOptions(self, optparser):
     optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
-    optparser.add_option("-r","--reset", dest="reset", help="Stop & remove all containers before starting", default=False, action="store_true")
     return optparser
 
   def getUsage(self):
