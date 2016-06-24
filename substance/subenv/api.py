@@ -56,15 +56,20 @@ class SubenvAPI(object):
       .then(dinfo("Current substance environment now: '%s'" % envSpec.name))
 
   def current(self):
-    current = self._getCurrentEnv()
-    return OK(current) 
+    return OK(self._getCurrentEnv())
   
-  def run(self, cmd):
-    current = self._getCurrentEnv()
-    if not current:
-      return Fail(InvalidEnvError("No env is currently active."))
+  def run(self, cmd, envName=None):
+    if not envName:
+      envSpec = self._getCurrentEnv() 
+      if not envSpec:
+        return Fail(InvalidEnvError("No env is currently active."))
+      envName = envSpec.name
 
-    return Shell.streamCommand(cmd, cwd=current.envPath)
+    return OK(envName) \
+      .bind(self._loadEnvSpec) \
+      .map(lambda x: x.envPath) \
+      .bind(lambda p: Shell.streamCommand(cmd, cwd=p))
+
      
   def ls(self):
     envs = []
@@ -77,13 +82,19 @@ class SubenvAPI(object):
           env.current = True
         envs.append(env)
     return OK(envs)
-    
+   
+  def _loadEnvSpec(self, name):
+    envPath = os.path.normpath(os.path.join(self.envsPath, name))
+    if not os.path.isdir(envPath):
+      return Fail(InvalidOptionError("Environment '%s' does not exist."))
+    return OK(SubenvSpec.fromEnvPath(envPath))
+
   def _getCurrentEnv(self):
     try:
       current = readSymlink(os.path.join(self.basePath, "current"))
       return SubenvSpec.fromEnvPath(current)
     except Exception as err:
-      return None 
+      return None
 
   def _applyEnv(self, envSpec):
     envPath = os.path.join(self.envsPath, envSpec.name)

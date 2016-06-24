@@ -22,6 +22,14 @@ class Parser(OptionParser):
   def format_epilog(self, formatter):
     return "\n"+self.epilog if self.epilog else ""
 
+class LoggingLessThanFilter(logging.Filter):
+  def __init__(self, level):
+    self._level = level
+    logging.Filter.__init__(self)
+
+  def filter(self, rec):
+    return rec.levelno < self._level
+
 class CLI(object):
   def __init__(self):
     self.args = None
@@ -180,8 +188,22 @@ class Program(CLI):
     return helpUsage
 
   def setupLogging(self):
-    log_level = logging.DEBUG if self.options.debug else logging.INFO
-    logging.basicConfig(format='%(message)s', level=log_level)
+    logLevel = logging.DEBUG if self.options.debug else logging.INFO
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.NOTSET)
+    formatter = logging.Formatter('%(message)s')
+    
+    stdout = logging.StreamHandler(sys.stdout)
+    stdout.setLevel(logLevel)
+    stdout.setFormatter(formatter)
+    stdout.addFilter(LoggingLessThanFilter(logging.WARNING))
+    logger.addHandler(stdout)
+
+    stderr = logging.StreamHandler(sys.stderr)
+    stderr.setLevel(logging.WARNING)
+    stderr.setFormatter(formatter)
+    logger.addHandler(stderr)
 
   def setupEnv(self):
     """Setup the Environment """
@@ -254,4 +276,5 @@ class Command(CLI):
 class SubProgram(Program):
   def initialize(self):
     self.setupCommands()
+
 

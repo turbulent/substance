@@ -47,7 +47,6 @@ class Init(Command):
     return OK(path)
 
   def readInputName(self):
-    
     name = os.path.normpath(self.options.name)
     return OK(name)
 
