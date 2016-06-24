@@ -105,23 +105,6 @@ class Link(object):
   def streamCommand(self, cmd, *args, **kwargs):
     return self.runCommand(cmd, stream=True) 
 
-#  def runCommand(self, cmd, *args, **kwargs):
-#    try:
-#      stdin, stdout, stderr = self.client.exec_command(cmd, *args, **kwargs)
-#      return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=None))
-#    except Exception as err:
-#      return Fail(err)
-#
-#  def onRunCommand(self, linkResponse):
-#    return OK(LinkResponse(
-#      link=self,
-#      cmd=linkResponse.cmd,
-#      stdin=linkResponse.stdin,
-#      stdout=linkResponse.stdout,
-#      stderr=linkResponse.stderr,
-#      code=linkResponse.stdout.channel.recv_exit_status()
-#    ))
-
   def runCommand(self, cmd, sudo=False, stream=False, *args, **kwargs):
    
     cmd = "sudo %s" % cmd if sudo is True else "%s" % cmd
