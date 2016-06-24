@@ -51,15 +51,49 @@ class Shell(object):
       return Fail(ShellCommandError(code=err.returncode, message=err.output, stdout=err.output))
 
   @staticmethod
-  def procCommand(cmd):
+  def procCommand(cmd, cwd=None):
     try:
       logging.debug("COMMAND: %s", cmd)
-      proc = Popen(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      proc = Popen(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
       pout, perr = proc.communicate()
       if proc.returncode == 0:
         return OK({"stdout": pout, "stderr": perr})
       else:
         return Fail(ShellCommandError(code=proc.returncode, message=pout, stdout=pout, stderr=perr))
+    except KeyboardInterrupt:
+      logging.info("CTRL-C Received...Exiting.")
+      return Fail(UserInterruptError())
+
+  @staticmethod
+  def streamCommand(cmd, cwd=None, shell=False):
+    try:
+      logging.debug("COMMAND: %s", cmd)
+      proc = Popen(shlex.split(cmd), shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+      stdout = ''
+      stderr = ''
+      while True:
+        d = proc.stdout.read(1)
+        if d != '':
+          stdout += d
+          sys.stdout.write(d)
+          sys.stdout.flush()
+
+        de = proc.stderr.read(1)
+        if de != '':
+          stderr += de
+          sys.stderr.write(de)
+          sys.stderr.flush()
+
+        if d == '' and de == '' and proc.poll() is not None:
+          break
+
+      if proc.returncode == 0:
+        return OK({"stdout": stdout, "stderr": stderr})
+      else:
+        return Fail(ShellCommandError(code=proc.returncode, message=stdout, stdout=stdout, stderr=stderr))
+    except OSError as err:
+      err.strerror = "Error running '%s': %s" % (cmd, err.strerror)
+      return Fail(err)
     except KeyboardInterrupt:
       logging.info("CTRL-C Received...Exiting.")
       return Fail(UserInterruptError())
@@ -95,3 +129,5 @@ class Shell(object):
       return OK(None)
     except Exception as err:
       return Fail(ShellCommandError(code=1, message="Failed to rmtree: %s: %s" % (path,err)))
+
+
