@@ -29,5 +29,4 @@ class Run(Command):
   def main(self):
     cmd = self.input
     return self.api.run(cmd=' '.join(cmd)) \
-      .thenIfNone(defer(self.exitError, "No current subenv is active.")) \
       .catch(self.exitError) 

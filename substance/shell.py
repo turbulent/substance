@@ -32,10 +32,10 @@ class Shell(object):
 
 
   @staticmethod
-  def call(cmd):
-    logger.debug("COMMAND: %s", cmd)
+  def call(cmd, cwd=None, shell=True):
+    logger.debug("COMMAND[%s]: %s", cwd, cmd)
     try:
-      returncode = call(cmd, shell=True)
+      returncode = call(cmd, shell=shell, cwd=cwd)
       if returncode == 0:
         return OK(None)
       else:
