@@ -7,6 +7,8 @@ from substance.exceptions import (InvalidOptionError)
 from substance import Command
 from substance.subenv import (SPECDIR, SubenvAPI)
 
+logger = logging.getLogger(__name__)
+
 class Init(Command):
 
   def getUsage(self):
@@ -28,7 +30,7 @@ class Init(Command):
     return Try.sequence(params) \
       .bind(lambda l: self.api.init(*l)) \
       .catch(self.exitError) \
-      .bind(lambda e: logging.info("Environment '%s' initialized." % e.name)) 
+      .bind(lambda e: logger.info("Environment '%s' initialized." % e.name)) 
 
   def readInputEnv(self): 
     env = {}

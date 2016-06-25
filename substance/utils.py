@@ -198,3 +198,4 @@ def makeSymlink(source, link, force=False):
 
 def readSymlink(link):
   return os.readlink(link)
+

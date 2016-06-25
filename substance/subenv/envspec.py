@@ -9,6 +9,8 @@ from substance import Shell
 from substance.subenv import (SPECDIR, ENVFILE, CODELINK)
 import jinja2
 
+logger = logging.getLogger(__name__)
+
 class SubenvSpec(object):
   def __init__(self, specPath, basePath, name=None, vars={}, lastApplied=None):
     self.specPath = specPath
@@ -86,7 +88,7 @@ class SubenvSpec(object):
     
   def writeEnv(self):
     dotenv = os.path.join(self.envPath, ENVFILE)
-    logging.debug("Writing environment to: %s" % dotenv)
+    logger.debug("Writing environment to: %s" % dotenv)
     envVars = OrderedDict(**self.vars)
     envVars.update({
       'subenv.name': self.name, 
@@ -101,7 +103,7 @@ class SubenvSpec(object):
   def applyDirs(self):
     dirs = [self.envPath]
     dirs.extend([os.path.join(self.envPath, dir) for dir in self.struct['dirs']])
-    map(lambda x: logging.debug("Creating directory '%s'"%x), dirs)
+    map(lambda x: logger.debug("Creating directory '%s'"%x), dirs)
     return OK(dirs).mapM(Shell.makeDirectory)
 
   def applyFiles(self):
@@ -114,11 +116,11 @@ class SubenvSpec(object):
       if fname == ENVFILE:
         continue
       elif ext == '.jinja':
-        logging.debug("Rendering '%s' to %s" % (file, dest))
+        logger.debug("Rendering '%s' to %s" % (file, dest))
         dest = os.path.splitext(dest)[0]
         ops.append(self.renderFile(file, dest, self.vars))
       else:
-        logging.debug("Copying '%s' to %s" % (file, dest))
+        logger.debug("Copying '%s' to %s" % (file, dest))
         ops.append(Shell.copyFile(os.path.join(self.specPath, file), os.path.join(self.envPath, file)))
       
     return Try.sequence(ops)
@@ -172,7 +174,7 @@ class SubenvSpec(object):
     if os.path.isfile(baseEnvFile):
       self.envFiles.append(baseEnvFile)
 
-    map(lambda x: logging.info("Loading dotenv file: '%s'" % x), self.envFiles)
+    map(lambda x: logger.info("Loading dotenv file: '%s'" % x), self.envFiles)
     return Try.sequence(map(Try.attemptDeferred(readDotEnv), self.envFiles))  \
       .map(lambda envs: reduce(lambda acc,x: dict(acc, **x), envs, {}))
 

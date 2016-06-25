@@ -7,6 +7,8 @@ from substance import (Command, Engine)
 from substance.driver.virtualbox.machine import *
 from substance.driver.virtualbox.network import *
 
+logger = logging.getLogger(__name__)
+
 class Testcom(Command):
 
   vboxManager = None
@@ -23,10 +25,10 @@ class Testcom(Command):
     return optparser
 
   def main(self):
-    logging.info("Test command!")
-    logging.debug("Input: %s", self.input)
-    logging.debug("Options: %s", self.options)
-    logging.debug("Args: %s", self.args)
+    logger.info("Test command!")
+    logger.debug("Input: %s", self.input)
+    logger.debug("Options: %s", self.options)
+    logger.debug("Args: %s", self.args)
 
     name = self.getInputName()
 

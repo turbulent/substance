@@ -5,6 +5,8 @@ from tabulate import tabulate
 from substance.constants import (EngineStates)
 from substance.exceptions import (EngineNotRunning)
 
+logger = logging.getLogger(__name__)
+
 class Status(Command):
   def getShellOptions(self, optparser):
     optparser.add_option("-f","--full", dest="full", help="Engine to run this command on", default=None, action="store_true")
@@ -31,8 +33,9 @@ class Status(Command):
     cols = [[ engine.name, engine.currentEnv ]]
     table = tabulate(cols, headers=headers, tablefmt="plain")
 
-    logging.info(table)
-    logging.info("")
-    logging.info(containers)
+    logger.info(table)
+    if containers:
+      logger.info("")
+      logger.info(containers)
     return OK(None)
 

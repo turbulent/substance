@@ -7,6 +7,7 @@ from substance.exceptions import (FileSystemError, FileDoesNotExist, ConfigValid
 
 from collections import namedtuple
 
+logger = logging.getLogger(__name__)
 
 class Config(object):
 
@@ -45,7 +46,7 @@ class Config(object):
   def loadConfigFile(self):
     if not os.path.exists(self.configFile):
       return Fail(FileDoesNotExist("File does not exist: %s" % self.configFile))
-    logging.debug("Loading config file: %s", self.configFile)
+    logger.debug("Loading config file: %s", self.configFile)
     return self.readConfigFile() >> self.setConfig
   
   def validateFieldsPresent(self, block, fields):

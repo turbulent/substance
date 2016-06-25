@@ -3,6 +3,8 @@ from substance.logs import *
 from substance import (Command, Engine)
 from tabulate import tabulate
 
+logger = logging.getLogger(__name__)
+
 class Ls(Command):
   def getShellOptions(self, optparser):
     #optparser.add_option("-a", dest="all", help="Single Val", action="store_true", default=False)
@@ -23,7 +25,7 @@ class Ls(Command):
       .mapM(self.tabulateEngine) \
       .bind(self.tabulateEngines) \
       .catch(self.exitError) \
-      .bind(logging.info)
+      .bind(logger.info)
 
   def tabulateEngine(self, engine):  
     state = engine.state if engine.state else "-"

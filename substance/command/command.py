@@ -15,20 +15,14 @@ from getpass import getpass
 from substance import Shell
 from substance.exceptions import InvalidCommandError
 
+logger = logging.getLogger('substance')
+
 class Parser(OptionParser):
   pass
 #  def format_description(self, formatter):
 #    return self.description if self.description else ""
   def format_epilog(self, formatter):
     return "\n"+self.epilog if self.epilog else ""
-
-class LoggingLessThanFilter(logging.Filter):
-  def __init__(self, level):
-    self._level = level
-    logging.Filter.__init__(self)
-
-  def filter(self, rec):
-    return rec.levelno < self._level
 
 class CLI(object):
   def __init__(self):
@@ -38,7 +32,7 @@ class CLI(object):
     self.parser = None
     self.name = None
     self.parent = None
-
+    
   def getHelp(self):
     """Returns the help description for this particular command"""
     return self.getParser().format_help()
@@ -123,21 +117,21 @@ class CLI(object):
 
   def exitOK(self, msg=None):
     if msg:
-      logging.info(msg)
+      logger.info(msg)
     sys.exit(0)
 
   def exitHelp(self, msg=None, code=1):
-    logging.info(self.getHelp())
-    logging.info("")
+    logger.info(self.getHelp())
+    logger.info("")
     if msg:
-      logging.info(msg)
+      logger.info(msg)
     sys.exit(1)
 
   def exitError(self, msg=None, code=1):
     if msg and isinstance(msg, Exception):
-      logging.error("%s (%s)" % (msg, type(msg).__name__))
+      logger.error("%s (%s)" % (msg, type(msg).__name__))
     elif msg:
-      logging.error(msg)
+      logger.error(msg)
     sys.exit(1)
 
 
@@ -187,26 +181,12 @@ class Program(CLI):
       helpUsage += "  %-20s%s\n" % (name, command.getHelpTitle())
     return helpUsage
 
-  def setupLogging(self):
-    logLevel = logging.DEBUG if self.options.debug else logging.INFO
-
-    logger = logging.getLogger()
-    logger.setLevel(logging.NOTSET)
-    formatter = logging.Formatter('%(message)s')
-    
-    stdout = logging.StreamHandler(sys.stdout)
-    stdout.setLevel(logLevel)
-    stdout.setFormatter(formatter)
-    stdout.addFilter(LoggingLessThanFilter(logging.WARNING))
-    logger.addHandler(stdout)
-
-    stderr = logging.StreamHandler(sys.stderr)
-    stderr.setLevel(logging.WARNING)
-    stderr.setFormatter(formatter)
-    logger.addHandler(stderr)
-
   def setupEnv(self):
     """Setup the Environment """
+
+  def setupLogging(self):
+    if self.getOption('debug'):
+      logger.setLevel(logging.DEBUG)
 
   def execute(self, args=None):
     self.input = args
@@ -233,7 +213,7 @@ class Program(CLI):
 
       self.runCommand(self.cmdString)
     except Exception as err:
-      logging.error(traceback.format_exc())
+      logger.error(traceback.format_exc())
       self.exitError("Error running command %s: %s" % (self.cmdString, err), code=2)
 
   def runCommand(self, commandName):
@@ -276,5 +256,4 @@ class Command(CLI):
 class SubProgram(Program):
   def initialize(self):
     self.setupCommands()
-
 

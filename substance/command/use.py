@@ -5,22 +5,19 @@ from tabulate import tabulate
 
 class Use(Command):
   def getShellOptions(self, optparser):
-    #optparser.add_option("-a", dest="all", help="Single Val", action="store_true", default=False)
+    optparser.add_option("-e", "--env", dest="env", help="Also switch to this environment", default=False)
     return optparser
 
   def getUsage(self):
-    return "substance use [options] ENGINE-NAME SUBENV-NAME"
+    return "substance use [options] ENGINE-NAME"
 
   def getHelpTitle(self):
-    return "Specify which engine and subenv is used by default"
+    return "Specify which engine is used by default"
 
   def main(self):
     name = self.getInputName()
-    subenv = self.getArg(1)
-
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name)) \
+    return self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
-      .bind(self.core.setUse, subenvName=subenv) \
+      .bind(self.core.setUse, subenvName=self.getOption('env')) \
       .then(self.core.config.saveConfig) \
       .catch(self.exitError)

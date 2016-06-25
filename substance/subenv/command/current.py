@@ -7,6 +7,8 @@ from substance.exceptions import (InvalidOptionError)
 from substance import Command
 from substance.subenv import (SPECDIR, SubenvAPI)
 
+logger = logging.getLogger(__name__)
+
 class Current(Command):
 
   def getUsage(self):
@@ -25,4 +27,4 @@ class Current(Command):
       .bind(self.printEnv)
 
   def printEnv(self, envSpec):
-    logging.info(envSpec.name)
+    logger.info(envSpec.name)

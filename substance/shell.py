@@ -11,6 +11,8 @@ from threading import Thread
 
 # pylint: disable=W0232
 
+logger = logging.getLogger(__name__)
+
 class Shell(object):
 
   @staticmethod
@@ -18,11 +20,11 @@ class Shell(object):
     if assumeYes:
       return OK(True)
 
-    logging.info(msg)
+    logger.info(msg)
     try:
       res = raw_input('Proceed? [N/y] ')
       if res.lower().startswith('y'):
-        logging.info('... proceeding')
+        logger.info('... proceeding')
         return OK(True)
       return Fail(UserInterruptError(message="User interrupted."))
     except KeyboardInterrupt as err:
@@ -31,7 +33,7 @@ class Shell(object):
 
   @staticmethod
   def call(cmd):
-    logging.debug("COMMAND: %s", cmd)
+    logger.debug("COMMAND: %s", cmd)
     try:
       returncode = call(cmd, shell=True)
       if returncode == 0:
@@ -43,7 +45,7 @@ class Shell(object):
 
   @staticmethod
   def command(cmd):
-    logging.debug("COMMAND: %s", cmd)
+    logger.debug("COMMAND: %s", cmd)
     try:
       out = check_output(cmd, shell=True)
       return OK(out.strip())
@@ -53,7 +55,7 @@ class Shell(object):
   @staticmethod
   def procCommand(cmd, cwd=None):
     try:
-      logging.debug("COMMAND: %s", cmd)
+      logger.debug("COMMAND: %s", cmd)
       proc = Popen(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
       pout, perr = proc.communicate()
       if proc.returncode == 0:
@@ -61,13 +63,13 @@ class Shell(object):
       else:
         return Fail(ShellCommandError(code=proc.returncode, message=pout, stdout=pout, stderr=perr))
     except KeyboardInterrupt:
-      logging.info("CTRL-C Received...Exiting.")
+      logger.info("CTRL-C Received...Exiting.")
       return Fail(UserInterruptError())
 
   @staticmethod
   def streamCommand(cmd, cwd=None, shell=False):
     try:
-      logging.debug("COMMAND: %s", cmd)
+      logger.debug("COMMAND: %s", cmd)
       proc = Popen(shlex.split(cmd), shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
       stdout = ''
       stderr = ''
@@ -95,7 +97,7 @@ class Shell(object):
       err.strerror = "Error running '%s': %s" % (cmd, err.strerror)
       return Fail(err)
     except KeyboardInterrupt:
-      logging.info("CTRL-C Received...Exiting.")
+      logger.info("CTRL-C Received...Exiting.")
       return Fail(UserInterruptError())
 
   @staticmethod
@@ -129,5 +131,3 @@ class Shell(object):
       return OK(None)
     except Exception as err:
       return Fail(ShellCommandError(code=1, message="Failed to rmtree: %s: %s" % (path,err)))
-
-

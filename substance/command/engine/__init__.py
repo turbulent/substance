@@ -14,7 +14,7 @@ class Engine(SubProgram):
     self.addCommand('init', 'substance.command.engine.init')
     self.addCommand('delete', 'substance.command.engine.delete')
     self.addCommand('launch', 'substance.command.engine.launch')
-    self.addCommand('stop', 'substance.command.engine.stop')
+    self.addCommand('halt', 'substance.command.engine.halt')
     self.addCommand('suspend', 'substance.command.engine.suspend')
     self.addCommand('deprovision', 'substance.command.engine.deprovision')
     self.addCommand('edit', 'substance.command.engine.edit')

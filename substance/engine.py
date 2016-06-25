@@ -24,6 +24,8 @@ from substance.exceptions import (
   EnvNotFoundError
 )
 
+logger = logging.getLogger(__name__)
+
 class EngineProfile(object):
   def __init__(self, cpus=2, memory=1024):
     self.cpus = cpus
@@ -121,7 +123,7 @@ class Engine(object):
     if not path:
       return Fail(ConfigValidationError("devroot path configuration is missing."))
     elif not os.path.isdir(path):
-      logging.info("WARNING: devroot '%s' does not exist locally." % path)
+      logger.info("WARNING: devroot '%s' does not exist locally." % path)
 
     mode = devroot.get('mode', None)
     if not mode:
@@ -278,23 +280,23 @@ class Engine(object):
       .then(self.addToHostsFile)
 
   def addToHostsFile(self):
-    logging.info("Registering engine in local hosts file")
+    logger.info("Registering engine in local hosts file")
     try:
       hosts = SubHosts.checkoutFromSystem()
      
       if not hosts.exists(address=self.getPublicIP()) or not hosts.exists(names=[self.name]): 
-        logging.info("Not found in local hosts file. Adding.")
+        logger.info("Not found in local hosts file. Adding.")
         hosts.addEngine(self)
         hosts.write()
         hosts.commitToSystem()
       else:
-        logging.info("Host is already registered in local hosts file.")
+        logger.info("Host is already registered in local hosts file.")
         return OK(None)
     except Exception as err:
       return Fail(err)
     
   def removeFromHostsFile(self):
-    logging.info("Removing engine from local hosts file")
+    logger.info("Removing engine from local hosts file")
     try:
       hosts = SubHosts.checkoutFromSystem()
       if hosts.exists(names=[self.name]): 
@@ -307,7 +309,7 @@ class Engine(object):
       return Fail(err)
 
   def updateNetworkInfo(self):
-    logging.info("Updating network info from driver")
+    logger.info("Updating network info from driver")
     return self.__readDriverNetworkInfo().bind(self.saveDriverNetworkInfo)
 
   def postLaunch(self):
@@ -315,7 +317,7 @@ class Engine(object):
       .then(self.mountFolders)
  
   def saveDriverNetworkInfo(self, info):
-    logging.debug("Network information for machine: %s" % info)
+    logger.debug("Network information for machine: %s" % info)
     net = self.config.get('network', OrderedDict())
     net.update(info) 
     self.config.set('network', net)
@@ -344,7 +346,7 @@ class Engine(object):
     
   def provision(self):
 
-    logging.info("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config.get('driver'))
+    logger.info("Provisioning engine \"%s\" with driver \"%s\"", self.name, self.config.get('driver'))
 
     prov = self.validateProvision()
     if prov.isFail():
@@ -413,7 +415,7 @@ class Engine(object):
 
   def __cacheCurrentEnv(self, lr):
     env = lr.stdout.strip()
-    logging.debug("Current environment: '%s'" % (env))
+    logger.debug("Current environment: '%s'" % (env))
     self.currentEnv = env
     return lr
 
@@ -446,34 +448,33 @@ class Engine(object):
     return self.readLink() >> Link.interactive
 
   def __waitForNetwork(self):
-    logging.info("Waiting for machine network...")
+    logger.info("Waiting for machine network...")
     return self.getDriver().readMachineWaitForNetwork(self.getDriverID())
 
   def __waitForReady(self):
-    logging.info("Waiting for machine to boot...")
+    logger.info("Waiting for machine to boot...")
     return self.readLink()
 
   def setHostname(self):
-    logging.info("Configuring machine hostname")
+    logger.info("Configuring machine hostname")
     hostCmd = "hostname %s" % self.name
     hostsCmd = "sed -i 's/substance-min/%s/g' /etc/hosts" % self.name
     serviceCmd = "service hostname restart"
     echoCmd = "echo %s > /etc/hostname" % self.name
     cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (echoCmd, hostCmd, hostsCmd, serviceCmd)
-    cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
+    cmds = map(defer(self.link.runCommand, stream=False, sudo=False), [cmd])
     return Try.sequence(cmds) 
 
   def envSwitch(self, subenvName, restart=False):
-    logging.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
+    logger.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
     cmds = [
       "subenv init '/substance/devroot/%s'" % (subenvName),
       "subenv use '%s'" % (subenvName),
-      "dockwrkr -y reset"
     ]
 
     if restart:
-      cmds.append("cd /substance/current")
-      cmds.append("dockwrkr start -a")
+      cmds.append("dockwrkr -y reset")
+      cmds.append("subenv run dockwrkr start -a")
 
     return self.readLink() \
       .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
@@ -493,10 +494,10 @@ class Engine(object):
       cmds.append("dockwrkr -y reset")
 
     if len(containers) > 0:
-      logging.info("Starting %s containers for '%s'" % (' '.join(containers), self.currentEnv))
+      logger.info("Starting %s containers for '%s'" % (' '.join(containers), self.currentEnv))
       cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
     else:
-      logging.info("Starting all containers for '%s'" % self.currentEnv) 
+      logger.info("Starting all containers for '%s'" % self.currentEnv) 
       cmds.append('subenv run dockwrkr start -a')
 
     return self.readLink() \
@@ -505,10 +506,10 @@ class Engine(object):
   def envStop(self, containers=[]):
     cmds = []
     if len(containers) > 0:
-      logging.info("Stopping %s containers for '%s'" % (' '.join(containers), self.currentEnv))
+      logger.info("Stopping %s containers for '%s'" % (' '.join(containers), self.currentEnv))
       cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
     else:
-      logging.info("Stopping containers for '%s'" % self.currentEnv) 
+      logger.info("Stopping containers for '%s'" % self.currentEnv) 
       cmds.append('subenv run dockwrkr start -a')
 
     return self.readLink() \
@@ -550,7 +551,7 @@ class Engine(object):
     return [pfolder]
  
   def mountFolders(self):
-    logging.info("Mounting engine folders")
+    logger.info("Mounting engine folders")
     folders = self.getEngineFolders()
     return Try.of(map(self.mountFolder, folders))
  

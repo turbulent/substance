@@ -6,6 +6,8 @@ from substance import Shell
 from substance.subenv import SubenvSpec
 from substance.utils import makeSymlink, readSymlink
 
+logger = logging.getLogger(__name__)
+
 class SubenvAPI(object):
   '''
     Subenv API
@@ -29,7 +31,7 @@ class SubenvAPI(object):
     return OK([self.basePath, self.envsPath]).mapM(Shell.makeDirectory)
 
   def init(self, path, env={}, name=None):
-    logging.info("Initializing subenv from: %s" % path)
+    logger.info("Initializing subenv from: %s" % path)
     return SubenvSpec.fromSpecPath(path, env, name) \
       .bind(self._applyEnv)
 
@@ -98,6 +100,6 @@ class SubenvAPI(object):
 
   def _applyEnv(self, envSpec):
     envPath = os.path.join(self.envsPath, envSpec.name)
-    logging.info("Applying environment to: %s" % envPath)
+    logger.info("Applying environment to: %s" % envPath)
     return envSpec.applyTo(envPath)
 

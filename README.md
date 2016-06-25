@@ -21,12 +21,11 @@ substance then allows you to switch from project to project simply by having a s
 - [x] substance engine sshinfo
 - [x] substance engine env
 
+
+# Usage
+
 - [x] substance help
-
-
-# Utility
-
-- [ ] substance use enginename
+- [x] substance use enginename --env rsi-website
 - [x] substance switch project [--restart]
 - [x] substance status [--full]
 substance logs -f web*nginx*access*.log -n 100
@@ -39,13 +38,15 @@ substance docker command
 substance enter CONTAINER
 substance exec CONTAINER command...
 
-- [ ] Porcelain spawn
-- [ ] Porcelain hatch
 
 # TODO
-
+- [ ] Don't initialize core manually in each command
+- [ ] Porcelain spawn
+- [ ] Porcelain hatch
 - [ ] Doc: How it works
 - [ ] Doc: How to use
 - [ ] Doc: Box guide
-- [ ] Speed-up import @ python start
-- [ ] Refactor CLI with functional
+- [ ] Box service
+- [ ] Sync: Ignore backdraft events when synching 
+- [ ] NTH Speed-up import @ python start
+- [ ] NTH Refactor CLI with functional

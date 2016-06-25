@@ -17,6 +17,8 @@ from subwatch.events import (WatchEvent, EVENT_TYPE_MODIFIED)
 
 from tornado import ioloop
 
+logger = logging.getLogger(__name__)
+
 logging.getLogger("watchdog").setLevel(logging.CRITICAL)
 
 class SubstanceSyncher(object):
@@ -73,7 +75,7 @@ class SubstanceSyncher(object):
     except KeyboardInterrupt:
       return self.stop()
     except Exception as err:
-      logging.error(err)
+      logger.error(err)
       return Fail(err)
     finally:
       return self.stop()
@@ -92,11 +94,11 @@ class SubstanceSyncher(object):
       ioloop.IOLoop.current().call_later(self.syncPeriod, defer(self.incrementalSync, direction=direction))
 
   def processLocalEvent(self, event):
-    #logging.info("LOCAL %s" % event)
+    #logger.info("LOCAL %s" % event)
     return self.processEvent(event, self.UP)
 
   def processRemoteEvent(self, event):
-    #logging.info("REMOTE %s" % event)
+    #logger.info("REMOTE %s" % event)
     return self.processEvent(event, self.DOWN)
 
   def processEvent(self, event, direction=None):
@@ -106,17 +108,17 @@ class SubstanceSyncher(object):
     folder = self.getFolderFromPath(event.watchPath, direction)
 
     if folder.isFail():
-      logging.error("%s" % folder)
+      logger.error("%s" % folder)
       return folder
     else:
       folder = folder.getOK()
 
     if event.type == EVENT_TYPE_MODIFIED and event.isDirectory:
-      logging.debug("IGNORED")
+      logger.debug("IGNORED")
       return
 
     if self.fileMatch(path, self.getExcludes()):
-      logging.debug("IGNORED")
+      logger.debug("IGNORED")
       return
 
     if folder not in self.toSync[direction]:
@@ -152,7 +154,7 @@ class SubstanceSyncher(object):
   def syncFolder(self, folder, direction, paths, incremental=False):
     filters = "\n".join(self.makeFilters(folder, paths))
 
-    logging.info("Synchronizing %s %s %s:%s" % (folder.hostPath, direction, self.engine.name, folder.guestPath))
+    logger.info("Synchronizing %s %s %s:%s" % (folder.hostPath, direction, self.engine.name, folder.guestPath))
     self.toSync[direction].pop(folder, None)
 
     syncher = Rsync()

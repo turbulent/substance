@@ -10,6 +10,7 @@ from substance.monads import *
 from substance.exceptions import *
 from subprocess import check_output
 
+logger = logging.getLogger('substance.link')
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
 LinkResponse = namedtuple('LinkResponse', ['link','stdin','stdout','stderr', 'code', 'cmd'])
@@ -20,6 +21,7 @@ try:
   hasTermios = True
 except ImportError:
   hasTermios = False
+
 
 
 class Link(object):
@@ -39,7 +41,7 @@ class Link(object):
     tries = 0
 
     while not self.connected:
-      logging.debug("Connect attempt %s..." % tries)
+      logger.debug("Connect attempt %s..." % tries)
       state = self.connect()  \
         .catchError(paramiko.ssh_exception.SSHException, lambda err: OK(None)) \
         .catchError(socket.error, lambda err: OK(None)) 
@@ -52,7 +54,7 @@ class Link(object):
       tries += 1
 
     end = time()
-    logging.debug("Connect time: %ss" % (end-start)) 
+    logger.debug("Connect time: %ss" % (end-start)) 
     self.connected = True 
     return OK(self)
  
@@ -60,7 +62,7 @@ class Link(object):
     connectDetails = engine.getConnectInfo()
     self.hostname = connectDetails.get('hostname')
     self.port = connectDetails.get('port')
-    logging.debug("Connecting to engine %s via %s:%s" % (engine.name, self.hostname, self.port))
+    logger.debug("Connecting to engine %s via %s:%s" % (engine.name, self.hostname, self.port))
     return self.loadKey().then(self.waitForConnect)
 
   def connectHost(self, host, port):
@@ -72,7 +74,7 @@ class Link(object):
     try:
       if not self.key:
         self.key = paramiko.rsakey.RSAKey.from_private_key_file(self.keyFile, password=None)
-      logging.debug("Connecting using key: %s" % self.keyFile)
+      logger.debug("Connecting using key: %s" % self.keyFile)
     except Exception as err:
       return Fail(err)
     return OK(self.key) 
@@ -111,7 +113,7 @@ class Link(object):
    
     cmd = "sudo %s" % cmd if sudo is True else "%s" % cmd
 
-    logging.debug("LINKCOMMAND: %s" % cmd)
+    logger.debug("LINKCOMMAND: %s" % cmd)
 
     try:
       channel = self.client.get_transport().open_session()

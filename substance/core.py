@@ -31,6 +31,8 @@ from substance.exceptions import (
 )
 import requests
 
+logger = logging.getLogger(__name__)
+
 class Core(object):
 
   def __init__(self, configFile=None, basePath=None):
@@ -89,7 +91,7 @@ class Core(object):
     return defaults
     
   def makeDefaultConfig(self, data=None):
-    logging.info("Generating default substance configuration in %s", self.config.getConfigFile())
+    logger.info("Generating default substance configuration in %s", self.config.getConfigFile())
     defaults = self.getDefaultConfig()
     for kkk, vvv in defaults.iteritems():
       self.config.set(kkk, vvv)
@@ -99,8 +101,14 @@ class Core(object):
   #-- Use
 
   def setUse(self, engine, subenvName=None):
+    ops = [ self.setCurrentEngine(engine) ]
+    if subenvName:
+      ops.append( engine.envSwitch(subenvName) )
+    return Try.sequence(ops)
+
+  def setCurrentEngine(self, engine):
     current = self.config.get('current')
-    current.update({'engine':engine.name, 'subenv': subenvName})
+    current.update({'engine':engine.name})
     self.config.set('current', current)
     return OK(self)
 

@@ -17,6 +17,8 @@ from substance.utils import (
   untar
 )
 
+logger = logging.getLogger(__name__)
+
 class Box(object):
  
   def __init__(self, core, name, version, namespace, registry=None, boxstring=None):
@@ -112,7 +114,7 @@ class Box(object):
     archiveSHA = boxResult['archiveSHA1']
     archive = self.getArchivePath()
 
-    logging.info("Downloading %s:%s (%s)" % (self.name, self.version, boxResult['archiveURL']))
+    logger.info("Downloading %s:%s (%s)" % (self.name, self.version, boxResult['archiveURL']))
 
     return Try.sequence([
       Shell.makeDirectory(os.path.dirname(archive)),
@@ -123,7 +125,7 @@ class Box(object):
     ]).map(lambda x: self)
 
   def verifyArchive(self, expectedSHA):
-    logging.info("Verifying archive for %s" % self.getImageName())
+    logger.info("Verifying archive for %s" % self.getImageName())
     archive = self.getArchivePath()
     sha = sha1sum(archive)
     if sha == expectedSHA:

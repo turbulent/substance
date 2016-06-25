@@ -2,13 +2,13 @@ from substance.monads import *
 from substance.logs import *
 from substance import (Command, Shell, Engine)
 
-class Stop(Command):
+class Halt(Command):
 
   def getUsage(self):
-    return "substance stop [ENGINE NAME]"
+    return "substance halt [options] [ENGINE NAME]"
 
   def getHelpTitle(self):
-    return "Stop an engine's vm gracefully or forcefully."
+    return "Halt an engine's vm gracefully or forcefully."
 
   def getShellOptions(self, optparser):
     optparser.add_option("-f", "--force", dest="force", help="Force power off", action="store_true")
@@ -19,8 +19,8 @@ class Stop(Command):
     name = self.getInputName()
 
     forced = self.options.force
-    #if forced and  not Shell.printConfirm("You are about to force stop engine \"%s\"." % name):
-    #  self.exitOK("User cancelled.")
+    if forced and  not Shell.printConfirm("You are about to force halt engine \"%s\"." % name):
+      self.exitOK("User cancelled.")
 
     self.core.initialize() \
       .then(defer(self.core.loadEngine, name)) \

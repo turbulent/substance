@@ -8,6 +8,8 @@ from substance.exceptions import (InvalidOptionError)
 from substance import Command
 from substance.subenv import (SPECDIR, SubenvAPI)
 
+logger = logging.getLogger(__name__)
+
 class Ls(Command):
 
   def getUsage(self):
@@ -24,7 +26,7 @@ class Ls(Command):
       .mapM(self.tabulateEnv) \
       .bind(self.tabulateEnvs) \
       .catch(self.exitError) \
-      .bind(logging.info) 
+      .bind(logger.info) 
 
   def tabulateEnv(self, env):
     return OK([env.name, "X" if env.current else "", env.basePath, env.getLastAppliedDateTime('%B %d %Y, %H:%M:%S')])

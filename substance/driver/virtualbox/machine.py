@@ -7,6 +7,8 @@ from substance.exceptions import (MachineDoesNotExist, SubstanceDriverError)
 from vbox import vboxManager
 from exceptions import *
 
+logger = logging.getLogger(__name__)
+
 MachineStates = Constants(
   POWEROFF="poweroff",
   SAVED="saved",
@@ -145,11 +147,11 @@ def readMachineState(uuid):
     .bind(parseMachineState)
 
 def readWaitGuestProperty(uuid, pattern, timeout=1000):
-  logging.debug("Read wait(%ss) on pattern %s on %s" % (timeout, pattern, uuid))
+  logger.debug("Read wait(%ss) on pattern %s on %s" % (timeout, pattern, uuid))
   return vboxManager("guestproperty", "wait %s %s --timeout %s" % (uuid, pattern, timeout)) 
   
 def readGuestProperty(uuid, prop):
-  logging.debug("Read guest property %s on %s" % (prop, uuid))
+  logger.debug("Read guest property %s on %s" % (prop, uuid))
   return vboxManager("guestproperty", "get %s %s" % (uuid, prop)) \
     .bind(parseGuestProperty)
 
@@ -221,7 +223,7 @@ def parseGuestProperty(prop):
     return OK(None)
 
   match = re.match(r'^Value: (.+?)$', prop)
-  logging.debug("Guest Property: %s" % prop)
+  logger.debug("Guest Property: %s" % prop)
   if match:
     return OK(match.group(1))
   else:
