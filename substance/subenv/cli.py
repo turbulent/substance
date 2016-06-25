@@ -31,16 +31,8 @@ class SubenvCLI(Program):
     self.addCommand('run', 'substance.subenv.command.run')
 
   def initCommand(self, command):
-    core = Core()
-    if self.getOption('assumeYes'):
-      core.setAssumeYes(True)
-    command.core = core
-
-    core.initialize().catch(self.exitError)
-
     api = SubenvAPI(self.getOption('base'))
     command.api = api
-
     return command
 
 

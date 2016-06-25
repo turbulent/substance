@@ -70,7 +70,7 @@ class SubenvAPI(object):
     return OK(envName) \
       .bind(self._loadEnvSpec) \
       .map(lambda x: x.envPath) \
-      .bind(lambda p: Shell.streamCommand(cmd, cwd=p, shell=True))
+      .bind(lambda p: Shell.streamCommand(cmd, cwd=p, shell=False))
 
      
   def ls(self):
