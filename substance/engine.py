@@ -525,6 +525,19 @@ class Engine(object):
         .map(self.__envStatus)
     else:
       return OK(self.__envStatus())
+
+  def envLogs(self, pattern="*.log", follow=False, lines=None):
+    cmds = []
+    cmd = "tail"
+    if follow:
+      cmd += " -f"
+    if lines:
+      cmd += " -n %s" % int(lines)
+    cmd += " logs/%s" % pattern 
+
+    cmds.append('subenv run %s' % cmd)
+    return self.readLink() \
+      .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
   
   def __envStatus(self, containers=None):
     return {
