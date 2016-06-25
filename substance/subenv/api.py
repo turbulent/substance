@@ -4,6 +4,7 @@ from substance.constants import *
 from substance.logs import dinfo
 from substance import Shell
 from substance.subenv import SubenvSpec
+from substance.exceptions import InvalidEnvError
 from substance.utils import makeSymlink, readSymlink
 
 logger = logging.getLogger(__name__)
@@ -70,8 +71,7 @@ class SubenvAPI(object):
     return OK(envName) \
       .bind(self._loadEnvSpec) \
       .map(lambda x: x.envPath) \
-      .bind(lambda p: Shell.streamCommand(cmd, cwd=p, shell=False))
-
+      .bind(lambda p: Shell.call(cmd, cwd=p, shell=True))
      
   def ls(self):
     envs = []
