@@ -21,25 +21,27 @@ substance then allows you to switch from project to project simply by having a s
 - [x] substance engine sshinfo
 - [x] substance engine env
 
-
 # Usage
 
 - [x] substance help
 - [x] substance use enginename --env rsi-website
 - [x] substance switch project [--restart]
 - [x] substance status [--full]
-substance logs -f web*nginx*access*.log -n 100
-substance docker command
+- [x] substance logs -f web*nginx*access*.log -n 100
+- [ ] substance docker command
 
 # Project commands
 
 - [x] substance start [-e ENGINE] [CONTAINER...] --reset
 - [x] substance stop [-e ENGINE] [CONTAINER...] 
-substance enter CONTAINER
-substance exec CONTAINER command...
+- [ ] substance enter CONTAINER
+- [ ] substance exec CONTAINER command...
 
 
 # TODO
+
+- [ ] Fix subprogram help (substance help engine ls)
+- [ ] Support subenv FQDN to /etc/hosts
 - [ ] Don't initialize core manually in each command
 - [ ] Porcelain spawn
 - [ ] Porcelain hatch

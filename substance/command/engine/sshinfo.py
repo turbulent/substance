@@ -18,8 +18,7 @@ class Sshinfo(Command):
 
     name = self.getInputName()
 
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name)) \
+    self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
       .bind(self.outputSSHInfo) \
       .catch(self.exitError)

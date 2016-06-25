@@ -9,6 +9,7 @@ class SubenvCLI(Program):
 
   def __init__(self):
     super(SubenvCLI, self).__init__()
+    self.name = 'subenv'
 
   def getShellOptions(self, optparser):
     optparser.add_option("-d", '--debug',  dest="debug", help="Activate debugging output", default=False, action="store_true")

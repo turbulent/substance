@@ -20,8 +20,7 @@ class Switch(Command):
     if not subenv:
       return self.exitError("Please specify a subenv name to switch to.")
 
-    self.core.initialize() \
-      .then(defer(self.core.loadCurrentEngine, name=self.getOption('engine'))) \
+    self.core.loadCurrentEngine(name=self.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.envSwitch, subenvName=subenv, restart=self.getOption('restart')) \
       .catch(self.exitError)

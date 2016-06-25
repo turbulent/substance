@@ -6,7 +6,7 @@ from substance.exceptions import (SubstanceError)
 class Launch(Command):
 
   def getUsage(self):
-    return "substance launch [ENGINE NAME]"
+    return "substance engine launch [ENGINE NAME]"
    
   def getHelpTitle(self):
     return "Launch an engine's virtual machine"
@@ -18,8 +18,7 @@ class Launch(Command):
 
     name = self.getInputName()
 
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name)) \
+    self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.launch) \
       .then(dinfo("Engine \"%s\" has been launched.", name)) \

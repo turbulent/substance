@@ -5,7 +5,7 @@ from substance import (Command, Shell, Engine)
 class Halt(Command):
 
   def getUsage(self):
-    return "substance halt [options] [ENGINE NAME]"
+    return "substance engine halt [options] [ENGINE NAME]"
 
   def getHelpTitle(self):
     return "Halt an engine's vm gracefully or forcefully."
@@ -22,8 +22,7 @@ class Halt(Command):
     if forced and  not Shell.printConfirm("You are about to force halt engine \"%s\"." % name):
       self.exitOK("User cancelled.")
 
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name)) \
+    self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
       .bind(defer(Engine.stop, force=forced)) \
       .catch(self.exitError)

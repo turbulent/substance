@@ -8,7 +8,7 @@ from substance.exceptions import (EngineNotFoundError)
 class Edit(Command):
 
   def getUsage(self):
-    return "substance edit [ENGINE NAME]"
+    return "substance engine edit [ENGINE NAME]"
 
   def getHelpTitle(self):
     return "Edit an engine configuration"
@@ -17,8 +17,7 @@ class Edit(Command):
 
     name = self.getInputName()
 
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name=name)) \
+    self.core.loadEngine(name=name) \
       .bind(self.editEngineConfig) \
       .bind(Engine.loadConfigFile) \
       .then(dinfo("Engine \"%s\" configuration was updated.", name)) \

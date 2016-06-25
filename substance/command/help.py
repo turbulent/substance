@@ -16,9 +16,11 @@ class Help(Command):
 
   def main(self):
     if len(self.args) > 0:
-      commandName = self.args[0]
-      command = self.parent.getCommand(commandName)
-      command.initialize()
+      parent = self.parent
+      for commandName in self.args:
+        command = parent.getCommand(commandName)
+        command.initialize()
+        parent = command
     else:
       command = self.parent
     return command.exitHelp()

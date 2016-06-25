@@ -13,8 +13,7 @@ class Suspend(Command):
   def main(self):
     name = self.getInputName()
 
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name)) \
+    self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.suspend) \
       .catch(self.exitError)

@@ -6,7 +6,7 @@ from substance.exceptions import (InvalidOptionError)
 class Init(Command):
 
   def getUsage(self):
-    return "substance init [options] [ENGINE NAME]"
+    return "substance engine init [options] [ENGINE NAME]"
 
   def getHelpTitle(self):
     return "Initialize a new engine configuration"
@@ -29,8 +29,7 @@ class Init(Command):
     options = self.buildConfigFromArgs().bind(self.buildProfileFromArgs) \
       .catch(self.exitError).getOK()
 
-    self.core.initialize() \
-      .then(defer(self.core.createEngine, name, config=options['config'], profile=options['profile'])) \
+    self.core.createEngine(name, config=options['config'], profile=options['profile']) \
       .bind(dinfo("Engine \"%s\" has been created", name)) \
       .catch(self.exitError) \
 

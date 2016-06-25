@@ -34,8 +34,5 @@ class Engine(SubProgram):
     return "Substance engine management"
 
   def initCommand(self, command):
-    core = Core()
-    if self.getOption('assumeYes'):
-      core.setAssumeYes(True)
-    command.core = core
+    command.core = self.core
     return command

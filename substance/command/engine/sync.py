@@ -28,8 +28,7 @@ your code up to date on the engine or to receive artifact stored in the devroot 
 
     name = self.getInputName()
 
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name)) \
+    self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
       .bind(self.syncFolders) \
       .catch(self.exitError)

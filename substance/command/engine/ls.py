@@ -11,14 +11,13 @@ class Ls(Command):
     return optparser
 
   def getUsage(self):
-    return "substance ls [options]"
+    return "substance engine ls [options]"
 
   def getHelpTitle(self):
     return "List substance engines"
 
   def main(self):
-    self.core.initialize() \
-      .then(self.core.getEngines) \
+    self.core.getEngines() \
       .mapM(self.core.loadEngine) \
       .mapM(Engine.loadConfigFile) \
       .mapM(Engine.loadState) \

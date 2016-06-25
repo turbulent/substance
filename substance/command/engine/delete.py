@@ -7,7 +7,7 @@ from substance.exceptions import (SubstanceError, EngineNotProvisioned)
 class Delete(Command):
 
   def getUsage(self):
-    return "substance delete [ENGINE NAME]"
+    return "substance engine delete [ENGINE NAME]"
 
   def getHelpTitle(self):
     return "Permanently delete an engine and it's associated machine."
@@ -17,8 +17,7 @@ class Delete(Command):
 
   def main(self):
     name = self.getInputName()
-    self.core.initialize() \
-      .then(defer(self.ask, "You are about to delete engine \"%s\"" % name)) \
+    self.ask("You are about to delete engine \"%s\"" % name) \
       .then(defer(self.core.loadEngine, name)) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.deprovision) \

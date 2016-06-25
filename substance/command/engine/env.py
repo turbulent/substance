@@ -6,7 +6,7 @@ from substance.exceptions import (SubstanceError)
 class Env(Command):
 
   def getUsage(self):
-    return "substance env [ENGINE NAME]"
+    return "substance engine env [ENGINE NAME]"
  
   def getHelpTitle(self):
     return "Print the shell variables to set up the local docker client environment"
@@ -18,8 +18,7 @@ class Env(Command):
 
     name = self.getInputName()
 
-    self.core.initialize() \
-      .then(defer(self.core.loadEngine, name)) \
+    self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
       .bind(self.outputDockerEnv) \
       .catch(self.exitError)

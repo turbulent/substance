@@ -10,6 +10,7 @@ class SubstanceCLI(Program):
 
   def __init__(self):
     super(SubstanceCLI, self).__init__()
+    self.name = 'substance'
 
   def setupCommands(self):
     self.addCommand('engine', 'substance.command.engine')
