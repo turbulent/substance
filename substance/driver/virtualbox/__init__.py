@@ -38,7 +38,7 @@ class VirtualBoxDriver(Driver):
     return defaults
 
   def makeDefaultConfig(self):
-    logger.info("Generating default virtualbox config in %s" % self.config.getConfigFile())
+    self.logAdapter.info("Generating default virtualbox config in %s" % self.config.getConfigFile())
     defaults = self.getDefaultConfig()
     for kkk, vvv in defaults.iteritems():
       self.config.set(kkk, vvv)
@@ -86,16 +86,16 @@ class VirtualBoxDriver(Driver):
     if not hoif:
       return self.provisionNetworking(netconfig)
     elif hoif.ip.format() != netconfig['gateway']:
-      logger.warn("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network." % hoif.name)
+      self.logAdapter.warn("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network." % hoif.name)
       return self.provisionNetworking(netconfig)
     elif dhcp is None:
-      logger.warn("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now." % hoif.name)
+      self.logAdapter.warn("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now." % hoif.name)
       return self.provisionDHCP(hoif.name, netconfig)
 
     return OK(hoif)
  
   def provisionNetworking(self, netconfig):
-    logger.info("Provisioning VirtualBox networking for substance")
+    self.logAdapter.info("Provisioning VirtualBox networking for substance")
     ifm = network.addHostOnlyInterface() 
     if ifm.isFail():
       return ifm
@@ -107,7 +107,7 @@ class VirtualBoxDriver(Driver):
       .then(defer(network.readHostOnlyInterface, name=iface))
 
   def provisionDHCP(self, interface, netconfig):
-    logger.info("Provisioning DHCP service for host only interface")
+    self.logAdapter.info("Provisioning DHCP service for host only interface")
     network.removeDHCP(interface).catch(lambda x: OK(interface)) \
       .bind(defer(network.addDHCP, **netconfig))
 
@@ -170,30 +170,30 @@ class VirtualBoxDriver(Driver):
       .then(defer(self.configureMachineFolders, uuid=uuid, folders=folders))
 
   def configureMachineFolders(self, folders, uuid):
-    logger.info("Configure machine shared folders")
+    self.logAdapter.info("Configure machine shared folders")
     return machine.clearSharedFolders(uuid) \
       .then(defer(machine.addSharedFolders, folders=folders, uuid=uuid))
 
   def resolvePortConflict(self, uuid, desiredPort):
-    logger.info("Checking for port conflicts")
+    self.logAdapter.info("Checking for port conflicts")
     return network.readAllPortForwards(ignoreUUIDs=[uuid]) \
       .bind(defer(self.determinePort, desiredPort=desiredPort)) \
       .bind(defer(self.configurePort, uuid=uuid))
        
   def determinePort(self, usedPorts, desiredPort):
     basePort = 4500
-    logger.debug("Base port: %s" % basePort) 
-    logger.debug("Desired port: %s" % desiredPort)
+    self.logAdapter.debug("Base port: %s" % basePort) 
+    self.logAdapter.debug("Desired port: %s" % desiredPort)
     unavailable = map(lambda x: x.hostPort, usedPorts)
     port = desiredPort if desiredPort >= basePort else basePort
     while port in unavailable or port < basePort:
-      logger.debug("Port %s is in use." % port)
+      self.logAdapter.debug("Port %s is in use." % port)
       port += 1
-    logger.info("Determined SSH port as %s" % port)
+    self.logAdapter.info("Determined SSH port as %s" % port)
     return OK(port)
 
   def configurePort(self, port, uuid):
-    logger.debug("Configure substance-ssh port on port %s" % port)
+    self.logAdapter.debug("Configure substance-ssh port on port %s" % port)
     pf = network.PortForward("substance-ssh", 1, "tcp", None, port, None, 22)
     return network.removePortForwards([pf], uuid) \
       .catch(lambda err: OK(None)) \

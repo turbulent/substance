@@ -71,6 +71,7 @@ class Engine(object):
     self.link = None
     configFile = os.path.join(self.enginePath, "engine.yml")
     self.config = Config(configFile)
+    self.logAdapter = EngineLogAdapter(logger, self.__dict__)
 
   def getDefaults(self):
     defaults = OrderedDict()
@@ -123,7 +124,7 @@ class Engine(object):
     if not path:
       return Fail(ConfigValidationError("devroot path configuration is missing."))
     elif not os.path.isdir(path):
-      logger.info("WARNING: devroot '%s' does not exist locally." % path)
+      self.logAdapter.info("WARNING: devroot '%s' does not exist locally." % path)
 
     mode = devroot.get('mode', None)
     if not mode:
@@ -280,23 +281,23 @@ class Engine(object):
       .then(self.addToHostsFile)
 
   def addToHostsFile(self):
-    logger.info("Registering engine in local hosts file")
+    self.logAdapter.info("Registering engine in local hosts file")
     try:
       hosts = SubHosts.checkoutFromSystem()
      
       if not hosts.exists(address=self.getPublicIP()) or not hosts.exists(names=[self.name]): 
-        logger.info("Not found in local hosts file. Adding.")
+        self.logAdapter.info("Not found in local hosts file. Adding.")
         hosts.addEngine(self)
         hosts.write()
         hosts.commitToSystem()
       else:
-        logger.info("Host is already registered in local hosts file.")
+        self.logAdapter.info("Host is already registered in local hosts file.")
         return OK(None)
     except Exception as err:
       return Fail(err)
     
   def removeFromHostsFile(self):
-    logger.info("Removing engine from local hosts file")
+    self.logAdapter.info("Removing engine from local hosts file")
     try:
       hosts = SubHosts.checkoutFromSystem()
       if hosts.exists(names=[self.name]): 
@@ -309,7 +310,7 @@ class Engine(object):
       return Fail(err)
 
   def updateNetworkInfo(self):
-    logger.info("Updating network info from driver")
+    self.logAdapter.info("Updating network info from driver")
     return self.__readDriverNetworkInfo().bind(self.saveDriverNetworkInfo)
 
   def postLaunch(self):
@@ -317,7 +318,7 @@ class Engine(object):
       .then(self.mountFolders)
  
   def saveDriverNetworkInfo(self, info):
-    logger.debug("Network information for machine: %s" % info)
+    self.logAdapter.debug("Network information for machine: %s" % info)
     net = self.config.get('network', OrderedDict())
     net.update(info) 
     self.config.set('network', net)
@@ -415,7 +416,7 @@ class Engine(object):
 
   def __cacheCurrentEnv(self, lr):
     env = lr.stdout.strip()
-    logger.debug("Current environment: '%s'" % (env))
+    self.logAdapter.debug("Current environment: '%s'" % (env))
     self.currentEnv = env
     return lr
 
@@ -448,15 +449,15 @@ class Engine(object):
     return self.readLink() >> Link.interactive
 
   def __waitForNetwork(self):
-    logger.info("Waiting for machine network...")
+    self.logAdapter.info("Waiting for machine network...")
     return self.getDriver().readMachineWaitForNetwork(self.getDriverID())
 
   def __waitForReady(self):
-    logger.info("Waiting for machine to boot...")
+    self.logAdapter.info("Waiting for machine to boot...")
     return self.readLink()
 
   def setHostname(self):
-    logger.info("Configuring machine hostname")
+    self.logAdapter.info("Configuring machine hostname")
     hostCmd = "hostname %s" % self.name
     hostsCmd = "sed -i 's/substance-min/%s/g' /etc/hosts" % self.name
     serviceCmd = "service hostname restart"
@@ -466,7 +467,7 @@ class Engine(object):
     return Try.sequence(cmds) 
 
   def envSwitch(self, subenvName, restart=False):
-    logger.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
+    self.logAdapter.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
     cmds = [
       "subenv init '/substance/devroot/%s'" % (subenvName),
       "subenv use '%s'" % (subenvName),
@@ -494,10 +495,10 @@ class Engine(object):
       cmds.append("dockwrkr -y reset")
 
     if len(containers) > 0:
-      logger.info("Starting %s containers for '%s'" % (' '.join(containers), self.currentEnv))
+      self.logAdapter.info("Starting %s containers for '%s'" % (' '.join(containers), self.currentEnv))
       cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
     else:
-      logger.info("Starting all containers for '%s'" % self.currentEnv) 
+      self.logAdapter.info("Starting all containers for '%s'" % self.currentEnv) 
       cmds.append('subenv run dockwrkr start -a')
 
     return self.readLink() \
@@ -506,10 +507,10 @@ class Engine(object):
   def envStop(self, containers=[]):
     cmds = []
     if len(containers) > 0:
-      logger.info("Stopping %s containers for '%s'" % (' '.join(containers), self.currentEnv))
+      self.logAdapter.info("Stopping %s containers for '%s'" % (' '.join(containers), self.currentEnv))
       cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
     else:
-      logger.info("Stopping containers for '%s'" % self.currentEnv) 
+      self.logAdapter.info("Stopping containers for '%s'" % self.currentEnv) 
       cmds.append('subenv run dockwrkr start -a')
 
     return self.readLink() \
@@ -551,7 +552,7 @@ class Engine(object):
     return [pfolder]
  
   def mountFolders(self):
-    logger.info("Mounting engine folders")
+    self.logAdapter.info("Mounting engine folders")
     folders = self.getEngineFolders()
     return Try.of(map(self.mountFolder, folders))
  

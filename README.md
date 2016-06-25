@@ -14,7 +14,7 @@ substance then allows you to switch from project to project simply by having a s
 - [x] substance engine init
 - [x] substance engine delete
 - [x] substance engine launch
-- [x] substance engine stop
+- [x] substance engine halt [--force]
 - [x] substance engine suspend
 - [x] substance engine deprovision
 - [x] substance engine ssh

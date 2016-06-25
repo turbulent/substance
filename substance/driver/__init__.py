@@ -1,3 +1,7 @@
+import logging
+from substance.logs import DriverLogAdapter
+
+logger = logging.getLogger(__name__)
 
 class Driver(object):
   '''
@@ -6,7 +10,8 @@ class Driver(object):
 
   def __init__(self, core):
     self.core = core
-  
+    self.logAdapter = DriverLogAdapter(logger, {'name': self.__class__.__name__})
+ 
   def importMachine(self, name, ovfFile, engineProfile=None):
     '''Import a machine image into a virtual machine'''
     raise NotImplementedError()

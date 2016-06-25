@@ -49,6 +49,15 @@ logging.config.dictConfig(LOG_SETTINGS)
 
 logger = logging.getLogger(__name__)
 
+class EngineLogAdapter(logging.LoggerAdapter):
+  def process(self, msg, kwargs):
+    return "[%s] ==> %s" % (self.extra['name'], msg), kwargs
+
+class DriverLogAdapter(logging.LoggerAdapter):
+  def process(self, msg, kwargs):
+    return "%s" % (msg), kwargs
+  
+
 def ddebug(msg, *args, **kwargs):
   return dlog(logging.DEBUG, msg, *args, **kwargs)
 
