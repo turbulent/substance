@@ -459,11 +459,11 @@ class Engine(object):
   def setHostname(self):
     self.logAdapter.info("Configuring machine hostname")
     hostCmd = "hostname %s" % self.name
-    hostsCmd = "sed -i 's/substance-min/%s/g' /etc/hosts" % self.name
+    hostsCmd = "sed -i 's/^127.0.1.1\\t.*$/127.0.1.1\\t%s/g' /etc/hosts" % self.name
     serviceCmd = "service hostname restart"
     echoCmd = "echo %s > /etc/hostname" % self.name
     cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (echoCmd, hostCmd, hostsCmd, serviceCmd)
-    cmds = map(defer(self.link.runCommand, stream=False, sudo=False), [cmd])
+    cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
     return Try.sequence(cmds) 
 
   def envSwitch(self, subenvName, restart=False):

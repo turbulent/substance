@@ -11,24 +11,44 @@ class StdoutFilter(logging.Filter):
   def filter(self, rec):
     return rec.levelno < self._level
 
+class EngineLogAdapter(logging.LoggerAdapter):
+  def process(self, msg, kwargs):
+    return "[%s] ==> %s" % (self.extra['name'], msg), kwargs
+
+class DriverLogAdapter(logging.LoggerAdapter):
+  def process(self, msg, kwargs):
+    return "%s" % (msg), kwargs
+ 
+class LevelLogFormatter(logging.Formatter):
+  def format(self, record):
+    if record.levelno == logging.DEBUG:
+      record.msg = '[%s] %s' % (record.levelname, record.msg)
+    return super(LevelLogFormatter , self).format(record)
+
 LOG_SETTINGS = {
   'version': 1,
-  'disable_existing_loggers': False,
+  'disable_existing_loggers': False, 
   'root': {
     'level': 'NOTSET',
-    'handlers': ['stdout','stderr']
+  },
+  'loggers': {
+    'substance': {
+      'level': 'NOTSET',
+      'qualname': 'substance',
+      'handlers': ['stdout', 'stderr']
+    }
   },
   'handlers': {
     'stdout': {
       'level': 'INFO',
-      'formatter': 'stdout',
+      'formatter': 'levelformatter',
       'class': 'logging.StreamHandler',
       'stream': 'ext://sys.stdout',
       'filters': ['StdoutFilter'],
     },
     'stderr': {
       'level': 'WARNING',
-      'formatter': 'stderr',
+      'formatter': 'levelformatter',
       'class': 'logging.StreamHandler',
       'stream': 'ext://sys.stderr'
     }
@@ -40,6 +60,8 @@ LOG_SETTINGS = {
     }
   },
   'formatters': {
+    'levelformatter': { 
+      '()': LevelLogFormatter, 'format': '%(message)s' },
     'stdout': { 'format': '%(message)s' },
     'stderr': { 'format': '%(message)s' }
   }
@@ -47,16 +69,7 @@ LOG_SETTINGS = {
 
 logging.config.dictConfig(LOG_SETTINGS)
 
-logger = logging.getLogger(__name__)
-
-class EngineLogAdapter(logging.LoggerAdapter):
-  def process(self, msg, kwargs):
-    return "[%s] ==> %s" % (self.extra['name'], msg), kwargs
-
-class DriverLogAdapter(logging.LoggerAdapter):
-  def process(self, msg, kwargs):
-    return "%s" % (msg), kwargs
-  
+logger = logging.getLogger('substance')
 
 def ddebug(msg, *args, **kwargs):
   return dlog(logging.DEBUG, msg, *args, **kwargs)

@@ -186,7 +186,7 @@ class Program(CLI):
 
   def setupLogging(self):
     if self.getOption('debug'):
-      logger.setLevel(logging.DEBUG)
+      logging.getLogger('substance').handlers[0].setLevel(logging.DEBUG)
 
   def execute(self, args=None):
     self.input = args
