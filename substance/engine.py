@@ -549,6 +549,20 @@ class Engine(object):
     cmd = "docker %s" % command
     logger.debug("DOCKER: %s" % cmd)
     return self.readLink().bind(Link.runCommand, cmd, stream=True, sudo=False)
+
+  def envEnter(self, container):
+    cmd = "subenv run dockwrkr exec -ti %s /bin/bash" % container
+    logger.debug("ENTER: %s" % cmd)
+    return self.readLink().bind(Link.interactive, cmd=cmd)
+
+  def envExec(self, container, cmd, interactive=None):
+    flags = ''
+    if interactive:
+      flags = '-ti '
+
+    cmd = "subenv run dockwrkr exec %s %s %s" % (flags, container, cmd)
+    logger.debug("EXEC on %s: %s" % (container, cmd))
+    return self.readLink().bind(Link.runCommand, cmd=cmd, stream=True, interactive=True)
       
   def getEngineFolders(self):
     #XXX Dynamic mounts / remove hardcoded values.

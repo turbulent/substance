@@ -9,6 +9,7 @@ from collections import namedtuple
 from substance.monads import *
 from substance.exceptions import *
 from subprocess import check_output
+from substance.termutils import getTerminalSize
 
 logger = logging.getLogger(__name__)
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
@@ -109,35 +110,75 @@ class Link(object):
   def streamCommand(self, cmd, *args, **kwargs):
     return self.runCommand(cmd, stream=True) 
 
-  def runCommand(self, cmd, sudo=False, stream=False, *args, **kwargs):
-   
+  def runCommand(self, cmd, sudo=False, stream=False, interactive=False, shell=False, *args, **kwargs):
+
+    import select
+  
     cmd = "sudo %s" % cmd if sudo is True else "%s" % cmd
 
     logger.debug("LINKCOMMAND: %s" % cmd)
 
+    oldtty = termios.tcgetattr(sys.stdin)
     try:
-      channel = self.client.get_transport().open_session()
+
+      # Setup our connection channel with forwarding
+      channel = None
+      if shell:
+        channel = self.client.invoke_shell()
+      else:
+        channel = self.client.get_transport().open_session()
+        channel.get_pty()
+
       forward = paramiko.agent.AgentRequestHandler(channel)
+
+      # Setup our buffers
+      bufsize = 1024
       stdin = ''
       stdout = ''
       stderr = ''
-      channel.exec_command(cmd, *args, **kwargs)
-      while True:
-        if channel.exit_status_ready():
-          break
-        if channel.recv_ready():
-          d = channel.recv(1024)
-          if stream:
-            sys.stdout.write(d)
-            sys.stdout.flush()
-          stdout += d
 
-        if channel.recv_stderr_ready():
-          d = channel.recv_stderr(1024)
-          if stream:
-            sys.stderr.write(d)
-            sys.stderr.flush()
-          stderr += d
+      # Star the command stream 
+      channel.exec_command(cmd, *args, **kwargs)
+      isAlive = True
+
+      # Set terminal options
+      tty.setraw(sys.stdin.fileno())
+      tty.setcbreak(sys.stdin.fileno())
+      channel.settimeout(0.0)
+
+      self.resizePTY(channel)
+
+      while isAlive:
+        r, w, e = select.select([channel, sys.stdin], [], [])
+
+        if channel.exit_status_ready():
+          isAlive = False
+          break
+
+        if channel in r:
+          if channel.recv_ready():
+            d = channel.recv(bufsize)
+            if len(d) == 0:
+              isAlive = False
+            else:
+              if stream:
+                sys.stdout.write(d)
+                sys.stdout.flush()
+              stdout += d
+
+          if channel.recv_stderr_ready():
+            d = channel.recv_stderr(bufsize)
+            if stream:
+              sys.stderr.write(d)
+              sys.stderr.flush()
+            stderr += d
+
+        if sys.stdin in r and isAlive and interactive:
+          x = os.read(sys.stdin.fileno(), bufsize)
+          if len(x) == 0:
+            isAlive = False
+          else:
+            channel.send(x)
 
       code = channel.recv_exit_status()
 
@@ -146,9 +187,18 @@ class Link(object):
 
       return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=code))
     except Exception as err:
+      logger.debug("%s" % err)
       return Fail(err)
+    finally:
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
-
+  def resizePTY(self, channel):
+    tty_width, tty_height = getTerminalSize() 
+    try:
+      channel.resize_pty(width=int(tty_width), height=int(tty_height))
+    except paramiko.ssh_exception.SSHException:
+      pass
+ 
   def getClient(self):
     return self.client
 
@@ -170,13 +220,14 @@ class Link(object):
       .then(defer(self.runCommand, "chmod +x %s" % scriptName, sudo=True)) \
       .then(defer(self.runCommand, cmd=scriptName, sudo=sudo, stream=True))
 
-  def interactive(self):
+  def interactive(self, cmd=None):
     if hasTermios:
-      return Try.attempt(self._posixShell)
+      return Try.attempt(self._posixShell, cmd)
     else:
-      return Try.attempt(self._windowsShell)
+      return Try.attempt(self._windowsShell, cmd)
 
-  def _posixShell(self):
+  def _posixShell(self, cmd=None):
+
     import select
 
     sys.stdout.write('\r\n*** Begin interactive session.\r\n')
@@ -185,14 +236,9 @@ class Link(object):
     channel = self.client.invoke_shell()
     forward = paramiko.agent.AgentRequestHandler(channel)
 
-    def resize_pty():
-      tty_height, tty_width = check_output(['stty', 'size']).split()
-
-      # try to resize, and catch it if we fail due to a closed connection
-      try:
-        channel.resize_pty(width=int(tty_width), height=int(tty_height))
-      except paramiko.ssh_exception.SSHException:
-        pass
+    if cmd:
+      channel.send(cmd)
+      channel.send("\n")
  
     try:
       tty.setraw(sys.stdin.fileno())
@@ -200,8 +246,9 @@ class Link(object):
       channel.settimeout(0.0)
 
       isAlive = True
-      resize_pty()
+
       while isAlive:
+        self.resizePTY(channel)
         r, w, e = select.select([channel, sys.stdin], [], [])
         if channel in r:
           try:
@@ -225,7 +272,7 @@ class Link(object):
       termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
       sys.stdout.write('\r\n*** End of interactive session.\r\n')
 
-  def _windowsShell(self):
+  def _windowsShell(self, cmd=None):
     import threading
   
     sys.stdout.write("Line-buffered terminal emulation. Press F6 or ^Z to send EOF.\r\n\r\n")
