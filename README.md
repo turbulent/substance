@@ -28,14 +28,14 @@ substance then allows you to switch from project to project simply by having a s
 - [x] substance switch project [--restart]
 - [x] substance status [--full]
 - [x] substance logs -f web*nginx*access*.log -n 100
-- [ ] substance docker command
+- [x] substance docker command
 
 # Project commands
 
 - [x] substance start [-e ENGINE] [CONTAINER...] --reset
 - [x] substance stop [-e ENGINE] [CONTAINER...] 
-- [ ] substance enter CONTAINER
-- [ ] substance exec CONTAINER command...
+- [x] substance enter CONTAINER
+- [x] substance exec CONTAINER command...
 
 
 # TODO
@@ -49,7 +49,7 @@ substance then allows you to switch from project to project simply by having a s
 - [ ] Doc: How to use
 - [ ] Doc: Box guide
 - [ ] Box service
-- [ ] substance docker -e conflicts
+- [ ] BUG substance docker/enter/exec -e conflicts
 - [ ] Sync: Ignore backdraft events when synching 
 - [ ] NTH Speed-up import @ python start
 - [ ] NTH Refactor CLI with functional

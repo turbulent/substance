@@ -508,10 +508,10 @@ class Engine(object):
     cmds = []
     if len(containers) > 0:
       self.logAdapter.info("Stopping %s containers for '%s'" % (' '.join(containers), self.currentEnv))
-      cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
+      cmds.append('subenv run dockwrkr stop %s' % ' '.join(containers))
     else:
       self.logAdapter.info("Stopping containers for '%s'" % self.currentEnv) 
-      cmds.append('subenv run dockwrkr start -a')
+      cmds.append('subenv run dockwrkr stop -a')
 
     return self.readLink() \
       .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
