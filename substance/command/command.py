@@ -205,6 +205,9 @@ class Program(CLI):
   def setupLogging(self):
     if self.getOption('debug'):
       logging.getLogger('substance').handlers[0].setLevel(logging.DEBUG)
+      logging.getLogger('subwatch').setLevel(logging.DEBUG)
+      logging.getLogger('watchdog').setLevel(logging.INFO)
+      logging.getLogger('paramiko').setLevel(logging.INFO)
 
   def execute(self, args=None):
     self.input = args

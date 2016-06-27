@@ -12,7 +12,6 @@ from subprocess import check_output
 from substance.termutils import getTerminalSize
 
 logger = logging.getLogger(__name__)
-logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
 LinkResponse = namedtuple('LinkResponse', ['link','stdin','stdout','stderr', 'code', 'cmd'])
 

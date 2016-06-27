@@ -5,6 +5,8 @@ from collections import OrderedDict
 from substance import (Program, Core)
 import substance.command
 
+import substance.logs
+
 class SubstanceCLI(Program):
   """Substance CLI command"""
 

@@ -36,9 +36,31 @@ LOG_SETTINGS = {
       'level': 'NOTSET',
       'qualname': 'substance',
       'handlers': ['stdout', 'stderr']
+    },
+    'subwatch': {
+      'level': 'INFO',
+      'qualname': 'subwatch',
+      'handlers': ['console'],
+      'propagate': False
+    },
+    'watchdog': {
+      'level': 'CRITICAL',
+      'handlers': ['console'],
+      'propagate': False
+    },
+    'paramiko': {
+      'level': 'CRITICAL',
+      'handlers': ['console'],
+      'propagate': False
     }
   },
   'handlers': {
+    'console': {
+      'level': 'NOTSET',
+      'formatter': 'levelformatter',
+      'class': 'logging.StreamHandler',
+      'stream': 'ext://sys.stdout',
+    },
     'stdout': {
       'level': 'INFO',
       'formatter': 'levelformatter',
