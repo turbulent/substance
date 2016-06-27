@@ -40,16 +40,19 @@ substance then allows you to switch from project to project simply by having a s
 
 # TODO
 
+- [ ] P1 Support subenv FQDN to /etc/hosts
+- [ ] P1 validate, test and fix Windows support
 - [x] Fix subprogram help (substance help engine ls)
-- [ ] Support subenv FQDN to /etc/hosts
-- [ ] Don't initialize core manually in each command
+- [x] Don't initialize core manually in each command
 - [ ] Porcelain spawn
 - [ ] Porcelain hatch
 - [ ] Doc: How it works
 - [ ] Doc: How to use
 - [ ] Doc: Box guide
 - [ ] Box service
+- [ ] Box push/pull commands
 - [ ] BUG substance docker/enter/exec -e conflicts
-- [ ] Sync: Ignore backdraft events when synching 
+- [ ] BUG Sync: Ignore backdraft events when synching
+- [ ] Refactor lists to use * to display 'current' in subenv. 
 - [ ] NTH Speed-up import @ python start
 - [ ] NTH Refactor CLI with functional
