@@ -4,6 +4,8 @@ from importlib import import_module
 from substance import (Program, Core)
 from substance.subenv import SubenvAPI
 
+import substance.logs
+
 class SubenvCLI(Program):
   """Subenv CLI command"""
 
@@ -30,6 +32,7 @@ class SubenvCLI(Program):
     self.addCommand('use', 'substance.subenv.command.use')
     self.addCommand('current', 'substance.subenv.command.current')
     self.addCommand('run', 'substance.subenv.command.run')
+    self.addCommand('vars', 'substance.subenv.command.vars')
 
   def initCommand(self, command):
     api = SubenvAPI(self.getOption('base'))

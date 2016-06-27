@@ -41,6 +41,17 @@ class SubenvAPI(object):
       return OK(True)
     return OK(False)
 
+  def vars(self, envName=None):
+    if not envName:
+      envSpec = self._getCurrentEnv()
+      if not envSpec:
+        return Fail(InvalidEnvError("No env is currently active."))
+      envName = envSpec.name
+
+    return OK(envName) \
+      .bind(self._loadEnvSpec) \
+      .map(lambda e: e.overrides)
+
   def delete(self, name):
     envPath = os.path.normpath(os.path.join(self.envsPath, name))
     if not os.path.isdir(envPath):
