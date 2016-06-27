@@ -9,7 +9,7 @@ import importlib
 import traceback
 from collections import OrderedDict
 from importlib import import_module
-from optparse import OptionParser
+import optparse
 from getpass import getpass
 
 from substance import Shell
@@ -17,12 +17,26 @@ from substance.exceptions import InvalidCommandError
 
 logger = logging.getLogger('substance')
 
-class Parser(OptionParser):
+class Parser(optparse.OptionParser):
   pass
 #  def format_description(self, formatter):
 #    return self.description if self.description else ""
   def format_epilog(self, formatter):
     return "\n"+self.epilog if self.epilog else ""
+
+
+class PassThroughParser(Parser):
+  def _process_long_opt(self, rargs, values):
+    try:
+      optparse.OptionParser._process_long_opt(self, rargs, values)
+    except optparse.BadOptionError, err:
+      self.largs.append(err.opt_str)
+
+  def _process_short_opts(self, rargs, values):
+    try:
+      optparse.OptionParser._process_short_opts(self, rargs, values)
+    except optparse.BadOptionError, err:
+      self.largs.append(err.opt_str)
 
 class CLI(object):
   def __init__(self):
@@ -46,9 +60,13 @@ class CLI(object):
   def getUsage(self):
     return "command: USAGE [options]"
 
+  def getParserClass(self):
+    return Parser
+
   def getParser(self, interspersed=True):
     usage = self.getUsage()
-    parser = Parser(usage=usage, conflict_handler="resolve", add_help_option=False, description=self.getHelpTitle(), epilog=self.getHelpDetails())
+    parserClass = self.getParserClass()
+    parser = parserClass(usage=usage, conflict_handler="resolve", add_help_option=False, description=self.getHelpTitle(), epilog=self.getHelpDetails())
     self.getShellOptions(parser)
     if interspersed:
       parser.enable_interspersed_args()

@@ -20,6 +20,7 @@ class SubstanceCLI(Program):
     self.addCommand('stop', 'substance.command.stop')
     self.addCommand('status', 'substance.command.status')
     self.addCommand('logs', 'substance.command.logs')
+    self.addCommand('docker', 'substance.command.docker')
     return self
 
   def getShellOptions(self, optparser):

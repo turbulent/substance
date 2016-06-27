@@ -10,7 +10,7 @@ from substance.monads import *
 from substance.exceptions import *
 from subprocess import check_output
 
-logger = logging.getLogger('substance.link')
+logger = logging.getLogger(__name__)
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
 LinkResponse = namedtuple('LinkResponse', ['link','stdin','stdout','stderr', 'code', 'cmd'])

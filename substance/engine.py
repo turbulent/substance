@@ -545,8 +545,9 @@ class Engine(object):
       'containers': containers.stdout + containers.stderr if containers else None
     }
      
-  def docker(self, cmd):
-    cmd = "docker %s" % cmd
+  def envDocker(self, command):
+    cmd = "docker %s" % command
+    logger.debug("DOCKER: %s" % cmd)
     return self.readLink().bind(Link.runCommand, cmd, stream=True, sudo=False)
       
   def getEngineFolders(self):

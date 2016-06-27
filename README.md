@@ -40,7 +40,7 @@ substance then allows you to switch from project to project simply by having a s
 
 # TODO
 
-- [ ] Fix subprogram help (substance help engine ls)
+- [x] Fix subprogram help (substance help engine ls)
 - [ ] Support subenv FQDN to /etc/hosts
 - [ ] Don't initialize core manually in each command
 - [ ] Porcelain spawn
@@ -49,6 +49,7 @@ substance then allows you to switch from project to project simply by having a s
 - [ ] Doc: How to use
 - [ ] Doc: Box guide
 - [ ] Box service
+- [ ] substance docker -e conflicts
 - [ ] Sync: Ignore backdraft events when synching 
 - [ ] NTH Speed-up import @ python start
 - [ ] NTH Refactor CLI with functional
