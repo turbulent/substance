@@ -102,10 +102,15 @@ class SubenvSpec(object):
     return Try.attempt(writeToFile, dotenv, env)
   
   def applyDirs(self):
-    dirs = [self.envPath]
-    dirs.extend([os.path.join(self.envPath, dir) for dir in self.struct['dirs']])
-    map(lambda x: logger.debug("Creating directory '%s'"%x), dirs)
-    return OK(dirs).mapM(Shell.makeDirectory)
+    ops = [ Shell.makeDirectory(self.envPath, 0750) ]
+    for dir in self.struct['dirs']:
+      sourceDir = os.path.join(self.specPath, dir)
+      destDir = os.path.join(self.envPath, dir)
+      mode = os.stat(sourceDir).st_mode & 0777
+      logger.debug("Creating directory '%s' mode: %s" % (dir, mode))
+      ops.append(Shell.makeDirectory(destDir).bind(defer(Shell.chmod, mode=mode)))
+
+    return Try.sequence(ops)
 
   def applyFiles(self):
     ops = []
