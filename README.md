@@ -1,4 +1,5 @@
-# substance
+
+![alt text](docs/substance.png "substance")
 
 Local docker-powered development environments
 
@@ -51,8 +52,10 @@ substance then allows you to switch from project to project simply by having a s
 - [ ] Doc: Box guide
 - [ ] Box service
 - [ ] Box push/pull commands
+- [ ] Box: ensure paravirt network
 - [ ] BUG substance docker/enter/exec -e conflicts
 - [ ] BUG Sync: Ignore backdraft events when synching
 - [ ] Refactor lists to use * to display 'current' in subenv. 
+- [ ] NTH Rework the hosts file mgmt. module sucks.
 - [ ] NTH Speed-up import @ python start
 - [ ] NTH Refactor CLI with functional

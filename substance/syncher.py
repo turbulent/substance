@@ -19,8 +19,6 @@ from tornado import ioloop
 
 logger = logging.getLogger(__name__)
 
-logging.getLogger("watchdog").setLevel(logging.CRITICAL)
-
 class SubstanceSyncher(object):
 
   UP = ">>"

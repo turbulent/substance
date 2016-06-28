@@ -52,6 +52,11 @@ LOG_SETTINGS = {
       'level': 'CRITICAL',
       'handlers': ['console'],
       'propagate': False
+    },
+    'requests': {
+      'level': 'CRITICAL',
+      'handlers': ['console'],
+      'propagate': False
     }
   },
   'handlers': {
