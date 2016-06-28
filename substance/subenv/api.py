@@ -4,7 +4,7 @@ from substance.constants import *
 from substance.logs import dinfo
 from substance import Shell
 from substance.subenv import SubenvSpec
-from substance.exceptions import InvalidEnvError
+from substance.exceptions import (InvalidEnvError, InvalidOptionError)
 from substance.utils import makeSymlink, readSymlink
 
 logger = logging.getLogger(__name__)
@@ -41,16 +41,23 @@ class SubenvAPI(object):
       return OK(True)
     return OK(False)
 
-  def vars(self, envName=None):
+  def vars(self, envName=None, vars=None):
     if not envName:
       envSpec = self._getCurrentEnv()
       if not envSpec:
         return Fail(InvalidEnvError("No env is currently active."))
       envName = envSpec.name
 
+    def varfilter(o):
+      if vars is not None:
+        return {k:v for k,v in o.iteritems() if k in vars} 
+      else:
+        return o
+
     return OK(envName) \
       .bind(self._loadEnvSpec) \
-      .map(lambda e: e.overrides)
+      .map(lambda e: e.overrides) \
+      .map(varfilter)
 
   def delete(self, name):
     envPath = os.path.normpath(os.path.join(self.envsPath, name))
