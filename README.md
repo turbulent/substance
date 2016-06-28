@@ -43,6 +43,7 @@ substance then allows you to switch from project to project simply by having a s
 
 - [x] P1 Support subenv FQDN to /etc/hosts
 - [ ] P1 validate, test and fix Windows support
+- [x] P1 Auto-create engine devroot on init
 - [x] Fix subprogram help (substance help engine ls)
 - [x] Don't initialize core manually in each command
 - [ ] Porcelain spawn
@@ -53,9 +54,17 @@ substance then allows you to switch from project to project simply by having a s
 - [ ] Box service
 - [ ] Box push/pull commands
 - [ ] Box: ensure paravirt network
+
+## Bugs
+
 - [ ] BUG substance docker/enter/exec -e conflicts
 - [ ] BUG Sync: Ignore backdraft events when synching
+
+
+## Improvements
+
 - [ ] Refactor lists to use * to display 'current' in subenv. 
+- [ ] NTH Use ssh binary instead of Paramiko for Link. (w/ ControlPersist)
 - [ ] NTH Rework the hosts file mgmt. module sucks.
 - [ ] NTH Speed-up import @ python start
 - [ ] NTH Refactor CLI with functional

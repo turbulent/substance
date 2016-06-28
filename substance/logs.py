@@ -35,7 +35,8 @@ LOG_SETTINGS = {
     'substance': {
       'level': 'NOTSET',
       'qualname': 'substance',
-      'handlers': ['stdout', 'stderr']
+      'handlers': ['stdout', 'stderr'],
+      'propagate': False
     },
     'subwatch': {
       'level': 'INFO',

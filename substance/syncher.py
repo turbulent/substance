@@ -112,7 +112,7 @@ class SubstanceSyncher(object):
       folder = folder.getOK()
 
     if event.type == EVENT_TYPE_MODIFIED and event.isDirectory:
-      logger.debug("IGNORED")
+      #logger.debug("IGNORED")
       return
 
     if self.fileMatch(path, self.getExcludes()):
