@@ -35,7 +35,8 @@ LOG_SETTINGS = {
     'substance': {
       'level': 'NOTSET',
       'qualname': 'substance',
-      'handlers': ['stdout', 'stderr']
+      'handlers': ['stdout', 'stderr'],
+      'propagate': False
     },
     'subwatch': {
       'level': 'INFO',
@@ -49,6 +50,11 @@ LOG_SETTINGS = {
       'propagate': False
     },
     'paramiko': {
+      'level': 'CRITICAL',
+      'handlers': ['console'],
+      'propagate': False
+    },
+    'requests': {
       'level': 'CRITICAL',
       'handlers': ['console'],
       'propagate': False

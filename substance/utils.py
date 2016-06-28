@@ -16,8 +16,7 @@ from substance.exceptions import (
   FileDoesNotExist
 )
 
-logging.getLogger('requests').setLevel(logging.CRITICAL)
-
+logger = logging.getLogger(__name__)
 
 _yaml_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
 
@@ -198,4 +197,3 @@ def makeSymlink(source, link, force=False):
 
 def readSymlink(link):
   return os.readlink(link)
-

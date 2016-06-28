@@ -82,6 +82,8 @@ class Core(object):
     defaults = OrderedDict()
     defaults['assumeYes'] = False
     defaults['drivers'] = ['virtualbox']
+    defaults['tld'] = '.sub'
+    defaults['devroot'] = '~/substance'
     defaults['virtualbox'] = OrderedDict()
     defaults['virtualbox']['network'] = "172.21.21.0/24"
     defaults['virtualbox']['interface'] = None

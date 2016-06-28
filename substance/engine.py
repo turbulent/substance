@@ -8,7 +8,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
-from substance.utils import mergeDict
+from substance.utils import mergeDict, parseDotEnv
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
@@ -187,6 +187,10 @@ class Engine(object):
     }
     return info
 
+  def getDNSName(self):
+    tld = self.core.config.get('tld')
+    return self.name + tld
+
   def getSyncher(self):
     return SubstanceSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
     
@@ -211,10 +215,18 @@ class Engine(object):
 
     return Shell.makeDirectory(self.enginePath) \
       .then(defer(self.makeDefaultConfig, config=config, profile=profile)) \
+      .bind(self.__ensureDevroot) \
       .bind(self.validateConfig) \
       .then(self.config.saveConfig) \
       .bind(dinfo("Generated default engine configuration in %s", self.config.configFile)) \
       .map(self.chainSelf)
+
+  def __ensureDevroot(self, config):
+    devroot = os.path.expanduser(config.get('devroot', {}).get('path'))
+    if not os.path.isdir(devroot):
+      self.logAdapter.info("Creating devroot at %s" % devroot)
+      return Shell.makeDirectory(devroot).then(lambda: OK(config))
+    return OK(config)
  
   def remove(self):
     if not os.path.isdir(self.enginePath):
@@ -226,6 +238,7 @@ class Engine(object):
   def makeDefaultConfig(self, config=None, profile=None):
     default = self.getDefaults()
     default["name"] = self.name
+    default["devroot"]["path"] = os.path.join(self.core.config.get('devroot'), self.name)
 
     cf = {}
     mergeDict(cf, default)
@@ -281,33 +294,12 @@ class Engine(object):
       .then(self.addToHostsFile)
 
   def addToHostsFile(self):
-    self.logAdapter.info("Registering engine in local hosts file")
-    try:
-      hosts = SubHosts.checkoutFromSystem()
-     
-      if not hosts.exists(address=self.getPublicIP()) or not hosts.exists(names=[self.name]): 
-        self.logAdapter.info("Not found in local hosts file. Adding.")
-        hosts.addEngine(self)
-        hosts.write()
-        hosts.commitToSystem()
-      else:
-        self.logAdapter.info("Host is already registered in local hosts file.")
-        return OK(None)
-    except Exception as err:
-      return Fail(err)
+    self.logAdapter.info("Registering engine as '%s' in local hosts file" % self.getDNSName())
+    return SubHosts.register(self.getDNSName(), self.getPublicIP())
     
   def removeFromHostsFile(self):
     self.logAdapter.info("Removing engine from local hosts file")
-    try:
-      hosts = SubHosts.checkoutFromSystem()
-      if hosts.exists(names=[self.name]): 
-        hosts.remove_all_matching(None, self.name)
-        hosts.write()
-        hosts.commitToSystem()
-      else:
-        return OK(None)
-    except Exception as err:
-      return Fail(err)
+    return SubHosts.unregister(self.getDNSName())
 
   def updateNetworkInfo(self):
     self.logAdapter.info("Updating network info from driver")
@@ -458,11 +450,13 @@ class Engine(object):
 
   def setHostname(self):
     self.logAdapter.info("Configuring machine hostname")
-    hostCmd = "hostname %s" % self.name
-    hostsCmd = "sed -i 's/^127.0.1.1\\t.*$/127.0.1.1\\t%s/g' /etc/hosts" % self.name
+    dns = self.getDNSName()
+    echoCmd = "echo %s > /etc/hostname" % dns
+    hostCmd = "hostname %s" % dns 
+    hostsCmd = "sed -i \"s/127.0.1.1.*/127.0.1.1\t%s/g\" /etc/hosts" % self.name
+    #hostsCmd = "hostnamectl set-hostname %s" % dns
     serviceCmd = "service hostname restart"
-    echoCmd = "echo %s > /etc/hostname" % self.name
-    cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (echoCmd, hostCmd, hostsCmd, serviceCmd)
+    cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (echoCmd, hostsCmd, hostCmd, serviceCmd)
     cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
     return Try.sequence(cmds) 
 
@@ -478,8 +472,25 @@ class Engine(object):
       cmds.append("subenv run dockwrkr start -a")
 
     return self.readLink() \
-      .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
+      .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) \
+      .then(self.envRegister)
 
+  def envRegister(self):
+    return self.readLink() \
+      .bind(Link.runCommand, 'subenv vars name fqdn', stream=False) \
+      .bind(self.__envRegister)
+
+  def __envRegister(self, lr):
+    vars = lr.stdout.split("\n")
+    env =  Try.attempt(parseDotEnv, vars)
+    if env.isFail():
+      return env
+    env = env.getOK()
+    if 'fqdn' in env:
+      return SubHosts.register(env['fqdn'], self.getPublicIP())
+    elif 'name' in env: 
+      return SubHosts.register(env['name'] + self.core.config.get('tld'), self.getPublicIP())
+       
   def envLoadCurrent(self):
     cmds = [ "subenv current" ]
     return self.readLink() \
