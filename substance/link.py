@@ -117,13 +117,17 @@ class Link(object):
 
     logger.debug("LINKCOMMAND: %s" % cmd)
 
-    oldtty = termios.tcgetattr(sys.stdin)
     try:
+      oldtty = termios.tcgetattr(sys.stdin)
 
       # Setup our connection channel with forwarding
       channel = None
       if shell:
         channel = self.client.invoke_shell()
+        # Set terminal options
+        channel.settimeout(0.0)
+        tty.setraw(sys.stdin.fileno())
+        tty.setcbreak(sys.stdin.fileno())
       else:
         channel = self.client.get_transport().open_session()
         channel.get_pty()
@@ -140,14 +144,8 @@ class Link(object):
       channel.exec_command(cmd, *args, **kwargs)
       isAlive = True
 
-      # Set terminal options
-      tty.setraw(sys.stdin.fileno())
-      tty.setcbreak(sys.stdin.fileno())
-      channel.settimeout(0.0)
-
-      self.resizePTY(channel)
-
       while isAlive:
+        self.resizePTY(channel)
         r, w, e = select.select([channel, sys.stdin], [], [])
 
         if channel.exit_status_ready():
@@ -188,6 +186,8 @@ class Link(object):
     except Exception as err:
       logger.debug("%s" % err)
       return Fail(err)
+    except KeyboardInterrupt as err:
+      return Fail(LinkCommandError(cmd=cmd, message="User Interrupted." , stdout=stdout, stderr=stderr, code=1, link=self))
     finally:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
