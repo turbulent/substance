@@ -39,19 +39,19 @@ class SubenvSpec(object):
 
     vars = envVars.copy()
     for k in vars.keys():
-      if k.startswith('subenv.'):
+      if k.startswith('SUBENV_'):
         del vars[k]
 
     lastApplied = None   
-    if 'subenv.lastApplied' in envVars:
-      lastApplied = envVars['subenv.lastApplied']
+    if 'SUBENV_LASTAPPLIED' in envVars:
+      lastApplied = envVars['SUBENV_LASTAPPLIED']
     
-    env = SubenvSpec(envVars['subenv.specPath'], envVars['subenv.basePath'], envVars['subenv.name'], vars, lastApplied)
+    env = SubenvSpec(envVars['SUBENV_SPECPATH'], envVars['SUBENV_BASEPATH'], envVars['SUBENV_NAME'], vars, lastApplied)
     env.envPath = envPath
     return env
 
   @staticmethod
-  def fromSpecPath(path, vars={}, name=None):
+  def fromSpecPath(path, vars={}):
     if not os.path.isdir(path):
       return Fail(InvalidEnvError("Specified path '%s' does not exist." % path))
 
@@ -59,7 +59,7 @@ class SubenvSpec(object):
       return Fail(InvalidOptionError("Invalid path specified. Please pass a path to a folder with a %s directory." % SPECDIR))
     specPath = os.path.join(path, SPECDIR)
 
-    name = os.path.basename(path) if name is None else name
+    name = os.path.basename(path)
 
     return SubenvSpec(specPath, path, name, vars).scan()
 
@@ -91,10 +91,11 @@ class SubenvSpec(object):
     logger.debug("Writing environment to: %s" % dotenv)
     envVars = OrderedDict(**self.vars)
     envVars.update({
-      'subenv.name': self.name, 
-      'subenv.basePath': self.basePath, 
-      'subenv.specPath': self.specPath,
-      'subenv.lastApplied': time.time()
+      'SUBENV_NAME': self.name,
+      'SUBENV_LASTAPPLIED': time.time(),
+      'SUBENV_ENVPATH': self.envPath,
+      'SUBENV_SPECPATH': self.specPath,
+      'SUBENV_BASEPATH': self.basePath
     })
 
     env = "\n".join([ "%s=\"%s\"" % (k,v) for k,v in envVars.iteritems() ])
@@ -131,7 +132,15 @@ class SubenvSpec(object):
       tpl = tplEnv.get_template(source)
  
       tplVars = vars.copy()
-      tplVars.update({'subenv':self})
+      tplVars.update({'subenv': self})
+      tplVars.update({
+        'SUBENV_NAME': self.name,
+        'SUBENV_LASTAPPLIED': self.lastApplied,
+        'SUBENV_VARS': self.vars,
+        'SUBENV_ENVPATH': self.envPath,
+        'SUBENV_SPECPATH': self.specPath,
+        'SUBENV_BASEPATH': self.basePath
+      })
 
       with open(dest, 'wb') as fh:
         fh.write(tpl.render(**tplVars))
