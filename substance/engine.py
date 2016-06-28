@@ -215,10 +215,18 @@ class Engine(object):
 
     return Shell.makeDirectory(self.enginePath) \
       .then(defer(self.makeDefaultConfig, config=config, profile=profile)) \
+      .bind(self.__ensureDevroot) \
       .bind(self.validateConfig) \
       .then(self.config.saveConfig) \
       .bind(dinfo("Generated default engine configuration in %s", self.config.configFile)) \
       .map(self.chainSelf)
+
+  def __ensureDevroot(self, config):
+    devroot = os.path.expanduser(config.get('devroot', {}).get('path'))
+    if not os.path.isdir(devroot):
+      self.logAdapter.info("Creating devroot at %s" % devroot)
+      return Shell.makeDirectory(devroot).then(lambda: OK(config))
+    return OK(config)
  
   def remove(self):
     if not os.path.isdir(self.enginePath):
@@ -230,6 +238,7 @@ class Engine(object):
   def makeDefaultConfig(self, config=None, profile=None):
     default = self.getDefaults()
     default["name"] = self.name
+    default["devroot"]["path"] = os.path.join(self.core.config.get('devroot'), self.name)
 
     cf = {}
     mergeDict(cf, default)

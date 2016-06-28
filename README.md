@@ -41,7 +41,7 @@ substance then allows you to switch from project to project simply by having a s
 
 # TODO
 
-- [ ] P1 Support subenv FQDN to /etc/hosts
+- [x] P1 Support subenv FQDN to /etc/hosts
 - [ ] P1 validate, test and fix Windows support
 - [x] Fix subprogram help (substance help engine ls)
 - [x] Don't initialize core manually in each command
