@@ -135,7 +135,7 @@ Additionally, subenv will provide the following variables:
 - [x] P1 Auto-create engine devroot on init
 - [x] Fix subprogram help (substance help engine ls)
 - [x] Don't initialize core manually in each command
-- [ ] Handle substance version
+- [x] Handle substance version
 - [ ] Porcelain spawn
 - [ ] Porcelain hatch
 - [ ] Doc: How it works
