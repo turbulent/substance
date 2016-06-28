@@ -9,7 +9,7 @@ import os, errno
 import hashlib
 import tarfile
 from time import time
-from pkg_resources import Requirement, resource_filename
+from pkg_resources import Requirement, resource_filename, require
 from substance.exceptions import (
   ConfigSyntaxError,
   FileSystemError,
@@ -59,6 +59,9 @@ def readYAML(filename):
 
 def getSupportFile(filename):
   return resource_filename(Requirement.parse("substance"), filename)
+ 
+def getPackageVersion():
+  return require('substance')[0].version
 
 def readSupportFile(filename):
   try:

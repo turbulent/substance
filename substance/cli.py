@@ -3,8 +3,8 @@ import sys
 import logging
 from collections import OrderedDict
 from substance import (Program, Core)
+from substance.utils import getPackageVersion
 import substance.command
-
 import substance.logs
 
 class SubstanceCLI(Program):
@@ -37,7 +37,8 @@ class SubstanceCLI(Program):
     return "substance [options] COMMAND [command-options]"
 
   def getHelpTitle(self):
-    return "Local docker-based development environments"
+    version = getPackageVersion()
+    return "Local docker-based development environments (version: %s)" % version
 
   def initCommand(self, command):
     core = Core()
