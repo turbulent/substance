@@ -101,10 +101,19 @@ class Shell(object):
       return Fail(UserInterruptError())
 
   @staticmethod
+  def chmod(path, mode):
+    try:
+      os.chmod(path, mode)
+      return OK(path)
+    except Exception as err:
+      return Fail(ShellCommandError(code=1, message="Failed to chmod %s: %s" % (path,err)))
+    
+  @staticmethod
   def makeDirectory(path, mode=0750):
     if not os.path.exists(path):
       try:
         os.makedirs(path, mode)
+        return OK(path)
       except Exception as err:
         return Fail(ShellCommandError(code=1, message="Failed to create %s: %s" % (path,err)))
     return OK(path)

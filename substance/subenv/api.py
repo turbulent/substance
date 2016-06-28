@@ -31,9 +31,9 @@ class SubenvAPI(object):
   def assertPaths(self):
     return OK([self.basePath, self.envsPath]).mapM(Shell.makeDirectory)
 
-  def init(self, path, env={}, name=None):
+  def init(self, path, env={}):
     logger.info("Initializing subenv from: %s" % path)
-    return SubenvSpec.fromSpecPath(path, env, name) \
+    return SubenvSpec.fromSpecPath(path, env) \
       .bind(self._applyEnv)
 
   def exists(self, name):
@@ -106,7 +106,7 @@ class SubenvAPI(object):
   def _loadEnvSpec(self, name):
     envPath = os.path.normpath(os.path.join(self.envsPath, name))
     if not os.path.isdir(envPath):
-      return Fail(InvalidOptionError("Environment '%s' does not exist."))
+      return Fail(InvalidOptionError("Environment '%s' does not exist." % name))
     return OK(SubenvSpec.fromEnvPath(envPath))
 
   def _getCurrentEnv(self):

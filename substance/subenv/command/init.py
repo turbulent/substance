@@ -18,15 +18,11 @@ class Init(Command):
     return "Initialize or apply a project environment"
 
   def getShellOptions(self, optparser):
-    optparser.add_option("-n", "--name", type="str", dest="name", help="Envrionment name")
     optparser.add_option("-D", "--define", dest="define", default=[], action='append', help="Define a variable for the environment")
     return optparser
 
   def main(self):
     params = [ self.readInputPath(), self.readInputEnv() ]
-    if self.options.name:
-      params.append(OK(os.path.normpath(self.options.name)))
-
     return Try.sequence(params) \
       .bind(lambda l: self.api.init(*l)) \
       .catch(self.exitError) \
@@ -47,8 +43,3 @@ class Init(Command):
       return Fail(InvalidOptionError("Please specify a path to a '%s' folder." % SPECDIR))
     path = os.path.abspath(os.path.normpath(self.args[0]))
     return OK(path)
-
-  def readInputName(self):
-    name = os.path.normpath(self.options.name)
-    return OK(name)
-
