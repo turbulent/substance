@@ -56,7 +56,7 @@ class SubenvAPI(object):
 
     return OK(envName) \
       .bind(self._loadEnvSpec) \
-      .map(lambda e: e.overrides) \
+      .map(lambda e: e.vars) \
       .map(varfilter)
 
   def delete(self, name):
