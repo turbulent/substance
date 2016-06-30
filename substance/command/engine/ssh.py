@@ -15,10 +15,9 @@ class Ssh(Command):
     return optparser
 
   def main(self):
-
     name = self.getInputName()
 
-    self.core.loadEngine, name) \
+    self.core.loadEngine(name) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.shell) \
       .catch(self.exitError)
