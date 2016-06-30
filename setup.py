@@ -18,6 +18,7 @@ setup(name='substance',
       packages=find_packages(),
       package_data={ 'substance': ['support/*'] },
       test_suite='tests',
+      zip_safe=False,
       entry_points={
         'console_scripts': [
           'substance = substance.cli:cli',
