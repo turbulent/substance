@@ -3,11 +3,12 @@ from setuptools import setup, find_packages
 with open('README.rst') as f:
     readme = f.read()
 
-version = '0.1'
+execfile('substance/_version.py')
+
 install_requires = ['setuptools', 'PyYAML', 'tabulate', 'paramiko', 'netaddr', 'requests', 'tinydb', 'python_hosts', 'jinja2']
 
 setup(name='substance',
-      version=version,
+      version=__version__,
       author='turbulent/bbeausej',
       author_email='b@turbulent.ca',
       license='MIT',
