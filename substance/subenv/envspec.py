@@ -50,6 +50,7 @@ class SubenvSpec(object):
     env.envPath = envPath
     return env
 
+    
   @staticmethod
   def fromSpecPath(path, vars={}):
     if not os.path.isdir(path):
@@ -130,22 +131,27 @@ class SubenvSpec(object):
         ops.append(Shell.copyFile(os.path.join(self.specPath, file), os.path.join(self.envPath, file)))
       
     return Try.sequence(ops)
+
+
+  def getEnvVars(self):
+    envVars = self.overrides.copy()
+    envVars.update({
+      'SUBENV_NAME': self.name,
+      'SUBENV_LASTAPPLIED': self.lastApplied,
+      'SUBENV_VARS': self.vars,
+      'SUBENV_ENVPATH': self.envPath,
+      'SUBENV_SPECPATH': self.specPath,
+      'SUBENV_BASEPATH': self.basePath
+    })
+    return envVars
  
   def renderFile(self, source, dest, vars={}):
     try:
       tplEnv = jinja2.Environment(loader=jinja2.FileSystemLoader(self.specPath))
       tpl = tplEnv.get_template(source)
- 
-      tplVars = vars.copy()
+
+      tplVars = self.getEnvVars() 
       tplVars.update({'subenv': self})
-      tplVars.update({
-        'SUBENV_NAME': self.name,
-        'SUBENV_LASTAPPLIED': self.lastApplied,
-        'SUBENV_VARS': self.vars,
-        'SUBENV_ENVPATH': self.envPath,
-        'SUBENV_SPECPATH': self.specPath,
-        'SUBENV_BASEPATH': self.basePath
-      })
 
       with open(dest, 'wb') as fh:
         fh.write(tpl.render(**tplVars))

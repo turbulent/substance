@@ -159,3 +159,16 @@ Additionally, subenv will provide the following variables:
 - [ ] NTH Rework the hosts file mgmt. module sucks.
 - [ ] NTH Speed-up import @ python start
 - [ ] NTH Refactor CLI with functional
+
+# Setup
+
+- Download [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) 5.0.2+ and install the [VM Extensions](http://download.virtualbox.org/virtualbox/5.0.24/Oracle_VM_VirtualBox_Extension_Pack-5.0.24-108355.vbox-extpack).
+- Make sure Xcode CLI is installed
+  - ``xcode-select --install``
+- Install homebrew and python
+  - ``brew install python``
+- Install subwatch alpha
+  - ``sudo pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@0.1alpha``
+- Install substance alpha
+  - ``sudo pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.1alpha``  
+  
