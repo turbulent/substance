@@ -107,7 +107,7 @@ class Link(object):
     return self.runCommand(cmd, *args, **kwargs) 
 
   def streamCommand(self, cmd, *args, **kwargs):
-    return self.runCommand(cmd, stream=True) 
+     self.runCommand(cmd, stream=True) 
 
   def runCommand(self, cmd, sudo=False, stream=False, interactive=False, shell=False, *args, **kwargs):
 
@@ -251,7 +251,7 @@ class Link(object):
         r, w, e = select.select([channel, sys.stdin], [], [])
         if channel in r:
           try:
-            x = u(channel.recv(1024))
+            x = channel.recv(1024)
             if len(x) == 0:
               isAlive = False
             else:
