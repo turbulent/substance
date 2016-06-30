@@ -477,7 +477,7 @@ class Engine(object):
 
   def envRegister(self):
     return self.readLink() \
-      .bind(Link.runCommand, 'subenv vars name fqdn', stream=False) \
+      .bind(Link.runCommand, 'subenv vars', stream=False) \
       .bind(self.__envRegister)
 
   def __envRegister(self, lr):
