@@ -54,7 +54,7 @@ class SubHosts(Hosts):
     try:
       hosts = SubHosts.checkoutFromSystem()
       if hosts.exists(names=[self.name]):
-        self.removeEntry(name)
+        hosts.removeEntry(name)
         hosts.write()
         hosts.commitToSystem()
       return OK(None)
