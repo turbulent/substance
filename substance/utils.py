@@ -58,7 +58,7 @@ def readYAML(filename):
     raise FileSystemError("Failed to read configuration file %s : %s" % (filename, err))
 
 def getSupportFile(filename):
-  return resource_filename("substance", filename)
+  return resource_filename(Requirement.parse('substance'), filename)
  
 def getPackageVersion():
   return require('substance')[0].version
