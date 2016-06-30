@@ -53,7 +53,7 @@ class SubHosts(Hosts):
   def unregister(name):
     try:
       hosts = SubHosts.checkoutFromSystem()
-      if hosts.exists(names=[self.name]):
+      if hosts.exists(names=[name]):
         hosts.removeEntry(name)
         hosts.write()
         hosts.commitToSystem()
