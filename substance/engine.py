@@ -487,9 +487,9 @@ class Engine(object):
       return env
     env = env.getOK()
     if 'SUBENV_FQDN' in env:
-      return SubHosts.register(env['FQDN'], self.getPublicIP())
+      return SubHosts.register(env['SUBENV_FQDN'], self.getPublicIP())
     elif 'SUBENV_NAME' in env: 
-      return SubHosts.register(env['NAME'] + self.core.config.get('tld'), self.getPublicIP())
+      return SubHosts.register(env['SUBENV_NAME'] + self.core.config.get('tld'), self.getPublicIP())
        
   def envLoadCurrent(self):
     cmds = [ "subenv current" ]
