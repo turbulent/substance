@@ -530,7 +530,7 @@ class Engine(object):
   def envStatus(self, full=False):
     if full:
       cmds = []
-      cmds.append('subenv run dockwrkr status -a')
+      cmds.append('subenv run dockwrkr status')
       return self.readLink() \
         .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False) \
         .map(self.__envStatus)
