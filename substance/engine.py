@@ -559,7 +559,7 @@ class Engine(object):
   def envDocker(self, command):
     cmd = "docker %s" % command
     logger.debug("DOCKER: %s" % cmd)
-    return self.readLink().bind(Link.runCommand, cmd, stream=True, sudo=False)
+    return self.readLink().bind(Link.runCommand, cmd, stream=True, interactive=True, shell=False)
 
   def envEnter(self, container):
     cmd = "subenv run dockwrkr exec -ti %s /bin/bash" % container

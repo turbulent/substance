@@ -123,14 +123,15 @@ class Link(object):
       # Setup our connection channel with forwarding
       channel = None
       if shell:
-        channel = self.client.invoke_shell()
         # Set terminal options
-        channel.settimeout(0.0)
-        tty.setraw(sys.stdin.fileno())
-        tty.setcbreak(sys.stdin.fileno())
+        channel = self.client.invoke_shell()
       else:
         channel = self.client.get_transport().open_session()
         channel.get_pty()
+
+      channel.settimeout(0.0)
+      tty.setraw(sys.stdin.fileno())
+      tty.setcbreak(sys.stdin.fileno())
 
       forward = paramiko.agent.AgentRequestHandler(channel)
 
@@ -141,7 +142,11 @@ class Link(object):
       stderr = ''
 
       # Star the command stream 
-      channel.exec_command(cmd, *args, **kwargs)
+      if shell:
+        channel.send(cmd + "\n", *args, **kwargs)
+      else:
+        channel.exec_command(cmd, *args, **kwargs)
+
       isAlive = True
 
       while isAlive:
