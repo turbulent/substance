@@ -31,7 +31,7 @@ class SubstanceSyncher(object):
     self.localAgent = LocalWatchAgent(self.processLocalEvent)
     self.remoteAgent = RemoteWatchAgent(self.processRemoteEvent)
     self.unison = {}
-    self.synching = {}
+    self.synching = {self.UP:{}, self.DOWN:{}}
     self.toSync = {self.UP:{}, self.DOWN:{}}
     self.syncPeriod = 0.3
     self.schedule = {self.UP: False, self.DOWN: False}
@@ -92,18 +92,35 @@ class SubstanceSyncher(object):
       ioloop.IOLoop.current().call_later(self.syncPeriod, defer(self.incrementalSync, direction=direction))
 
   def processLocalEvent(self, event):
-    #logger.info("LOCAL %s" % event)
-    return self.processEvent(event, self.UP)
+    logger.debug("LOCAL %s" % event)
+    return self.expungeSynching(self.UP).then(defer(self.processEvent, event, self.UP))
 
   def processRemoteEvent(self, event):
-    #logger.info("REMOTE %s" % event)
-    return self.processEvent(event, self.DOWN)
+    logger.debug("REMOTE %s" % event)
+    return self.expungeSynching(self.DOWN).then(defer(self.processEvent, event, self.DOWN))
+
+  def expungeSynching(self, direction):
+    dirs = self.synching[direction]
+    for dir in dirs.keys():
+      t = self.synching[direction][dir]
+      if (time.time() - t) > 0:
+        logging.debug("Expiring ignore of %s (%s)" % (dir, direction))
+        del self.synching[direction][dir]
+    return OK(None)
+
+  def ignoreSync(self, direction, folder, paths=[], timeout=3):
+    for path in paths:
+      logger.debug("Ignoring %s (%s) for %ss" % (path, direction, timeout))
+      self.synching[direction][path] = time.time() + timeout
 
   def processEvent(self, event, direction=None):
     direction = self.UP if direction is None else direction
   
     path = event.getRelativePath()
     folder = self.getFolderFromPath(event.watchPath, direction)
+
+    if path in self.synching[direction]:
+      logger.info("IGNORE SYNC OF %s" % path)
 
     if folder.isFail():
       logger.error("%s" % folder)
@@ -169,11 +186,14 @@ class SubstanceSyncher(object):
     if direction == self.UP:
       syncher.setFrom(folder.hostPath)
       syncher.setTo(folder.guestPath, self.engine.getSSHIP(), "substance")
+      self.ignoreSync(self.DOWN, folder, paths)
     elif direction == self.DOWN:
       syncher.setFrom(folder.guestPath, self.engine.getSSHIP(), "substance")
       syncher.setTo(folder.hostPath)
+      self.ignoreSync(self.UP, folder, paths)
     else:
       return Fail(ValueError("Sync direction must be 'up' or 'down'"))
+
 
     return syncher.sync() \
       .then(dinfo("Finished sync of %s %s %s:%s" % (folder.hostPath, direction, self.engine.name, folder.guestPath))) \
@@ -188,6 +208,9 @@ class SubstanceSyncher(object):
     plus.append('*.*.swo')
     plus.append('*.*.swp')
     plus.append('*.*.swpx')
+    plus.append('*.*.ssh')
+    plus.append('*.*.bash_history')
+    plus.append('*.*.profile')
     plus.append('*.DS_Store')
     return exs + plus
 
