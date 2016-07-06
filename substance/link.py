@@ -129,9 +129,10 @@ class Link(object):
         channel = self.client.get_transport().open_session()
         channel.get_pty()
 
-      channel.settimeout(0.0)
-      tty.setraw(sys.stdin.fileno())
-      tty.setcbreak(sys.stdin.fileno())
+      if interactive:
+        channel.settimeout(0.0)
+        tty.setraw(sys.stdin.fileno())
+        tty.setcbreak(sys.stdin.fileno())
 
       forward = paramiko.agent.AgentRequestHandler(channel)
 
