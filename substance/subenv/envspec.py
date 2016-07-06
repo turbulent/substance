@@ -46,7 +46,7 @@ class SubenvSpec(object):
     lastApplied = None   
     if 'SUBENV_LASTAPPLIED' in envVars:
       lastApplied = envVars['SUBENV_LASTAPPLIED']
-    
+   
     env = SubenvSpec(envVars['SUBENV_SPECPATH'], envVars['SUBENV_BASEPATH'], envVars['SUBENV_NAME'], vars, lastApplied)
     env.envPath = envPath
     return env
@@ -153,7 +153,7 @@ class SubenvSpec(object):
       tplVars = self.getEnvVars() 
       tplVars.update({'subenv': self})
       tplVars.update({'SUBENV_VARS': self.getEnvVars()})
-
+ 
       with open(dest, 'wb') as fh:
         fh.write(tpl.render(**tplVars))
       return OK(None)
@@ -178,7 +178,7 @@ class SubenvSpec(object):
     return OK(self)
  
   def setEnvVars(self, e={}):
-    self.vars = e
+    self.overrides = e
     return OK(self)
 
   def loadEnvVars(self, env={}):
