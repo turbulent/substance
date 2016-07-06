@@ -104,13 +104,13 @@ class SubstanceSyncher(object):
     for dir in dirs.keys():
       t = self.synching[direction][dir]
       if (time.time() - t) > 0:
-        logging.debug("Expiring ignore of %s (%s)" % (dir, direction))
+        logger.debug("Expiring ignore of (%s)%s" % (direction, dir))
         del self.synching[direction][dir]
     return OK(None)
 
-  def ignoreSync(self, direction, folder, paths=[], timeout=3):
+  def ignoreSync(self, direction, folder, paths=[], timeout=1):
     for path in paths:
-      logger.debug("Ignoring %s (%s) for %ss" % (path, direction, timeout))
+      logger.debug("Ignoring (%s)%s for %ss" % (direction, path, timeout))
       self.synching[direction][path] = time.time() + timeout
 
   def processEvent(self, event, direction=None):
@@ -119,8 +119,6 @@ class SubstanceSyncher(object):
     path = event.getRelativePath()
     folder = self.getFolderFromPath(event.watchPath, direction)
 
-    if path in self.synching[direction]:
-      logger.info("IGNORE SYNC OF %s" % path)
 
     if folder.isFail():
       logger.error("%s" % folder)
@@ -133,8 +131,11 @@ class SubstanceSyncher(object):
       return
 
     if self.fileMatch(path, self.getExcludes()):
-      logger.debug("IGNORED")
+      logger.debug("Ignored event (%s)%s, excluded." % (direction, path))
       return
+
+    if path in self.synching[direction]:
+      logger.debug("Ignored event of (%s)%s" % (direction, path))
 
     if folder not in self.toSync[direction]:
       self.toSync[direction][folder] = []
@@ -169,13 +170,16 @@ class SubstanceSyncher(object):
   def syncFolder(self, folder, direction, paths, incremental=False):
     filters = "\n".join(self.makeFilters(folder, paths))
 
-    logger.info("Synchronizing %s %s %s:%s" % (folder.hostPath, direction, self.engine.name, folder.guestPath))
+    if paths:
+      logger.info("Synchronizing %s %s %s:%s" % (folder.hostPath, direction, self.engine.name, folder.guestPath))
+
     self.toSync[direction].pop(folder, None)
 
     syncher = Rsync()
     syncher.setTransport(self.engine.getSSHPort(), self.keyfile)
     syncher.setFilters(self.makeFilters(folder, paths))
     syncher.setLongOption('delay-updates', True)
+    syncher.setLongOption('temp-dir', '/tmp')
     syncher.setLongOption('partial-dir', self.PARTIAL_DIR)
     syncher.setLongOption('itemize-changes', True)
     syncher.setLongOption('log-format', '%o\t%n %L')

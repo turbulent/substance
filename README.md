@@ -132,7 +132,7 @@ Additionally, subenv will provide the following variables:
 
 - [x] P1 Support subenv FQDN to /etc/hosts
 - [x] P1 Auto-create engine devroot on init
-- [ ] P1 Fix sync backdraft with git.
+- [x] P1 Fix sync backdraft with git.
 - [ ] P2 validate, test and fix Windows support
 - [x] Fix subprogram help (substance help engine ls)
 - [x] Don't initialize core manually in each command
