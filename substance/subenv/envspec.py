@@ -152,6 +152,7 @@ class SubenvSpec(object):
 
       tplVars = self.getEnvVars() 
       tplVars.update({'subenv': self})
+      tplVars.update({'SUBENV_VARS': self.getEnvVars()})
 
       with open(dest, 'wb') as fh:
         fh.write(tpl.render(**tplVars))
