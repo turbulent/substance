@@ -137,6 +137,7 @@ Additionally, subenv will provide the following variables:
 - [x] Fix subprogram help (substance help engine ls)
 - [x] Don't initialize core manually in each command
 - [x] Handle substance version
+- [ ] P2 ModifyVM on bootup for EngineProfile
 - [ ] Porcelain spawn
 - [ ] Porcelain hatch
 - [ ] Doc: How it works
@@ -144,7 +145,7 @@ Additionally, subenv will provide the following variables:
 - [ ] Doc: Box guide
 - [ ] Box service
 - [ ] Box push/pull commands
-- [ ] Box: ensure paravirt network
+- [ ] Box: ensure paravirt network @ boot
 
 ## Bugs
 
