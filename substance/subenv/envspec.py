@@ -37,9 +37,10 @@ class SubenvSpec(object):
       return envVars
     envVars = envVars.getOK()
 
+    reserved = ['SUBENV_NAME','SUBENV_LASTAPPLIED','SUBENV_ENVPATH','SUBENV_SPECPATH','SUBENV_BASEPATH'] 
     vars = envVars.copy()
     for k in vars.keys():
-      if k.startswith('SUBENV_'):
+      if k in reserved:
         del vars[k]
 
     lastApplied = None   
@@ -86,7 +87,7 @@ class SubenvSpec(object):
       Try.attempt(makeSymlink, self.basePath, os.path.join(self.envPath, CODELINK), True),
       Try.attempt(makeSymlink, self.specPath, os.path.join(self.envPath, SPECDIR), True)
     ])
-    
+   
   def writeEnv(self):
     dotenv = os.path.join(self.envPath, ENVFILE)
     logger.debug("Writing environment to: %s" % dotenv)
@@ -138,7 +139,6 @@ class SubenvSpec(object):
     envVars.update({
       'SUBENV_NAME': self.name,
       'SUBENV_LASTAPPLIED': self.lastApplied,
-      'SUBENV_VARS': self.vars,
       'SUBENV_ENVPATH': self.envPath,
       'SUBENV_SPECPATH': self.specPath,
       'SUBENV_BASEPATH': self.basePath
