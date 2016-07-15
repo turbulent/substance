@@ -19,6 +19,9 @@ from tornado import ioloop
 
 logger = logging.getLogger(__name__)
 
+#logging.getLogger("subwatch.client").setLevel(logging.WARNING)
+#logging.getLogger("subwatch.watcher").setLevel(logging.WARNING)
+
 class SubstanceSyncher(object):
 
   UP = ">>"
@@ -33,7 +36,7 @@ class SubstanceSyncher(object):
     self.unison = {}
     self.synching = {self.UP:{}, self.DOWN:{}}
     self.toSync = {self.UP:{}, self.DOWN:{}}
-    self.syncPeriod = 0.3
+    self.syncPeriod = 0.3 
     self.schedule = {self.UP: False, self.DOWN: False}
     self.excludes = []
     
@@ -92,11 +95,11 @@ class SubstanceSyncher(object):
       ioloop.IOLoop.current().call_later(self.syncPeriod, defer(self.incrementalSync, direction=direction))
 
   def processLocalEvent(self, event):
-    logger.debug("LOCAL %s" % event)
+    #logger.debug("LOCAL %s" % event)
     return self.expungeSynching(self.UP).then(defer(self.processEvent, event, self.UP))
 
   def processRemoteEvent(self, event):
-    logger.debug("REMOTE %s" % event)
+    #logger.debug("REMOTE %s" % event)
     return self.expungeSynching(self.DOWN).then(defer(self.processEvent, event, self.DOWN))
 
   def expungeSynching(self, direction):
@@ -108,7 +111,7 @@ class SubstanceSyncher(object):
         del self.synching[direction][dir]
     return OK(None)
 
-  def ignoreSync(self, direction, folder, paths=[], timeout=1):
+  def ignoreSync(self, direction, folder, paths=[], timeout=10):
     for path in paths:
       logger.debug("Ignoring (%s)%s for %ss" % (direction, path, timeout))
       self.synching[direction][path] = time.time() + timeout
@@ -118,7 +121,6 @@ class SubstanceSyncher(object):
   
     path = event.getRelativePath()
     folder = self.getFolderFromPath(event.watchPath, direction)
-
 
     if folder.isFail():
       logger.error("%s" % folder)
@@ -131,11 +133,11 @@ class SubstanceSyncher(object):
       return
 
     if self.fileMatch(path, self.getExcludes()):
-      logger.debug("Ignored event (%s)%s, excluded." % (direction, path))
+      logger.debug("Ignored (excluded) event (%s)%s" % (direction, path))
       return
 
     if path in self.synching[direction]:
-      logger.debug("Ignored event of (%s)%s" % (direction, path))
+      logger.debug("Ignored (ignored) event of (%s)%s" % (direction, path))
 
     if folder not in self.toSync[direction]:
       self.toSync[direction][folder] = []
@@ -144,8 +146,16 @@ class SubstanceSyncher(object):
       path = os.path.dirname(path)
    
     if path not in self.toSync[direction][folder]:
+      if path not in self.synching[direction]:
+        self.ignoreSync(self.inverse(direction), folder, [path])
       self.toSync[direction][folder].append(path)
       self.scheduleSync(direction)
+
+  def inverse(self, direction): 
+    if direction == self.UP:
+      return self.DOWN
+    else:
+      return self.UP
 
   def fileMatch(self, filename, excludes=[]):
     for ex in excludes:
@@ -178,9 +188,10 @@ class SubstanceSyncher(object):
     syncher = Rsync()
     syncher.setTransport(self.engine.getSSHPort(), self.keyfile)
     syncher.setFilters(self.makeFilters(folder, paths))
-    syncher.setLongOption('delay-updates', True)
+    #syncher.setLongOption('delay-updates', True)
+    syncher.setLongOption('inplace', True)
     syncher.setLongOption('temp-dir', '/tmp')
-    syncher.setLongOption('partial-dir', self.PARTIAL_DIR)
+    #syncher.setLongOption('partial-dir', self.PARTIAL_DIR)
     syncher.setLongOption('itemize-changes', True)
     syncher.setLongOption('log-format', '%o\t%n %L')
 
@@ -190,11 +201,9 @@ class SubstanceSyncher(object):
     if direction == self.UP:
       syncher.setFrom(folder.hostPath)
       syncher.setTo(folder.guestPath, self.engine.getSSHIP(), "substance")
-      self.ignoreSync(self.DOWN, folder, paths)
     elif direction == self.DOWN:
       syncher.setFrom(folder.guestPath, self.engine.getSSHIP(), "substance")
       syncher.setTo(folder.hostPath)
-      self.ignoreSync(self.UP, folder, paths)
     else:
       return Fail(ValueError("Sync direction must be 'up' or 'down'"))
 
@@ -258,6 +267,7 @@ class Rsync(object):
   
     self.filters = []
     self.opt = {
+      'p':True,
       'a':True,
       'r':True,
       'u':True
