@@ -163,41 +163,7 @@ Additionally, subenv will provide the following variables:
 - [ ] NTH Speed-up import @ python start
 - [ ] NTH Refactor CLI with functional
 
+
 # Setup
 
-## TLDR OSX
-
-```
-xcode-select --install
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-brew install python
-pip install -U pip
-pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@0.2alpha
-pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.2alpha
-```
-
-## Update to latest on OSX 
-
-```
-pip uninstall subwatch
-pip uninstall substance
-pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git
-pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git
-```
-
-## Detailed
-
-- Download [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) 5.0.2+ and install the [VM Extensions](http://download.virtualbox.org/virtualbox/5.0.24/Oracle_VM_VirtualBox_Extension_Pack-5.0.24-108355.vbox-extpack).
-- Make sure Xcode CLI is installed
-  - ``xcode-select --install``
-- Ensure homebrew is installed
-  - ``/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"``
-- Install homebrew python
-  - ``brew install python``
-- Ensure pip is up to date
--   - ``pip install -U pip``
-- Install subwatch alpha
-  - ``sudo pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@0.2alpha``
-- Install substance alpha
-  - ``sudo pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.2alpha``  
-  
+[USAGE](USAGE.md)
