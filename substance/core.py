@@ -82,7 +82,7 @@ class Core(object):
     defaults = OrderedDict()
     defaults['assumeYes'] = False
     defaults['drivers'] = ['virtualbox']
-    defaults['tld'] = '.sub'
+    defaults['tld'] = '.dev'
     defaults['devroot'] = '~/substance'
     defaults['defaultBox'] = 'turbulent/substance-box:0.4'
     defaults['virtualbox'] = OrderedDict()
