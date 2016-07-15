@@ -111,7 +111,7 @@ class SubstanceSyncher(object):
         del self.synching[direction][dir]
     return OK(None)
 
-  def ignoreSync(self, direction, folder, paths=[], timeout=10):
+  def ignoreSync(self, direction, folder, paths=[], timeout=3):
     for path in paths:
       logger.debug("Ignoring (%s)%s for %ss" % (direction, path, timeout))
       self.synching[direction][path] = time.time() + timeout
