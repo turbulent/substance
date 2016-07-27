@@ -257,3 +257,9 @@ The above command will make substance read your .substance directory for your pr
 Our project is now up and running!
 
 You should be able to visit it using ```https://myproject.dev```
+
+### Post-setup steps
+
+Substance has no hooks currently to bootstrap your project datastores (MySQL, redis) or setup your fixtures. You must now load up your database model by 
+
+
