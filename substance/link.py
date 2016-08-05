@@ -109,7 +109,7 @@ class Link(object):
   def streamCommand(self, cmd, *args, **kwargs):
      self.runCommand(cmd, stream=True) 
 
-  def runCommand(self, cmd, sudo=False, stream=False, interactive=False, shell=False, *args, **kwargs):
+  def runCommand(self, cmd, sudo=False, stream=False, capture=False, interactive=False, shell=False, *args, **kwargs):
 
     import select
   
@@ -167,14 +167,16 @@ class Link(object):
               if stream:
                 sys.stdout.write(d)
                 sys.stdout.flush()
-              stdout += d
+              if capture:
+                stdout += d
 
           if channel.recv_stderr_ready():
             d = channel.recv_stderr(bufsize)
             if stream:
               sys.stderr.write(d)
               sys.stderr.flush()
-            stderr += d
+            if capture:
+              stderr += d
 
         if sys.stdin in r and isAlive and interactive:
           x = os.read(sys.stdin.fileno(), bufsize)
@@ -211,6 +213,9 @@ class Link(object):
     if not self.sftp:
       self.sftp = self.client.open_sftp()
     return self.sftp
+
+  def closeSFTP(self):
+    return self.sftp.close()
 
   def upload(self, localPath, remotePath):
     return Try.attempt(self._put, localPath, remotePath)
@@ -304,12 +309,12 @@ class Link(object):
       # user hit ^Z or F6
       pass
 
-
-
   def _put(self, localPath, remotePath):
     client = self.getSFTP()
+    logger.debug("PUT %s %s" % (localPath, remotePath))
     return client.put(localPath, remotePath) 
        
   def _get(self, remotePath, localPath):
     client = self.getSFTP()
+    logger.debug("GET %s %s" % (remotePath, localPath))
     return client.get(remotePath, localPath) 

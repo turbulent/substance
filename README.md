@@ -13,6 +13,22 @@ substance then allows you to switch from project to project simply by having a s
 
 # Engine commands
 
+substance ls
+substance boot MYENGINE
+substance halt MYENGINE
+substance suspend MYENGINE
+substance deprovision MYENGINE
+substance delete MYENGINE
+substance ssh MYENGINE
+substance sshinfo MYENGINE
+substance docker-env MYENGINE
+
+substance use MYENGINE --env MYPROJECT
+substance switch MYPROJECT --restart
+substance logs -f webnginxaccess*.log -n 100 
+substance start 
+substance stop
+
 - [x] substance engine ls
 - [x] substance engine init
 - [x] substance engine delete

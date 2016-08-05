@@ -200,3 +200,12 @@ def makeSymlink(source, link, force=False):
 
 def readSymlink(link):
   return os.readlink(link)
+
+
+def expandLocalPath(path, basePath=None):
+  path = os.path.expanduser(path)
+  if not os.path.isabs(path) and basePath:
+    path = os.path.normpath(path)
+    path = os.path.join(basePath, path)
+  return os.path.abspath(os.path.realpath(path))
+

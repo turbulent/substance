@@ -24,9 +24,7 @@ class Env(Command):
       .catch(self.exitError)
 
   def outputDockerEnv(self, engine):
-    publicIP = engine.getPublicIP()
-    port = engine.getDockerPort()
-    print("export DOCKER_API_VERSION=\"1.19\"")   
-    print("export DOCKER_HOST=\"%s\"" % (engine.getDockerURL()))
-    print("export DOCKER_TLS_VERIFY=\"\"")
+    env = engine.getDockerEnv()
+    for k, v in env.iteritems():
+      print("export %s=\"%s\"" % (k,v))
     return OK(None)

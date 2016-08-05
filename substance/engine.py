@@ -8,7 +8,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
-from substance.utils import mergeDict, parseDotEnv
+from substance.utils import mergeDict, parseDotEnv, expandLocalPath
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
@@ -153,6 +153,13 @@ class Engine(object):
  
   def getDockerPort(self):
     return self.config.get('docker', {}).get('port', 2375) 
+
+  def getDockerEnv(self):
+    env = OrderedDict()
+    #env['DOCKER_API_VERSION'] = '1.19'
+    env['DOCKER_HOST'] = self.getDockerURL()
+    env['DOCKER_TLS_VERIFY'] = ''
+    return env
 
   def getPublicIP(self):
     return self.config.get('network').get('publicIP', None)
@@ -307,7 +314,8 @@ class Engine(object):
 
   def postLaunch(self):
     return self.setHostname() \
-      .then(self.mountFolders)
+      .then(self.mountFolders) \
+      .then(self.uploadKeys)
  
   def saveDriverNetworkInfo(self, info):
     self.logAdapter.debug("Network information for machine: %s" % info)
@@ -460,6 +468,28 @@ class Engine(object):
     cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
     return Try.sequence(cmds) 
 
+  def uploadKeys(self):
+    ''' pass '''
+    ops = []
+    key = self.core.config.get('ssh', {}).get('privateKey')
+    if key:
+      keyfile = expandLocalPath(key)
+      if not os.path.isfile(keyfile):
+        return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
+      self.logAdapter.info("Uploading private key: %s" % keyfile)
+      ops.append( self.readLink().bind(Link.upload, localPath=keyfile, remotePath=".ssh/id_dsa") )
+
+    pkey = self.core.config.get('ssh', {}).get('publicKey')
+    if pkey:
+      pkeyfile = expandLocalPath(pkey)
+      if not os.path.isfile(pkeyfile):
+        return Fail(FileDoesNotExist("Inexistent public key: %s" %pkey))
+      self.logAdapter.info("Uploading public key: %s" % pkeyfile)
+      ops.append( self.readLink().bind(Link.upload, localPath=pkeyfile, remotePath=".ssh/id_dsa.pub") )
+      ops.append( self.readLink().bind(Link.runCommand, cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys", stream=True, interactive=True) )
+ 
+    return Try.sequence(ops)
+ 
   def envSwitch(self, subenvName, restart=False):
     self.logAdapter.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
     cmds = [
@@ -477,7 +507,7 @@ class Engine(object):
 
   def envRegister(self):
     return self.readLink() \
-      .bind(Link.runCommand, 'subenv vars', stream=False) \
+      .bind(Link.runCommand, 'subenv vars', stream=False, capture=True) \
       .bind(self.__envRegister)
 
   def __envRegister(self, lr):
@@ -494,7 +524,7 @@ class Engine(object):
   def envLoadCurrent(self):
     cmds = [ "subenv current" ]
     return self.readLink() \
-      .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False) \
+      .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False, capture=True) \
       .map(self.__cacheCurrentEnv) \
       .catch(lambda err: Fail(EnvNotFoundError("No current subenv is set. Check 'switch' for detais."))) \
       .then(lambda: self)
@@ -532,7 +562,7 @@ class Engine(object):
       cmds = []
       cmds.append('subenv run dockwrkr status')
       return self.readLink() \
-        .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False) \
+        .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False, capture=True) \
         .map(self.__envStatus)
     else:
       return OK(self.__envStatus())
@@ -548,7 +578,7 @@ class Engine(object):
 
     cmds.append('subenv run %s' % cmd)
     return self.readLink() \
-      .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
+      .bind(Link.runCommand, ' && '.join(cmds), stream=True, capture=False, sudo=False) 
   
   def __envStatus(self, containers=None):
     return {

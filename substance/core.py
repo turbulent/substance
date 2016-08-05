@@ -88,6 +88,9 @@ class Core(object):
     defaults['virtualbox'] = OrderedDict()
     defaults['virtualbox']['network'] = "172.21.21.0/24"
     defaults['virtualbox']['interface'] = None
+    defaults['ssh'] = OrderedDict()
+    defaults['ssh']['privateKey'] = None
+    defaults['ssh']['publicKey'] = None
     defaults['current'] = OrderedDict()
     defaults['engine'] = None
     defaults['subenv'] = None
