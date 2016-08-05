@@ -6,7 +6,7 @@ from substance.logs import *
 from exceptions import *
 from substance.exceptions import *
 
-VBOX_VERSION_MIN = (5,0,10)
+VBOX_VERSION_MIN = (5,0,0)
 VBOX_VERSION_CHECKED = None
 
 def vboxManager(cmd, params=""):
