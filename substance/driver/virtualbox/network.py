@@ -262,7 +262,7 @@ def _netFrom(net):
     return Fail(err)
     
 def _mapAsBlocks(data, func):
-  blocks = data.strip().split("\n\n")
+  blocks = [ x for x in data.strip().split("\n\n") if x ]
   return OK(blocks).mapM(func)
 
 def _extractClassFromBlock(block, actions, cls):
@@ -280,4 +280,7 @@ def _extractClassFromBlock(block, actions, cls):
         info[field] = match.group(1)
         break
 
-  return OK(cls(**info))
+  if info:
+    return OK(cls(**info))
+  else:
+    return OK(None)
