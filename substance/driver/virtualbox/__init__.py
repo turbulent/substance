@@ -86,10 +86,10 @@ class VirtualBoxDriver(Driver):
     if not hoif:
       return self.provisionNetworking(netconfig)
     elif hoif.ip.format() != netconfig['gateway']:
-      self.logAdapter.warn("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network." % hoif.name)
+      self.logAdapter.warning("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network." % hoif.name)
       return self.provisionNetworking(netconfig)
     elif dhcp is None:
-      self.logAdapter.warn("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now." % hoif.name)
+      self.logAdapter.warning("VirtualBox interface \"%s\" does not have DHCP enabled. Re-Establishing now." % hoif.name)
       return self.provisionDHCP(hoif.name, netconfig)
 
     return OK(hoif)
