@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 class Status(Command):
   def getShellOptions(self, optparser):
-    optparser.add_option("-f","--full", dest="full", help="Engine to run this command on", default=None, action="store_true")
     return optparser
 
   def getUsage(self):
@@ -21,7 +20,7 @@ class Status(Command):
   def main(self):
     return self.core.loadCurrentEngine(name=self.getOption('engine')) \
       .bind(Engine.envLoadCurrent) \
-      .bind(Engine.envStatus, full=self.getOption('full')) \
+      .bind(Engine.envStatus, full=True) \
       .bind(self.printStatus) \
       .catch(self.exitError)
 

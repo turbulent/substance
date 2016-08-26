@@ -118,6 +118,13 @@ class Core(object):
     self.config.set('current', current)
     return OK(self)
 
+  def readCurrentEngineName(self):
+    current = self.config.get('current', {})
+    name = current.get('engine', None)
+    if not name:
+      return Fail(EngineNotFoundError("No current engine is specified. Check the 'use' command for details."))
+    return OK(name)
+
   def loadCurrentEngine(self, name=None):
     current = self.config.get('current', {}) 
     engineName = name

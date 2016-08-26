@@ -7,25 +7,26 @@ logger = logging.getLogger(__name__)
 
 class Logs(Command):
   def getShellOptions(self, optparser):
-    optparser.add_option("-f","--follow", dest="follow", help="Keep following the logs", default=None, action="store_true")
     optparser.add_option("-n","--lines", dest="lines", help="Output the last N lines", default=None, metavar="N")
+    optparser.add_option("-p","--pattern", dest="pattern", help="Use a log pattern instead of arguments", default=None)
+    optparser.add_option("-l","--list", dest="list", help="List available environment logs", default=None, action="store_true")
     return optparser
 
   def getUsage(self):
-    return "substance logs [options] PATTERN"
+    return "substance logs [options] [container] [logname]"
 
   def getHelpTitle(self):
     return "Display current subenv logs"
 
   def main(self):
-    pattern = self.getInputPattern()
-    return self.core.loadCurrentEngine(name=self.getOption('engine')) \
-      .bind(Engine.envLoadCurrent) \
-      .bind(Engine.envLogs, pattern=pattern, follow=self.getOption('follow'), lines=self.getOption('lines')) \
-      .catch(self.exitError)
 
-  def getInputPattern(self):
-    if not self.hasArg(0):
-      self.exitError("You must specified a log pattern.")
+    op = self.core.loadCurrentEngine(name=self.getOption('engine')) \
+      .bind(Engine.envLoadCurrent) 
 
-    return self.getArg(0)
+    if self.getOption('list'):
+      op = op.bind(Engine.envListLogs, parts=self.getArgs(), pattern=self.getOption('pattern'))
+    else:
+      op = op.bind(Engine.envLogs, parts=self.getArgs(), pattern=self.getOption('pattern'), lines=self.getOption('lines')) 
+
+    op = op.catch(self.exitError)
+    return op

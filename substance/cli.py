@@ -15,16 +15,21 @@ class SubstanceCLI(Program):
     self.name = 'substance'
 
   def setupCommands(self):
-    self.addCommand('engine', 'substance.command.engine')
     self.addCommand('use', 'substance.command.use')
+    self.addCommand('launch', 'substance.command.launch')
+    self.addCommand('suspend', 'substance.command.suspend')
+    self.addCommand('halt', 'substance.command.halt')
     self.addCommand('switch', 'substance.command.switch')
     self.addCommand('start', 'substance.command.start')
     self.addCommand('stop', 'substance.command.stop')
+    self.addCommand('restart', 'substance.command.restart')
+    self.addCommand('recreate', 'substance.command.recreate')
+    self.addCommand('ssh', 'substance.command.ssh')
     self.addCommand('status', 'substance.command.status')
     self.addCommand('logs', 'substance.command.logs')
     self.addCommand('docker', 'substance.command.docker')
-    self.addCommand('enter', 'substance.command.enter')
     self.addCommand('exec', 'substance.command.exec')
+    self.addCommand('engine', 'substance.command.engine')
     return self
 
   def getShellOptions(self, optparser):
@@ -51,8 +56,6 @@ class SubstanceCLI(Program):
     return command
 
 def cli():
-  args = sys.argv
-  args.pop(0)
-
+  args = sys.argv[1:]
   prog = SubstanceCLI()
   prog.execute(args)

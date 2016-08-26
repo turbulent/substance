@@ -13,11 +13,10 @@ class Start(Command):
     return "substance start [options] [CONTAINER...]"
 
   def getHelpTitle(self):
-    return "Start containers in the current subenv"
+    return "Start all or specific container(s)"
 
   def main(self):
     return self.core.loadCurrentEngine(name=self.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
-      .bind(Engine.envLoadCurrent) \
       .bind(Engine.envStart, reset=self.getOption('reset'), containers=self.args) \
       .catch(self.exitError)

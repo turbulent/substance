@@ -3,22 +3,20 @@ from substance.logs import *
 from substance import (Command, Engine)
 from tabulate import tabulate
 
-class Stop(Command):
+class Recreate(Command):
   def getShellOptions(self, optparser):
     optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
     optparser.add_option("-t","--time", dest="time", help="Seconds to wait before sending SIGKILL", default=10)
     return optparser
 
   def getUsage(self):
-    return "substance stop [options]"
+    return "substance recreate [options] [CONTAINER...]"
 
   def getHelpTitle(self):
-    return "Stop all or specific container(s)"
+    return "Recreate all or specified container(s)"
 
   def main(self):
-   
     return self.core.loadCurrentEngine(name=self.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
-      .bind(Engine.envStop, containers=self.args, time=self.getOption('time')) \
+      .bind(Engine.envRecreate, containers=self.args, time=self.getOption('time')) \
       .catch(self.exitError)
-

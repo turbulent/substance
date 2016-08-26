@@ -148,11 +148,15 @@ class Link(object):
       else:
         channel.exec_command(cmd, *args, **kwargs)
 
+
       isAlive = True
+      watchHandles = [channel]
+      if interactive:
+        watchHandles.append(sys.stdin)
 
       while isAlive:
         self.resizePTY(channel)
-        r, w, e = select.select([channel, sys.stdin], [], [])
+        r, w, e = select.select(watchHandles, [], [])
 
         if channel.exit_status_ready():
           isAlive = False

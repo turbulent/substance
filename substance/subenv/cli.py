@@ -41,8 +41,6 @@ class SubenvCLI(Program):
 
 
 def cli():
-  args = sys.argv
-  args.pop(0)
-
+  args = sys.argv[1:]
   prog = SubenvCLI()
   prog.execute(args)

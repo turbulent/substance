@@ -224,10 +224,12 @@ class Program(CLI):
       self.initialize()
 
       if not len(self.args) > 0:
-        self.exitError("Please provide a command.\n\nUse 'help' for available commands.")
-  
-      self.cmdString = self.args[0]
-      self.commandInput = self.args[1:]
+        self.cmdString = 'help'
+        self.commandInput = []
+        #self.exitError("Please provide a command.\n\nUse 'help' for available commands.")
+      else: 
+        self.cmdString = self.args[0]
+        self.commandInput = self.args[1:]
 
       if self.cmdString not in self.commands:
         return self.exitError("Invalid command '%s' specified for '%s'.\n\nUse 'help %s' for available commands." % (self.cmdString, self.name, self.name))

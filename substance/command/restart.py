@@ -2,31 +2,21 @@ from substance.monads import *
 from substance.logs import *
 from substance import (Command, Engine)
 from tabulate import tabulate
-from substance.command.command import PassThroughParser
 
-class Enter(Command):
-
+class Restart(Command):
   def getShellOptions(self, optparser):
     optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
+    optparser.add_option("-t","--time", dest="time", help="Seconds to wait before sending SIGKILL", default=10)
     return optparser
 
   def getUsage(self):
-    return "substance enter [options] COMMAND"
+    return "substance restart [options] [CONTAINER...]"
 
   def getHelpTitle(self):
-    return "Enter a container by spawning a bash shell"
+    return "Restart all or specified container(s)"
 
   def main(self):
-    container = self.getInputContainer()
     return self.core.loadCurrentEngine(name=self.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
-      .bind(Engine.envLoadCurrent) \
-      .bind(Engine.envEnter, container=container) \
+      .bind(Engine.envRestart, time=self.getOption('time'), containers=self.args) \
       .catch(self.exitError)
-
-  def getInputContainer(self):
-    if len(self.args) <= 0:
-      return self.exitError("Please specify a container name.")
-    name = self.args[0]
-    return name
-
