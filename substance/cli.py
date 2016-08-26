@@ -27,6 +27,7 @@ class SubstanceCLI(Program):
     self.addCommand('ssh', 'substance.command.ssh')
     self.addCommand('status', 'substance.command.status')
     self.addCommand('logs', 'substance.command.logs')
+    self.addCommand('sync', 'substance.command.sync')
     #self.addCommand('docker', 'substance.command.docker')
     #self.addCommand('exec', 'substance.command.exec')
     self.addCommand('engine', 'substance.command.engine')
