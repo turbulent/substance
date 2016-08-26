@@ -8,6 +8,8 @@ from substance.exceptions import (InvalidOptionError)
 from substance import Command
 from substance.subenv import (SPECDIR, SubenvAPI)
 
+logger = logging.getLogger(__name__)
+
 class Run(Command):
 
   def getUsage(self):
@@ -27,6 +29,5 @@ class Run(Command):
     return (opts, args)
 
   def main(self):
-    cmd = self.input
-    return self.api.run(cmd=' '.join(cmd)) \
+    return self.api.run(args=self.input) \
       .catch(self.exitError) 

@@ -1,4 +1,5 @@
 import os
+import subprocess
 from substance.monads import *
 from substance.constants import *
 from substance.logs import dinfo
@@ -79,13 +80,15 @@ class SubenvAPI(object):
   def current(self):
     return OK(self._getCurrentEnv())
   
-  def run(self, cmd, envName=None):
+  def run(self, args, envName=None):
     if not envName:
       envSpec = self._getCurrentEnv() 
       if not envSpec:
         return Fail(InvalidEnvError("No env is currently active."))
       envName = envSpec.name
 
+    cmd = subprocess.list2cmdline(args)
+    
     return OK(envName) \
       .bind(self._loadEnvSpec) \
       .map(lambda x: x.envPath) \
