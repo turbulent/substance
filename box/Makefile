@@ -1,7 +1,7 @@
 
 BOX_NS = turbulent
 BOX_NAME = substance-box
-BOX_VERSION = 0.4
+BOX_VERSION = 0.5
 
 define BOXYML
 name: $(BOX_NAME)

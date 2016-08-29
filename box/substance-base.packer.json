@@ -16,7 +16,9 @@
       ["modifyvm", "{{.Name}}", "--cpus", "2"],
       ["modifyvm", "{{.Name}}", "--memory", "1024"],
       ["modifyvm", "{{.Name}}", "--audio", "none"],
-      ["modifyvm", "{{.Name}}", "--usb", "off"]
+      ["modifyvm", "{{.Name}}", "--usb", "off"],
+      ["modifyvm", "{{.Name}}", "--nictype1", "virtio"],
+      ["modifyvm", "{{.Name}}", "--nictype2", "virtio"]
     ],
 
     "disk_size" : 24576,

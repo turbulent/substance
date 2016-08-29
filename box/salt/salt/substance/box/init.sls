@@ -1,4 +1,5 @@
 include:
+  - .sysctl
   - .pkgs
   - .network
   - .user

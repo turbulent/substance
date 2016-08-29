@@ -84,7 +84,7 @@ class Core(object):
     defaults['drivers'] = ['virtualbox']
     defaults['tld'] = '.dev'
     defaults['devroot'] = '~/substance'
-    defaults['defaultBox'] = 'turbulent/substance-box:0.4'
+    defaults['defaultBox'] = 'turbulent/substance-box:0.5'
     defaults['virtualbox'] = OrderedDict()
     defaults['virtualbox']['network'] = "172.21.21.0/24"
     defaults['virtualbox']['interface'] = None

@@ -93,7 +93,20 @@ class Engine(object):
     defaults['devroot'] = OrderedDict()
     defaults['devroot']['path'] = '~/devroot'
     defaults['devroot']['mode'] = 'rsync'
-    defaults['devroot']['excludes'] = ['*.*.swp']
+    defaults['devroot']['excludes'] = [
+      '*.*.swp',
+      '.bash*',
+      '.composer',
+      '.git',
+      '.idea'
+      '.npm',
+      '.ssh',
+      '.viminfo',
+      '*node_modules*',
+      'data/work/*',
+      'data/media/*',
+      'var/uploads/*'
+    ]
     return defaults
   
   def validateConfig(self, config):
