@@ -2,9 +2,12 @@ from substance.monads import *
 from substance.logs import *
 from substance import (Command, Engine)
 from tabulate import tabulate
+from substance.constants import Syncher
 
 class Sync(Command):
   def getShellOptions(self, optparser):
+    optparser.add_option("-u","--up", dest="up", help="Synchronize UP to the engine only.", default=False, action="store_true")
+    optparser.add_option("-d","--down", dest="down", help="Synchronize DOWN from the engine only.", default=False, action="store_true")
     return optparser
 
   def getUsage(self):
@@ -21,10 +24,18 @@ your code up to date on the engine or to receive artifact stored in the devroot 
 """
 
   def main(self):
+
+    if self.getOption('up'):
+      direction = Syncher.UP
+    elif self.getOption('down'):
+      direction = Syncher.DOWN
+    else:
+      direction = Syncher.BOTH
+
     return self.core.loadCurrentEngine(name=self.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
-      .bind(self.syncFolders) \
+      .bind(self.syncFolders, direction=direction) \
       .catch(self.exitError)
 
-  def syncFolders(self, engine):
-    return engine.getSyncher().start()
+  def syncFolders(self, engine, direction=Syncher.BOTH):
+    return engine.getSyncher().start(direction)

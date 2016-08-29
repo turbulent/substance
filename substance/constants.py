@@ -30,3 +30,9 @@ EngineStates = Constants(
   INEXISTENT="inexistent"
 )
 
+Syncher = Constants(
+  UP=">>",
+  DOWN="<<",
+  BOTH="<>"
+)
+

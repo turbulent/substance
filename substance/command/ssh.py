@@ -20,7 +20,6 @@ class Ssh(Command):
   def main(self):
     return self.core.loadCurrentEngine(name=self.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
-      .bind(Engine.envLoadCurrent) \
       .bind(Engine.envShell, container=self.getInputContainer(), user=self.getOption('user'), cwd=self.getOption('cwd')) \
       .catch(self.exitError)
 

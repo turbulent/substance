@@ -10,6 +10,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.exceptions import (SubstanceError)
 from substance.utils import pathComponents
+from substance.constants import Syncher
 
 from subwatch.watcher import (LocalWatchAgent, RemoteWatchAgent)
 from subwatch.events import WatchEventHandler
@@ -24,37 +25,35 @@ logger = logging.getLogger(__name__)
 
 class SubstanceSyncher(object):
 
-  UP = ">>"
-  DOWN = "<<"
   PARTIAL_DIR = '.~subsync~'
-
   def __init__(self, engine, keyfile):
     self.keyfile = keyfile
     self.engine = engine
     self.localAgent = LocalWatchAgent(self.processLocalEvent)
     self.remoteAgent = RemoteWatchAgent(self.processRemoteEvent)
     self.unison = {}
-    self.synching = {self.UP:{}, self.DOWN:{}}
-    self.toSync = {self.UP:{}, self.DOWN:{}}
+    self.synching = {Syncher.UP:{}, Syncher.DOWN:{}}
+    self.toSync = {Syncher.UP:{}, Syncher.DOWN:{}}
     self.syncPeriod = 0.3 
-    self.schedule = {self.UP: False, self.DOWN: False}
+    self.schedule = {Syncher.UP: False, Syncher.DOWN: False}
     self.excludes = []
     
   def getFolders(self):
     return reduce(lambda acc, x: acc + [x] if x.mode == 'rsync' else acc, self.engine.getEngineFolders(), [])
 
   def getFolderFromPath(self, path, direction=None):
-    direction = self.UP if not direction else direction
+    direction = Syncher.UP if not direction else direction
 
     for folder in self.getFolders():
-      if direction is self.UP and folder.hostPath == path:
+      if direction is Syncher.UP and folder.hostPath == path:
         return OK(folder)
-      elif direction is self.DOWN and folder.guestPath == path:
+      elif direction is Syncher.DOWN and folder.guestPath == path:
         return OK(folder)
     return Fail(NameError("%s is not a folder." % path))
  
-  def start(self):
-    op = self.initialSync()
+  def start(self, direction=Syncher.BOTH):
+
+    op = self.initialSync(direction)
     if op.isFail():
       return op
     
@@ -63,9 +62,13 @@ class SubstanceSyncher(object):
     if len(folders) == 0:
       return Fail(SubstanceError("No rsync folders definedfor synchronization in engine configuration."))
 
+    logger.info("Starting substance syncher (%s)" % direction)
+
     for folder in folders:
-      self.localAgent.startWatching(folder.hostPath)
-      self.remoteAgent.startWatching(folder.guestPath)
+      if direction in [Syncher.UP, Syncher.BOTH]:
+        self.localAgent.startWatching(folder.hostPath)
+      if direction in [Syncher.DOWN, Syncher.BOTH]:
+        self.remoteAgent.startWatching(folder.guestPath)
 
     self.remoteAgent.connect("ws://%s:%s" % (self.engine.getPublicIP(), 1500))
 
@@ -95,12 +98,12 @@ class SubstanceSyncher(object):
       ioloop.IOLoop.current().call_later(self.syncPeriod, defer(self.incrementalSync, direction=direction))
 
   def processLocalEvent(self, event):
-    #logger.debug("LOCAL %s" % event)
-    return self.expungeSynching(self.UP).then(defer(self.processEvent, event, self.UP))
+    #logger.info("LOCAL %s" % event)
+    return self.expungeSynching(Syncher.UP).then(defer(self.processEvent, event, Syncher.UP))
 
   def processRemoteEvent(self, event):
-    #logger.debug("REMOTE %s" % event)
-    return self.expungeSynching(self.DOWN).then(defer(self.processEvent, event, self.DOWN))
+    #logger.info("REMOTE %s" % event)
+    return self.expungeSynching(Syncher.DOWN).then(defer(self.processEvent, event, Syncher.DOWN))
 
   def expungeSynching(self, direction):
     dirs = self.synching[direction]
@@ -111,17 +114,17 @@ class SubstanceSyncher(object):
         del self.synching[direction][dir]
     return OK(None)
 
-  def ignoreSync(self, direction, folder, paths=[], timeout=3):
+  def ignoreSync(self, direction, folder, paths=[], timeout=1):
     for path in paths:
-      logger.debug("Ignoring (%s)%s for %ss" % (direction, path, timeout))
+      logger.info("Ignoring (%s)%s for %ss" % (direction, path, timeout))
       self.synching[direction][path] = time.time() + timeout
 
   def processEvent(self, event, direction=None):
-    direction = self.UP if direction is None else direction
+    direction = Syncher.UP if direction is None else direction
   
     path = event.getRelativePath()
     folder = self.getFolderFromPath(event.watchPath, direction)
-
+ 
     if folder.isFail():
       logger.error("%s" % folder)
       return folder
@@ -129,15 +132,15 @@ class SubstanceSyncher(object):
       folder = folder.getOK()
 
     if event.type == EVENT_TYPE_MODIFIED and event.isDirectory:
-      #logger.debug("IGNORED")
       return
 
     if self.fileMatch(path, self.getExcludes()):
-      logger.debug("Ignored (excluded) event (%s)%s" % (direction, path))
+      logger.info("Ignored (excluded) event (%s)%s" % (direction, path))
       return
 
-    if path in self.synching[direction]:
-      logger.debug("Ignored (ignored) event of (%s)%s" % (direction, path))
+    if os.path.dirname(path) in self.synching[direction]:
+      logger.info("Ignored (ignored) event of (%s)%s" % (direction, path))
+      return
 
     if folder not in self.toSync[direction]:
       self.toSync[direction][folder] = []
@@ -152,10 +155,10 @@ class SubstanceSyncher(object):
       self.scheduleSync(direction)
 
   def inverse(self, direction): 
-    if direction == self.UP:
-      return self.DOWN
+    if direction == Syncher.UP:
+      return Syncher.DOWN
     else:
-      return self.UP
+      return Syncher.UP
 
   def fileMatch(self, filename, excludes=[]):
     for ex in excludes:
@@ -163,12 +166,14 @@ class SubstanceSyncher(object):
         return True
     return False
  
-  def initialSync(self):
+  def initialSync(self, direction):
     folders = self.getFolders()
     chain = OK(None)
     for folder in folders:
-      chain = chain.then(defer(self.syncFolder, folder=folder, direction=self.UP, paths=['/'])) \
-        .then(defer(self.syncFolder, folder=folder, direction=self.DOWN, paths=['/']))
+      if direction in [Syncher.UP, Syncher.BOTH]:
+        chain = chain.then(defer(self.syncFolder, folder=folder, direction=Syncher.UP, paths=['/'])) 
+      if direction in [Syncher.DOWN, Syncher.BOTH]: 
+        chain = chain.then(defer(self.syncFolder, folder=folder, direction=Syncher.DOWN, paths=['/']))
     return chain
 
   def incrementalSync(self, direction):
@@ -198,10 +203,10 @@ class SubstanceSyncher(object):
     if incremental is True:
       syncher.setLongOption('delete', True)
 
-    if direction == self.UP:
+    if direction == Syncher.UP:
       syncher.setFrom(folder.hostPath)
       syncher.setTo(folder.guestPath, self.engine.getSSHIP(), "substance")
-    elif direction == self.DOWN:
+    elif direction == Syncher.DOWN:
       syncher.setFrom(folder.guestPath, self.engine.getSSHIP(), "substance")
       syncher.setTo(folder.hostPath)
     else:
@@ -342,7 +347,7 @@ class Rsync(object):
     return dest
 
   def getCommandTransport(self):
-    transport = "ssh -p %s -o StrictHostKeyChecking=no" % self.port
+    transport = "ssh -p %s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" % self.port
     if self.keyfile is not None:
       transport += " -i \"%s\"" % self.keyfile
     return transport
