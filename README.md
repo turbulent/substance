@@ -11,50 +11,45 @@ With substance you create an `engine` which runs it's own virtual machine with t
 
 substance then allows you to switch from project to project simply by having a simple `.substance` folder in the root of your project source to define the containers and folders/volumes needed to run your project.
 
+# Commands
+
+```
+  help                Print help for a specific substance command
+  use                 Specify which engine is used by default
+  launch              Launch the current engine's virtual machine
+  suspend             Suspend the current engine's virtual machine
+  halt                Suspend the current engine's virtual machine
+  switch              Switch the active subenv for an engine
+  start               Start all or specific container(s)
+  stop                Stop all or specific container(s)
+  restart             Restart all or specified container(s)
+  recreate            Recreate all or specified container(s)
+  ssh                 Connect using SSH to the engine or directly into a container
+  status              Show substance engine and env status
+  logs                Display current subenv logs
+  sync                Synchronize & watch the devroot of the current engine
+  engine              Substance engine management
+  ```
+
+
 # Engine commands
 
-substance ls
-substance boot MYENGINE
-substance halt MYENGINE
-substance suspend MYENGINE
-substance deprovision MYENGINE
-substance delete MYENGINE
-substance ssh MYENGINE
-substance sshinfo MYENGINE
-substance docker-env MYENGINE
+```
+  ls                  List substance engines
+  init                Initialize a new engine configuration
+  delete              Permanently delete an engine and it's associated machine.
+  launch              Launch an engine's virtual machine
+  halt                Halt an engine's vm gracefully or forcefully.
+  suspend             Suspend an engine gracefully.
+  deprovision         Destroy an engine's assocaited virtual machine
+  edit                Edit an engine configuration
+  ssh                 Connect using SSH to the engine's virtual machine.
+  env                 Print the shell variables to set up the local docker client environment
+  sshinfo             Obtain the ssh info configuration for connecting to an engine
+  sync                Synchronize and watch the devroot folder for an engine
+```
 
-substance use MYENGINE --env MYPROJECT
-substance switch MYPROJECT --restart
-substance logs -f webnginxaccess*.log -n 100 
-substance start 
-substance stop
 
-- [x] substance engine ls
-- [x] substance engine init
-- [x] substance engine delete
-- [x] substance engine launch
-- [x] substance engine halt [--force]
-- [x] substance engine suspend
-- [x] substance engine deprovision
-- [x] substance engine ssh
-- [x] substance engine sshinfo
-- [x] substance engine env
-
-# Usage
-
-- [x] substance help
-- [x] substance use enginename --env projectA
-- [x] substance switch project [--restart]
-- [x] substance status [--full]
-- [x] substance logs -f web*nginx*access*.log -n 100
-- [x] substance docker command
-
-# Project commands
-
-- [x] substance start [-e ENGINE] [CONTAINER...] --reset
-- [x] substance stop [-e ENGINE] [CONTAINER...] 
-- [x] substance enter CONTAINER
-- [x] substance exec CONTAINER command...
 
 # subenv
 
@@ -143,29 +138,42 @@ Additionally, subenv will provide the following variables:
 | SUBENV_ENVPATH      | Full path to the environment                   |
 | SUBENV_VARS         | Dict of all variables                          |
 
+### subenv.yml
+
+You can also create a `subenv.yml` file to specify additional commands to be executed once the environment is applied. The file format is YAML and only the `script` key is available which should contain a list of shell commands to run when applying the envrionment. Each command is run as substance relatively in the environment directory.
+
+Sample:
+
+```
+script:
+  - chmod -R 777 var
+  - chmod -R 700 database
+```
+
 
 # TODO
 
-- [x] P1 Support subenv FQDN to /etc/hosts
-- [x] P1 Auto-create engine devroot on init
-- [x] P1 Fix sync backdraft with git.
 - [ ] P2 validate, test and fix Windows support
-- [x] Fix subprogram help (substance help engine ls)
-- [x] Don't initialize core manually in each command
-- [x] Handle substance version
 - [ ] P2 ModifyVM on bootup for EngineProfile
-- [x] Core: CLI revamp
-- [x] Engine: provide a way to copy an ssh identity in the VM.
-- [x] Sync mode --up and --down
-
-- [x] Box: ensure paravirt network @ boot
-- [x] Box: Ensure sysctl tweaks for fs watches
 - [ ] Box service (push/pull/hosting registry)
 - [ ] Box: Provide export, snapshot and reload commands
 - [ ] Box: Provide support for an initialization script
 - [ ] Doc: How it works
 - [ ] Doc: How to use
 - [ ] Doc: Box guide
+
+
+- [x] P1 Support subenv FQDN to /etc/hosts
+- [x] P1 Auto-create engine devroot on init
+- [x] P1 Fix sync backdraft with git.
+- [x] Fix subprogram help (substance help engine ls)
+- [x] Don't initialize core manually in each command
+- [x] Handle substance version
+- [x] Core: CLI revamp
+- [x] Engine: provide a way to copy an ssh identity in the VM.
+- [x] Sync mode --up and --down
+- [x] Box: ensure paravirt network @ boot
+- [x] Box: Ensure sysctl tweaks for fs watches
 
 ## Bugs
 
