@@ -81,7 +81,7 @@ class SubenvSpec(object):
 
   def applyTo(self, envPath):
     self.setEnvPath(envPath)
-    return self.assertConfig() \
+    return self.clearEnv() \
       .then(self.applyDirs) \
       .then(self.applyFiles)  \
       .then(self.writeEnv) \
@@ -96,6 +96,11 @@ class SubenvSpec(object):
       Try.attempt(makeSymlink, self.basePath, os.path.join(self.envPath, CODELINK), True),
       Try.attempt(makeSymlink, self.specPath, os.path.join(self.envPath, SPECDIR), True)
     ])
+  
+  def clearEnv(self):
+    if os.path.isfile(self.config.configFile):
+      return Shell.rmFile(self.config.configFile)
+    return OK(None)
    
   def writeEnv(self):
     dotenv = os.path.join(self.envPath, ENVFILE)
@@ -116,7 +121,7 @@ class SubenvSpec(object):
     if not os.path.isfile(self.config.configFile):
       return OK({})
     return self.config.loadConfigFile() 
- 
+
   def applyScript(self):
     commands = self.config.get('script', [])
     return Try.sequence(map(self.applyCommand,  commands))
