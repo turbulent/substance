@@ -50,10 +50,18 @@ class SubstanceSyncher(object):
       elif direction is Syncher.DOWN and folder.guestPath == path:
         return OK(folder)
     return Fail(NameError("%s is not a folder." % path))
+
+  def ensureKeyPerms(self):
+    try:
+      # XXX Hack for perms on insecure file. Temporary until distribution is sorted out.
+      os.chmod(self.keyfile, 0600)
+    except Exception as err:
+      pass 
+    return OK(None)
  
   def start(self, direction=Syncher.BOTH):
-
-    op = self.initialSync(direction)
+    op = self.ensureKeyPerms() \
+      .then(defer(self.initialSync, direction=direction))
     if op.isFail():
       return op
     
