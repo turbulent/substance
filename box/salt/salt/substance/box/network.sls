@@ -18,6 +18,7 @@ substance-sshd-config:
     - content: |
         PermitOpen any
         AllowTcpForwarding yes
+        StrictModes no
     - show_changes: True
     - append_if_not_found: True
 
