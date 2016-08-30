@@ -5,8 +5,9 @@ from substance.monads import *
 from substance.constants import *
 from substance.utils import readDotEnv, writeToFile, makeSymlink
 from substance.exceptions import (InvalidEnvError, InvalidOptionError)
+from substance.config import (Config)
 from substance import Shell
-from substance.subenv import (SPECDIR, ENVFILE, CODELINK)
+from substance.subenv import (SPECDIR, ENVFILE, CODELINK, CONFFILE)
 import jinja2
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,10 @@ class SubenvSpec(object):
     self.current = False
     self.struct = {'files': [], 'dirs': []}
 
+  def setEnvPath(self, path):
+    self.envPath = path
+    self.config = Config(os.path.join(self.envPath, CONFFILE))
+  
   @staticmethod
   def fromEnvPath(path):
     if not os.path.isdir(path):
@@ -48,7 +53,7 @@ class SubenvSpec(object):
       lastApplied = envVars['SUBENV_LASTAPPLIED']
    
     env = SubenvSpec(envVars['SUBENV_SPECPATH'], envVars['SUBENV_BASEPATH'], envVars['SUBENV_NAME'], vars, lastApplied)
-    env.envPath = envPath
+    env.setEnvPath(envPath)
     return env
 
     
@@ -75,13 +80,17 @@ class SubenvSpec(object):
       .then(self.loadEnvStruct)
 
   def applyTo(self, envPath):
-    self.envPath = envPath
-    return self.applyDirs() \
+    self.setEnvPath(envPath)
+    return self.assertConfig() \
+      .then(self.applyDirs) \
       .then(self.applyFiles)  \
       .then(self.writeEnv) \
       .then(self.linkCode) \
+      .then(self.assertConfig) \
+      .then(self.applyScript) \
       .then(lambda: OK(self))
 
+    
   def linkCode(self):
     return Try.sequence([
       Try.attempt(makeSymlink, self.basePath, os.path.join(self.envPath, CODELINK), True),
@@ -102,7 +111,20 @@ class SubenvSpec(object):
 
     env = "\n".join([ "%s=\"%s\"" % (k,v) for k,v in envVars.iteritems() ])
     return Try.attempt(writeToFile, dotenv, env)
-  
+ 
+  def assertConfig(self):
+    if not os.path.isfile(self.config.configFile):
+      return OK({})
+    return self.config.loadConfigFile() 
+ 
+  def applyScript(self):
+    commands = self.config.get('script', [])
+    return Try.sequence(map(self.applyCommand,  commands))
+
+  def applyCommand(self, cmd):
+    logger.info("Running environment command: %s" % cmd)
+    return Shell.call(cmd, cwd=self.envPath, shell=True)
+
   def applyDirs(self):
     ops = [ Shell.makeDirectory(self.envPath, 0750) ]
     for dir in self.struct['dirs']:
