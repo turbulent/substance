@@ -158,7 +158,7 @@ class Core(object):
     return False
 
   def getDefaultBoxString(self):
-    return self.config.get('defaultBox', 'turbulent/substance-box:0.4')
+    return self.config.get('defaultBox', 'turbulent/substance-box:0.5')
 
   #-- Engine library management
 
