@@ -21,13 +21,14 @@ logger = logging.getLogger(__name__)
 
 class Box(object):
  
-  def __init__(self, core, name, version, namespace, registry=None, boxstring=None):
+  def __init__(self, core, name, version, namespace, registry=None, boxstring=None, archiveSHA1=None):
     self.core = core
     self.name = name
     self.version = version
     self.namespace = namespace
     self.registry = registry
     self.boxstring = boxstring
+    self.archiveSHA1 = archiveSHA1
 
   def getRegistryURL(self):
     return "http://%(registry)s/box/%(namespace)s/%(name)s-%(version)s.json" % self.__dict__
@@ -109,6 +110,16 @@ class Box(object):
   def isDownloaded(self):
     return True if os.path.exists(self.getOVFFile()) else False
 
+  def getShortBoxString(self):
+    return "%s/%s:%s" % (self.namespace, self.name, self.version)
+
+  def delete(self):
+    logger.info("Removing box %s from box cache" % self.getShortBoxString())
+    return Try.sequence([
+      Shell.nukeDirectory(self.getPath()),
+      self.core.getDB().removeBoxRecord(self)
+    ])
+    
   def download(self, boxResult):
     archiveURL = boxResult['archiveURL']
     archiveSHA = boxResult['archiveSHA1']
@@ -124,10 +135,12 @@ class Box(object):
       self.core.getDB().updateBoxRecord(self, boxResult)
     ]).map(lambda x: self)
 
+  def getArchiveHash(self):
+    return sha1sum(self.getArchivePath())
+
   def verifyArchive(self, expectedSHA):
     logger.info("Verifying archive for %s" % self.getImageName())
-    archive = self.getArchivePath()
-    sha = sha1sum(archive)
+    sha = self.getArchiveHash()
     if sha == expectedSHA:
       return OK(self)
     else:

@@ -39,6 +39,9 @@ class DB(object):
     q = (q.name == box.name) & (q.registry == box.registry) & (q.namespace == box.namespace)
     return self.get(Tables.BOXES, q)
 
+  def getBoxRecords(self):
+    return self.all(Tables.BOXES)
+    
   # -- DB mapping
 
   def tables(self):

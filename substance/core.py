@@ -228,6 +228,16 @@ class Core(object):
     return Box.parseBoxString(boxstring) \
       .map(lambda p: Box(core=self, **p))
 
+  def pullBox(self, box):
+    return box.fetch()
+
+  def removeBox(self, box):
+    return box.delete()
+
+  def getBoxes(self):
+    return self.getDB().getBoxRecords() \
+      .mapM(lambda r: OK(Box(self, r.get('name'), r.get('version'), r.get('namespace'), r.get('registry'), r.get('boxstring'), r.get('archiveSHA1'))))
+
   #-- Keys handling
 
   def getInsecureKeyFile(self):

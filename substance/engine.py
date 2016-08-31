@@ -122,7 +122,6 @@ class Engine(object):
       print("%s" % err)
       return ConfigValidationError(err.message)
 
-#lambda err: ConfigValidationError(err.message) if print("%s" % err.message) else None ) \
     return Try.sequence(ops) \
       .catch(dd) \
       .then(lambda: OK(config.getConfig()))
