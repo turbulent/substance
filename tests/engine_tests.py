@@ -16,7 +16,7 @@ class TestEngine(tests.TestBase):
   basePath = None
   projectsPath = None
 
-  vmTest = False
+  vmTest = True
 
   @classmethod
   def setUpClass(cls):

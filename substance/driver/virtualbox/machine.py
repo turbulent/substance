@@ -295,7 +295,7 @@ def enableSharedFolderSymlinks(folder, uuid):
   return vboxManager("setextradata", "\"%s\" \"%s\" \"%s\"" % (uuid, symlinksKey, 1))
 
 def removeSharedFolder(folder, uuid):
-  return vboxManager("sharedfolder", "remove \"%s\" --name \"%s\"" % (uuid, folder.vboxName))
+  return vboxManager("sharedfolder", "remove \"%s\" --name \"%s\"" % (uuid, folder.name))
 
 def addSharedFolders(folders, uuid):
   return OK(map(defer(addSharedFolder, uuid=uuid), folders))

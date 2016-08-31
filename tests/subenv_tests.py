@@ -52,7 +52,7 @@ class TestSubenv(tests.TestBase):
 
     self.assertIsInstance(Try.sequence(ops), OK)
 
-    tpl1 = "{{subenv.envPath}}\n{{subenv.basePath}}"
+    tpl1 = "{{SUBENV_ENVPATH}}\n{{SUBENV_BASEPATH}}"
     tpl2 = 'This is a template with no vars.'
 
     customVar = self.randString()
@@ -95,9 +95,9 @@ class TestSubenv(tests.TestBase):
         self.assertEqual(data['name'], self.env['name'])
         self.assertEqual(data['custom'], self.env['custom'])
         self.assertEqual(data['custom2'], custom2)
-        self.assertEqual(data['subenv.name'], self.env['name'])
-        self.assertEqual(data['subenv.basePath'], os.path.join(self.projectsBasePath, self.env['name']))
-        self.assertEqual(data['subenv.specPath'], os.path.join(self.projectsBasePath, self.env['name'], SPECDIR))
+        self.assertEqual(data['SUBENV_NAME'], self.env['name'])
+        self.assertEqual(data['SUBENV_BASEPATH'], os.path.join(self.projectsBasePath, self.env['name']))
+        self.assertEqual(data['SUBENV_SPECPATH'], os.path.join(self.projectsBasePath, self.env['name'], SPECDIR))
       else:
         self.assertTrue(os.path.isfile(os.path.join(envPath, f)))
         with open(os.path.join(envPath, f), 'r') as fh:

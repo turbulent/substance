@@ -20,7 +20,7 @@ class TestVirtualBox(tests.TestBase):
   basePath = None
   projectsPath = None
 
-  vmTest = False
+  vmTest = True
   vmName = "testVbox"
   vmUUID = None
 
@@ -242,7 +242,7 @@ class TestVirtualBox(tests.TestBase):
       .then(defer(machine.readSharedFolders, uuid=self.vmUUID))
     self.assertIsInstance(op, OK)
     self.assertEqual(len(op.getOK()), 2)
-    self.assertEqual([ x.machinePath for x in op.getOK() ], [d1, d2])
+    self.assertEqual([ x.hostPath for x in op.getOK() ], [d1, d2])
    
     op = machine.clearSharedFolders(self.vmUUID) \
       .then(defer(machine.readSharedFolders, uuid=self.vmUUID))

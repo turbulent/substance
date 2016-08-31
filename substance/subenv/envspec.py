@@ -105,7 +105,7 @@ class SubenvSpec(object):
   def writeEnv(self):
     dotenv = os.path.join(self.envPath, ENVFILE)
     logger.debug("Writing environment to: %s" % dotenv)
-    envVars = OrderedDict(**self.vars)
+    envVars = OrderedDict(self.vars, **self.overrides)
     envVars.update({
       'SUBENV_NAME': self.name,
       'SUBENV_LASTAPPLIED': time.time(),

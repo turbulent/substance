@@ -79,7 +79,7 @@ class Engine(object):
     defaults['name'] = 'default'
     defaults['driver'] = 'virtualbox'
     defaults['id'] = None
-    defaults['box'] = 'turbulent/substance-box:0.2'
+    defaults['box'] = 'turbulent/substance-box:0.5'
     defaults['profile'] = EngineProfile().__dict__
     defaults['docker'] = OrderedDict()
     defaults['docker']['port'] = 2375
@@ -387,6 +387,8 @@ class Engine(object):
     if not self.isProvisioned():  
       return Fail(EngineNotProvisioned("Engine \"%s\" is not provisioned." % self.name, self))
 
+    self.__cacheLink(None)
+
     return self.validateProvision() \
       .thenIfTrue(self.isRunning) \
       .thenIfTrue(self.__terminate) \
@@ -400,7 +402,8 @@ class Engine(object):
   def suspend(self):
     if not self.isProvisioned():
       return Fail(EngineNotProvisioned("Engine \"%s\" is not provisioned." % self.name))   
-       
+    self.__cacheLink(None)
+
     return self.validateProvision() \
       .thenIfTrue(self.isRunning) \
       .thenIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) \
@@ -411,6 +414,9 @@ class Engine(object):
     #XXX Insert wait for suspension
 
   def stop(self, force=False):
+
+    self.__cacheLink(None)
+
     operation = self.validateProvision() \
       .thenIfTrue(self.isRunning) \
       .thenIfFalse(failWith(EngineNotRunning("Engine \"%s\" is not running." % self.name))) 
