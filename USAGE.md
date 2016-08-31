@@ -12,7 +12,7 @@
 - Ensure pip is up to date
 -   - ``pip install -U pip``
 - Install subwatch alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@0.6a2``
+  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0``
 - Install substance alpha
   - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.6a2``  
 
