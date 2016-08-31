@@ -29,6 +29,7 @@ substance then allows you to switch from project to project simply by having a s
   logs                Display current subenv logs
   sync                Synchronize & watch the devroot of the current engine
   engine              Substance engine management
+  box                 Substance box management
   ```
 
 
@@ -49,7 +50,14 @@ substance then allows you to switch from project to project simply by having a s
   sync                Synchronize and watch the devroot folder for an engine
 ```
 
+# Box commands
 
+```
+  help                Print help for a specific substance command
+  ls                  List substance box available locally
+  pull                Download a box
+  delete              Permanently delete a box.
+```
 
 # subenv
 
@@ -156,8 +164,8 @@ script:
 - [ ] P2 validate, test and fix Windows support
 - [ ] P2 ModifyVM on bootup for EngineProfile
 - [ ] Box service (push/pull/hosting registry)
-- [ ] Box: Provide export, snapshot and reload commands
-- [ ] Box: Provide support for an initialization script
+- [ ] Engine: Provide export, snapshot and reload commands
+- [ ] Engine: Provide support for an initialization script
 - [ ] Doc: How it works
 - [ ] Doc: How to use
 - [ ] Doc: Box guide
@@ -174,7 +182,8 @@ script:
 - [x] Sync mode --up and --down
 - [x] Box: ensure paravirt network @ boot
 - [x] Box: Ensure sysctl tweaks for fs watches
-
+- [x] Box: Provide ls, delete, pull commands to manipulate the cache.
+- 
 ## Bugs
 
 - [x] BUG Sync: Ignore backdraft events when synching (esp git manips)
