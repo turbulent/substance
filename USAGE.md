@@ -12,9 +12,9 @@
 - Ensure pip is up to date
 -   - ``pip install -U pip``
 - Install subwatch alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@0.4alpha``
+  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@0.6a2``
 - Install substance alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.4alpha``  
+  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.6a2``  
 
 
 ### Update substance to the latest
@@ -53,7 +53,7 @@ substance use work
 
 You can start the synch process :
 
-```substance engine work```
+```substance sync```
 
 While this process runs, files between your local machine and the engine's devroot are kept in sync by subwatch.
 
