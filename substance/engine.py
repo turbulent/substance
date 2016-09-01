@@ -273,6 +273,10 @@ class Engine(object):
 
     return OK(self.config)
 
+  def getProfile(self):
+    prof = self.config.get('profile', {})
+    return EngineProfile(prof.get('cpus'), prof.get('memory'))
+
   def isProvisioned(self):
     '''
     Check that this engine has an attached Virtual Machine.

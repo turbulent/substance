@@ -254,6 +254,9 @@ def parseSharedFolders(machInfo):
 def configureAdapter(uuid, adapterId, adapterSettings):
   return vboxManager("modifyvm", "\"%s\" %s" % (uuid, adapterSettings.getAsArg(adapterId)))
 
+def configureProfile(uuid, cpus, memory):
+  return vboxManager("modifyvm", "\"%s\" --cpus %s --memory %s" % (uuid, cpus, memory))
+  
 # -- Control
 
 def start(uuid):

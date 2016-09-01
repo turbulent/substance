@@ -167,7 +167,13 @@ class VirtualBoxDriver(Driver):
     return self.assertSetup() \
       .then(defer(self.resolvePortConflict, uuid=uuid, desiredPort=desiredPort)) \
       .then(defer(self.configureMachineAdapters, uuid=uuid)) \
-      .then(defer(self.configureMachineFolders, uuid=uuid, folders=folders))
+      .then(defer(self.configureMachineFolders, uuid=uuid, folders=folders)) \
+      .then(defer(self.configureMachineProfile, uuid=uuid, engine=engine))
+
+  def configureMachineProfile(self, uuid, engine):
+    self.logAdapter.info("Configure machine profile")
+    profile = engine.getProfile()
+    return machine.configureProfile(uuid, profile.cpus, profile.memory)
 
   def configureMachineFolders(self, folders, uuid):
     self.logAdapter.info("Configure machine shared folders")
