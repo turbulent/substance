@@ -162,7 +162,6 @@ script:
 # TODO
 
 - [ ] P2 validate, test and fix Windows support
-- [ ] P2 ModifyVM on bootup for EngineProfile
 - [ ] Box service (push/pull/hosting registry)
 - [ ] Engine: Provide export, snapshot and reload commands
 - [ ] Engine: Provide support for an initialization script
@@ -183,7 +182,9 @@ script:
 - [x] Box: ensure paravirt network @ boot
 - [x] Box: Ensure sysctl tweaks for fs watches
 - [x] Box: Provide ls, delete, pull commands to manipulate the cache.
-- 
+- [x] P2 ModifyVM on bootup for EngineProfile
+
+
 ## Bugs
 
 - [x] BUG Sync: Ignore backdraft events when synching (esp git manips)
