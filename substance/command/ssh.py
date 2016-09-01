@@ -27,4 +27,3 @@ class Ssh(Command):
     if len(self.args) <= 0:
       return None
     return self.args[0]
-

@@ -25,11 +25,10 @@ class SubstanceCLI(Program):
     self.addCommand('restart', 'substance.command.restart')
     self.addCommand('recreate', 'substance.command.recreate')
     self.addCommand('ssh', 'substance.command.ssh')
+    self.addCommand('exec', 'substance.command.exec')
     self.addCommand('status', 'substance.command.status')
     self.addCommand('logs', 'substance.command.logs')
     self.addCommand('sync', 'substance.command.sync')
-    #self.addCommand('docker', 'substance.command.docker')
-    #self.addCommand('exec', 'substance.command.exec')
     self.addCommand('engine', 'substance.command.engine')
     self.addCommand('box', 'substance.command.box')
     return self

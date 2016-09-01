@@ -136,8 +136,11 @@ class Core(object):
 
     engine = self.loadEngine(engineName) \
       .bind(Engine.loadConfigFile) \
-      .bind(Engine.loadState) \
-      .getOK()
+      .bind(Engine.loadState) 
+    if engine.isFail():
+       return engine
+
+    engine = engine.getOK()
 
     if engine.state is not EngineStates.RUNNING:
       return Fail(EngineNotRunning("Engine '%s' is not running." % engine.name))

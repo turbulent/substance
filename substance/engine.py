@@ -591,7 +591,6 @@ class Engine(object):
     return self.readLink() \
       .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) 
 
-
   def envShell(self, container=None, user=None, cwd=None):
     if container:
       return self.envEnter(container, user, cwd)
@@ -599,20 +598,25 @@ class Engine(object):
       return self.readLink().bind(Link.interactive)
    
   def envEnter(self, container, user=None, cwd=None):
+    self.logAdapter.info("Entering %s container..." % (container))
+    return self.envExec(container, ["exec /bin/bash"] , cwd, user)
+
+  def envExec(self, container, cmd, cwd=None, user=None):
     opts = []
-    initCommands = ['export TERM=xterm', 'exec /bin/bash']
+    cmdline = ' '.join(cmd)
+
+    initCommands = ['export TERM=xterm', cmdline]
     if user:
       opts.append('--user %s' % user)
     if cwd:
       initCommands.insert(0, 'cd %s' % cwd)
-    
+
     tpl = {
       'opts': ' '.join(opts),
       'container': container,
       'initCommands': ' && '.join(initCommands)
     }
-      
-    self.logAdapter.info("Entering %s container..." % (container))
+
     cmd = "subenv run dockwrkr exec -t -i %(opts)s %(container)s 'bash -c \"%(initCommands)s\"'" % tpl
     return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
@@ -679,14 +683,6 @@ class Engine(object):
     logger.debug("DOCKER: %s" % cmd)
     return self.readLink().bind(Link.runCommand, cmd, stream=True, interactive=True, shell=False)
 
-  def envExec(self, container, cmd, interactive=None):
-    flags = ''
-    if interactive:
-      flags = '-ti '
-
-    cmd = "subenv run dockwrkr exec %s %s %s" % (flags, container, cmd)
-    logger.debug("EXEC on %s: %s" % (container, cmd))
-    return self.readLink().bind(Link.runCommand, cmd=cmd, stream=True, interactive=True)
       
   def getEngineFolders(self):
     #XXX Dynamic mounts / remove hardcoded values.
