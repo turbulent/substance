@@ -14,7 +14,7 @@
 - Install subwatch alpha
   - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0``
 - Install substance alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.6a2``  
+  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.7a1``  
 
 
 ### Update substance to the latest
@@ -35,7 +35,7 @@ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@VERSION
 To start using a substance environment, first create an engine. For the sake of this example we will create an engine named `work`.
 
 ```
-substance engine init work --memory 2048 --cpus 2 --box turbulent/substance-box:0.4
+substance engine init work --memory 2048 --cpus 2 --box turbulent/substance-box:0.5
 ```
 
 Launch your engine with the launch command:
