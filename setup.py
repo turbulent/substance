@@ -5,7 +5,7 @@ with open('README.rst') as f:
 
 execfile('substance/_version.py')
 
-install_requires = ['setuptools>=1.1.3', 'PyYAML', 'tabulate', 'paramiko', 'netaddr', 'requests', 'tinydb', 'python_hosts', 'jinja2']
+install_requires = ['setuptools>=1.1.3', 'PyYAML', 'tabulate', 'paramiko', 'netaddr', 'requests', 'tinydb', 'python_hosts=0.3.3', 'jinja2']
 
 setup(name='substance',
       version=__version__,
