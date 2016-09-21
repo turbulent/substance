@@ -2,7 +2,7 @@
 
 ## Installation
 
-- Download [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) 5.0.2+ and install the [VM Extensions](http://download.virtualbox.org/virtualbox/5.0.24/Oracle_VM_VirtualBox_Extension_Pack-5.0.24-108355.vbox-extpack).
+- Download [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) 5.1.x+ and install the [VM Extensions](http://download.virtualbox.org/virtualbox/5.1.6/Oracle_VM_VirtualBox_Extension_Pack-5.1.6-110634.vbox-extpack).
 - Make sure Xcode CLI is installed
   - ``xcode-select --install``
 - Ensure homebrew is installed
@@ -14,19 +14,8 @@
 - Install subwatch alpha
   - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0``
 - Install substance alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.7a1``  
+  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.7a2``  
 
-
-### Update substance to the latest
-
-In the event that an update to the alpha is distributed, these commands will allow you to update the substance tools on your machine without losing data or engines.
-
-```
-pip uninstall subwatch
-pip uninstall substance
-pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@VERSION
-pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@VERSION
-```
 
 ## Usage
 
@@ -56,6 +45,18 @@ You can start the synch process :
 ```substance sync```
 
 While this process runs, files between your local machine and the engine's devroot are kept in sync by subwatch.
+
+
+### Update substance to the latest
+
+In the event that an update to the alpha is distributed, these commands will allow you to update the substance tools on your machine without losing data or engines.
+
+```
+pip uninstall subwatch
+pip uninstall substance
+pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@VERSION
+pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@VERSION
+```
 
 
 ### Setting up your project for substance
