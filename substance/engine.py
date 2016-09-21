@@ -103,9 +103,8 @@ class Engine(object):
       '.ssh',
       '.viminfo',
       '*node_modules*',
-      'data/work/*',
-      'data/media/*',
-      'var/uploads/*'
+      'data/*',
+      'var/*'
     ]
     return defaults
   
