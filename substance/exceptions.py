@@ -95,6 +95,11 @@ class EngineNotRunning(EngineError):
   Engine VM is not running.
   '''
 
+class EnvNotDefinedError(EngineError):
+  '''
+  Raised when an env is not defined on an engine
+  '''
+
 class EnvNotFoundError(EngineError):
   '''
   Raised when an env is not found

@@ -21,7 +21,7 @@ from substance.exceptions import (
   EngineExistsError, 
   EngineNotProvisioned,
   EngineProvisioned,
-  EnvNotFoundError
+  EnvNotDefinedError
 )
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class EngineFolder(object):
     self.gid = gid if gid else 1000
     self.umask = umask if umask else "0022"
     self.excludes = excludes
-    self.currentEnv = None
+
  
   def setExcludes(self, exs=[]):
     self.excludes = exs
@@ -73,6 +73,7 @@ class Engine(object):
     configFile = os.path.join(self.enginePath, "engine.yml")
     self.config = Config(configFile)
     self.logAdapter = EngineLogAdapter(logger, self.__dict__)
+    self.currentEnv = None
 
   def getDefaults(self):
     defaults = OrderedDict()
@@ -315,7 +316,10 @@ class Engine(object):
       .then(self.start) \
       .then(self.updateNetworkInfo) \
       .then(self.addToHostsFile) \
-      .then(dinfo("Engine \"%s\" has been launched.", self.name)) 
+      .then(self.envLoadCurrent) \
+      .catchError(EnvNotDefinedError, lambda e: OK(None)) \
+      .then(dinfo("Engine \"%s\" has been launched.", self.name)) \
+      .then(self.envStart if self.currentEnv else lambda: OK(None))
 
   def addToHostsFile(self):
     self.logAdapter.info("Registering engine as '%s' in local hosts file" % self.getDNSName())
@@ -549,7 +553,7 @@ class Engine(object):
     return self.readLink() \
       .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False, capture=True) \
       .map(self.__cacheCurrentEnv) \
-      .catch(lambda err: Fail(EnvNotFoundError("No current subenv is set. Check 'switch' for detais."))) \
+      .catch(lambda err: Fail(EnvNotDefinedError("No current subenv is set. Check 'switch' for detais."))) \
       .then(lambda: self)
 
  

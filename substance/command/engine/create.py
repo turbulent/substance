@@ -3,16 +3,16 @@ from substance.logs import *
 from substance import (Command, Box, EngineProfile)
 from substance.exceptions import (InvalidOptionError)
 
-class Init(Command):
+class Create(Command):
 
   def getUsage(self):
     return "substance engine init [options] [ENGINE NAME]"
 
   def getHelpTitle(self):
-    return "Initialize a new engine configuration"
+    return "Create a new engine configuration"
 
   def getShellOptions(self, optparser):
-    optparser.set_description("Initialize a new substance engine")
+    optparser.set_description("Create a new substance engine")
     optparser.add_option("--devroot", dest="devroot", help="Path to local devroot directory.")
     optparser.add_option('--devroot-mode', dest="devroot_mode", help="devroot sync mode", default="rsync")
     optparser.add_option("--mount", dest="mounts", help="Mount host path to engine path", nargs=10)

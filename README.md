@@ -159,46 +159,6 @@ script:
 ```
 
 
-# TODO
-
-- [ ] P2 validate, test and fix Windows support
-- [ ] Box service (push/pull/hosting registry)
-- [ ] Engine: Provide export, snapshot and reload commands
-- [ ] Engine: Provide support for an initialization script
-- [ ] Doc: How it works
-- [ ] Doc: How to use
-- [ ] Doc: Box guide
-
-
-- [x] P1 Support subenv FQDN to /etc/hosts
-- [x] P1 Auto-create engine devroot on init
-- [x] P1 Fix sync backdraft with git.
-- [x] Fix subprogram help (substance help engine ls)
-- [x] Don't initialize core manually in each command
-- [x] Handle substance version
-- [x] Core: CLI revamp
-- [x] Engine: provide a way to copy an ssh identity in the VM.
-- [x] Sync mode --up and --down
-- [x] Box: ensure paravirt network @ boot
-- [x] Box: Ensure sysctl tweaks for fs watches
-- [x] Box: Provide ls, delete, pull commands to manipulate the cache.
-- [x] P2 ModifyVM on bootup for EngineProfile
-
-
-## Bugs
-
-- [x] BUG Sync: Ignore backdraft events when synching (esp git manips)
-- [ ] BUG substance docker/enter/exec -e conflicts
-
-## Improvements
-
-- [x] Investigate composer's need of git inside the container.
-- [ ] dotenv parsing should support "export", multiline and enforce caps.
-- [ ] Refactor lists to use * to display 'current' in subenv. 
-- [ ] NTH Use ssh binary instead of Paramiko for Link. (w/ ControlPersist)
-- [ ] NTH Rework the hosts file mgmt. module sucks.
-- [ ] NTH Speed-up import @ python start
-- [ ] NTH Refactor CLI with functional baseline
 
 # Setup
 

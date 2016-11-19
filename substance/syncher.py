@@ -147,7 +147,7 @@ class SubstanceSyncher(object):
       return
 
     if os.path.dirname(path) in self.synching[direction]:
-      logger.info("Ignored (ignored) event of (%s)%s" % (direction, path))
+      logger.debug("Ignored (synching) event of (%s)%s" % (direction, path))
       return
 
     if folder not in self.toSync[direction]:

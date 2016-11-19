@@ -11,7 +11,7 @@ class Engine(SubProgram):
 
   def setupCommands(self):
     self.addCommand('ls', 'substance.command.engine.ls')
-    self.addCommand('init', 'substance.command.engine.init')
+    self.addCommand('create', 'substance.command.engine.create')
     self.addCommand('delete', 'substance.command.engine.delete')
     self.addCommand('launch', 'substance.command.engine.launch')
     self.addCommand('halt', 'substance.command.engine.halt')
