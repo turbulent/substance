@@ -68,12 +68,9 @@ class HostOnlyInterface(object):
     self.status = status
     self.netName = netName
     
-    if v6ip:
-      self.ip = IPAddress(v6ip)
-      self.network = IPNetwork(v6ip+"/"+v6prefix)
-    else:
-      self.ip = IPAddress(v4ip)
-      self.network = IPNetwork(v4ip+"/"+v4mask)
+ 
+    self.ip = IPAddress(v4ip)
+    self.network = IPNetwork(v4ip+"/"+v4mask)
 
   def __repr__(self):
     return "HostOnlyInterface(%(name)s, %(mac)s IP: %(v4ip)s, netmask: %(v4mask)s, IPV6: %(v6ip)s, prefix: %(v6prefix)s status: %(status)s)" % self.__dict__
@@ -192,7 +189,7 @@ def removePortForwards(ports, uuid):
     args.append(port.getDeleteArg())
   
   if len(args) > 0: 
-    return vboxManager("modifyvm", "%s %s" % (uuid, " ".join(args)))
+    return vboxManager("modifyvm", "\"%s\" %s" % (uuid, " ".join(args)))
   else:
     return OK(None)
 
@@ -202,7 +199,7 @@ def addPortForwards(ports, uuid):
     args.append(port.getCreateArg())
 
   if len(args) > 0:
-    return vboxManager("modifyvm", "%s %s" % (uuid, " ".join(args)))
+    return vboxManager("modifyvm", "\"%s\" %s" % (uuid, " ".join(args)))
   else:
     return OK(None)
 

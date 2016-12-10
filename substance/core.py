@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class Core(object):
 
   def __init__(self, configFile=None, basePath=None):
-    self.basePath = os.path.abspath(basePath) if basePath else os.path.expanduser('~/.substance')
+    self.basePath = os.path.abspath(basePath) if basePath else os.path.expanduser('~%s.substance' % os.sep)
     self.enginesPath = os.path.join(self.basePath, "engines")
     self.boxesPath = os.path.join(self.basePath, "boxes")
     self.dbFile = os.path.join(self.basePath, "db.json")

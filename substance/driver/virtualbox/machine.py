@@ -61,7 +61,7 @@ class AdapterSettings(object):
     vals = self.__dict__.copy()
     vals['nicId'] = nicId
     vals['typeArg'] = self.getTypeArg()
-    return "--nic%(nicId)d %(type)s --%(typeArg)s%(nicId)d %(attachedTo)s" % vals
+    return "--nic%(nicId)d %(type)s --%(typeArg)s%(nicId)d \"%(attachedTo)s\"" % vals
 
   def __repr__(self):
     return "Adapter(nic=%(nic)s,nictype=%(nictype)s,mac=%(mac)s,promiscuous=%(promiscuous)s" % self.__dict__
@@ -81,7 +81,7 @@ def inspectOVF(ovfFile):
   '''
   Inspect an OVF file to extract it's examined output
   '''
-  return vboxManager("import", "-n %s" % ovfFile)
+  return vboxManager("import", '-n "%s"' % ovfFile)
 
 def makeImportParams(inspection, name, engineProfile=None):
   '''
@@ -113,7 +113,7 @@ def importOVF(importParams, name, ovfFile):
   '''
   Import the OVF file as a virtual box vm.
   '''
-  importParams.insert(0, ovfFile)
+  importParams.insert(0, '"'+ovfFile+'"')
   return vboxManager("import", " ".join(importParams)) \
     .then(defer(readMachineID, name))
 
@@ -205,12 +205,12 @@ def parseMachineInfo(machInfo):
 
 def parseMachineState(vminfo):
   '''
-  Parse the output of showvminfo to extrcat the VM state
+  Parse the output of showvminfo to extract the VM state
   '''
-  if re.search(r'^name="<inaccessible>"$', vminfo, re.M):
+  if re.search(r'^name="<inaccessible>"\r?\n', vminfo, re.MULTILINE):
     return OK('inaccessible')
 
-  stateMatch = re.search(r'^VMState="(.+?)"$', vminfo, re.M)
+  stateMatch = re.search(r'^VMState="(.+?)"\r?\n', vminfo, re.MULTILINE)
   if stateMatch:
     return OK(stateMatch.group(1))
   else:

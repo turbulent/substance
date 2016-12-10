@@ -52,6 +52,7 @@ class SubHosts(Hosts):
   @staticmethod
   def unregister(name):
     try:
+      logger.info("Hosts unregister %s: %s" % (name))
       hosts = SubHosts.checkoutFromSystem()
       if hosts.exists(names=[name]):
         hosts.removeEntry(name)
@@ -63,14 +64,18 @@ class SubHosts(Hosts):
   
   @staticmethod
   def checkoutFromSystem():
-    tempFile = tempfile.NamedTemporaryFile()
+    tempFile = tempfile.NamedTemporaryFile(delete=False)
+    tempFile.close()
     hostsPath = Hosts.determine_hosts_path()
+    logger.debug("Checking out '%s' from system to '%s'" % (hostsPath, tempFile.name))
     copyfile(hostsPath, tempFile.name)
     return SubHosts(tempFile.name, tempFile)
 
   def commitToSystem(self):
+    hostsPath = self.determine_hosts_path()
+    logger.debug("Commiting '%s' to system '%s'" % (self.hosts_path, hostsPath))
     return Shell.command("sudo cp \"%s\" \"%s\"" % (self.hosts_path, self.determine_hosts_path())) \
-      .then(lambda: self.tempFile.close())
+      .then(lambda: os.remove(self.tempFile.name))
 
   def findEntryByAddress(self, address):
     for entry in self.entries:

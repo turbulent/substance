@@ -85,7 +85,7 @@ class VirtualBoxDriver(Driver):
 
     if not hoif:
       return self.provisionNetworking(netconfig)
-    elif hoif.ip.format() != netconfig['gateway']:
+    elif hoif.v4ip.format() != netconfig['gateway']:
       self.logAdapter.warning("VirtualBox interface \"%s\" is not properly configured. Creating a new host-only network." % hoif.name)
       return self.provisionNetworking(netconfig)
     elif dhcp is None:
@@ -286,6 +286,7 @@ class VirtualBoxDriver(Driver):
     '''
     Resolve a vbox machine state to a substance engine state.
     '''
+
     mapping = {
       machine.MachineStates.POWEROFF: EngineStates.STOPPED,
       machine.MachineStates.SAVED: EngineStates.SUSPENDED,
