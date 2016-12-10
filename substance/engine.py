@@ -92,7 +92,7 @@ class Engine(object):
     defaults['network']['sshIP'] = None
     defaults['network']['sshPort'] = 4500
     defaults['devroot'] = OrderedDict()
-    defaults['devroot']['path'] = '~/devroot'
+    defaults['devroot']['path'] = os.path.join('~','devroot')
     defaults['devroot']['mode'] = 'rsync'
     defaults['devroot']['excludes'] = [
       '*.*.swp',

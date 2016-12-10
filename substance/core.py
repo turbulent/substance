@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class Core(object):
 
   def __init__(self, configFile=None, basePath=None):
-    self.basePath = os.path.abspath(basePath) if basePath else os.path.expanduser('~%s.substance' % os.sep)
+    self.basePath = os.path.abspath(basePath) if basePath else os.path.expanduser(os.path.join('~','.substance'))
     self.enginesPath = os.path.join(self.basePath, "engines")
     self.boxesPath = os.path.join(self.basePath, "boxes")
     self.dbFile = os.path.join(self.basePath, "db.json")
@@ -83,7 +83,7 @@ class Core(object):
     defaults['assumeYes'] = False
     defaults['drivers'] = ['virtualbox']
     defaults['tld'] = '.dev'
-    defaults['devroot'] = '~/substance'
+    defaults['devroot'] = os.path.join('~', 'substance')
     defaults['defaultBox'] = 'turbulent/substance-box:0.5'
     defaults['virtualbox'] = OrderedDict()
     defaults['virtualbox']['network'] = "172.21.21.0/24"
