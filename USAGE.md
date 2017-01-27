@@ -1,6 +1,6 @@
 # Substance usage & insallation (OSX)
 
-For Windows installation, see [docs/INSTALL-windows.md](docs/INSTALL-windows.md)
+For Windows installation, see [docs/INSTALL.windows.md](docs/INSTALL.windows.md)
 
 ## Installation
 
