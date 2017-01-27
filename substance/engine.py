@@ -96,8 +96,8 @@ class Engine(object):
     defaults['devroot']['path'] = os.path.join('~','devroot')
     defaults['devroot']['mode'] = 'unison'
     defaults['devroot']['syncArgs'] = [
-      '-ignore', 'Path var',
-      '-ignore', 'Path data'
+      '-ignore', 'Path */var',
+      '-ignore', 'Path */data'
     ]
     defaults['devroot']['excludes'] = [
       '*.swp',
