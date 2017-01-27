@@ -14,7 +14,7 @@ class Create(Command):
   def getShellOptions(self, optparser):
     optparser.set_description("Create a new substance engine")
     optparser.add_option("--devroot", dest="devroot", help="Path to local devroot directory.")
-    optparser.add_option('--devroot-mode', dest="devroot_mode", help="devroot sync mode", default="rsync")
+    optparser.add_option('--devroot-mode', dest="devroot_mode", help="devroot sync mode", default="unison")
     optparser.add_option("--mount", dest="mounts", help="Mount host path to engine path", nargs=10)
     optparser.add_option("--driver", dest="driver", help="Virtualization driver for this engine")
     optparser.add_option("--memory", type="int", dest="memory", help="Machine memory allocation")

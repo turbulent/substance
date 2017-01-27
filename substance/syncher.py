@@ -54,6 +54,9 @@ class UnisonSyncher(object):
       directionArgs = ['-nocreation', remoteRoot, '-nodeletion', remoteRoot, '-noupdate', remoteRoot]
     else:
       directionArgs = ['-prefer', 'newer', '-copyonconflict']
+
+    # User args
+    userArgs = folder.syncArgs
     
     # Other arguments
     rootArgs = [localRoot, remoteRoot]
@@ -65,7 +68,7 @@ class UnisonSyncher(object):
       transport += " -i \'%s\'" % Shell.normalizePath(self.keyfile)
     
     # Assemble everything
-    args = ['-batch', '-repeat', 'watch', '-sshargs', transport] + directionArgs + ignoreArgs + rootArgs
+    args = ['-batch', '-repeat', 'watch', '-sshargs', transport] + userArgs + directionArgs + ignoreArgs + rootArgs
     return args
   
   def getUnisonEnv(self):

@@ -36,7 +36,7 @@ class EngineProfile(object):
 
 
 class EngineFolder(object):
-  def __init__(self, name, mode, hostPath, guestPath, uid=None, gid=None, umask=None, excludes=[]):
+  def __init__(self, name, mode, hostPath, guestPath, uid=None, gid=None, umask=None, excludes=[], syncArgs=[]):
     self.name = name
     self.mode = mode
     self.hostPath = hostPath
@@ -45,6 +45,7 @@ class EngineFolder(object):
     self.gid = gid if gid else 1000
     self.umask = umask if umask else "0022"
     self.excludes = excludes
+    self.syncArgs = syncArgs
 
  
   def setExcludes(self, exs=[]):
@@ -93,19 +94,20 @@ class Engine(object):
     defaults['network']['sshPort'] = 4500
     defaults['devroot'] = OrderedDict()
     defaults['devroot']['path'] = os.path.join('~','devroot')
-    defaults['devroot']['mode'] = 'rsync'
+    defaults['devroot']['mode'] = 'unison'
+    defaults['devroot']['syncArgs'] = [
+      '-ignore', 'Path var',
+      '-ignore', 'Path data'
+    ]
     defaults['devroot']['excludes'] = [
-      '*.*.swp',
+      '*.swp',
       '.bash*',
       '.composer',
       '.git',
-      '.idea'
+      '.idea',
       '.npm',
       '.ssh',
-      '.viminfo',
-      '*node_modules*',
-      'data/*',
-      'var/*'
+      '.viminfo'
     ]
     return defaults
   
@@ -702,14 +704,15 @@ class Engine(object):
     #XXX Dynamic mounts / remove hardcoded values.
     devroot = self.config.get('devroot')
     pfolder = EngineFolder(
-      name='devroot',
+      name='devroot', 
       mode=devroot.get('mode'),
       hostPath=os.path.expanduser(devroot.get('path')),
       guestPath='/substance/devroot',
       uid=1000,
       gid=1000,
       umask="0022",
-      excludes=devroot.get('excludes', [])
+      excludes=devroot.get('excludes', []),
+      syncArgs=devroot.get('syncArgs', [])
     )
     return [pfolder]
  
