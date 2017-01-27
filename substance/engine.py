@@ -12,7 +12,7 @@ from substance.utils import mergeDict, parseDotEnv, expandLocalPath
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
-from substance.syncher import SubstanceSyncher
+from substance.syncher import SubstanceSyncher, UnisonSyncher
 from substance.exceptions import (
   FileSystemError, 
   ConfigValidationError,
@@ -142,7 +142,7 @@ class Engine(object):
     mode = devroot.get('mode', None)
     if not mode:
       return Fail(ConfigValidationError("devroot mode is not set."))
-    elif mode not in ['sharedfolder','rsync']:
+    elif mode not in ['sharedfolder','rsync','unison']:
       #XXX Fix hardcoded values.
       return Fail(ConfigValidationError("devroot mode '%s' is not valid." % mode)) 
 
@@ -212,7 +212,13 @@ class Engine(object):
     return self.name + tld
 
   def getSyncher(self):
-    return SubstanceSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+    syncMode = self.config.get('devroot').get('mode')
+    if syncMode == 'rsync':
+      return SubstanceSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+    elif syncMode == 'unison':
+      return UnisonSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+    else:
+      raise NotImplementedError()
     
   def clearDriverID(self):
     self.config.set('id', None)

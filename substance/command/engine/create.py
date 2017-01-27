@@ -55,7 +55,7 @@ class Create(Command):
 
     if self.options.devroot_mode:
       #XXX Fix hardcoded values.
-      if self.options.devroot_mode not in ['rsync','sharedfolder']:
+      if self.options.devroot_mode not in ['rsync','sharedfolder','unison']:
         return Fail(InvalidOptionError("Devroot mode '%s' is not valid."))
       opts['devroot'] = {} if 'devroot' not in opts else opts['devroot']
       opts['devroot']['mode'] = self.options.devroot_mode
