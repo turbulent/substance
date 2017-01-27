@@ -1,5 +1,6 @@
 import logging
 import tempfile
+import os
 from python_hosts import Hosts, HostsEntry
 from shutil import copyfile
 from substance.monads import *
@@ -74,7 +75,7 @@ class SubHosts(Hosts):
   def commitToSystem(self):
     hostsPath = self.determine_hosts_path()
     logger.debug("Commiting '%s' to system '%s'" % (self.hosts_path, hostsPath))
-    return Shell.command("sudo cp \"%s\" \"%s\"" % (self.hosts_path, self.determine_hosts_path())) \
+    return Shell.call(["cp", self.hosts_path, self.determine_hosts_path()], shell=False, sudo=True) \
       .then(lambda: os.remove(self.tempFile.name))
 
   def findEntryByAddress(self, address):

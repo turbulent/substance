@@ -6,6 +6,7 @@ from substance.constants import Constants
 from substance.exceptions import (MachineDoesNotExist, SubstanceDriverError)
 from vbox import vboxManager
 from exceptions import *
+from substance.shell import Shell
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ def inspectOVF(ovfFile):
   '''
   Inspect an OVF file to extract it's examined output
   '''
-  return vboxManager("import", '-n "%s"' % ovfFile)
+  return vboxManager("import", '-n "%s"' % Shell.normalizePath(ovfFile))
 
 def makeImportParams(inspection, name, engineProfile=None):
   '''
@@ -113,6 +114,7 @@ def importOVF(importParams, name, ovfFile):
   '''
   Import the OVF file as a virtual box vm.
   '''
+  ovfFile = Shell.normalizePath(ovfFile)
   importParams.insert(0, '"'+ovfFile+'"')
   return vboxManager("import", " ".join(importParams)) \
     .then(defer(readMachineID, name))

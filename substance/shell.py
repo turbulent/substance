@@ -1,5 +1,7 @@
 import os
 import sys
+import platform
+import time
 import logging
 import shutil
 import shlex
@@ -32,12 +34,19 @@ class Shell(object):
 
 
   @staticmethod
-  def call(cmd, cwd=None, shell=True):
-    logger.debug("COMMAND[%s]: %s", cwd, cmd)
+  def call(cmd, cwd=None, shell=True, sudo=False):
     try:
+      mustSleep = False
+      if sudo and not shell:
+        if platform.system().startswith("CYGWIN"):
+          mustSleep = True
+          cmd = ["cygstart", "--action=runas"] + cmd
+        else:
+          cmd = ["sudo"] + cmd
+      logger.debug("COMMAND[%s]: %s", cwd, cmd)
       returncode = call(cmd, shell=shell, cwd=cwd)
       if returncode == 0:
-        return OK(None)
+        return OK(None).then(lambda: None if not mustSleep else time.sleep(1)) # Allow command to finish on Windows (cygstart exits early)
       else:
         return Fail(ShellCommandError(code=returncode))
     except CalledProcessError as err:
@@ -125,6 +134,12 @@ class Shell(object):
   @staticmethod
   def pathExists(path):
     return OK(path) if os.path.exists(path) else Fail(FileSystemError("Path %s does not exist." % path))
+  
+  @staticmethod
+  def normalizePath(path):
+    if platform.system().startswith("CYGWIN"):
+      path = check_output(["cygpath", "-w", path]).strip()
+    return path
 
   @staticmethod
   def rmFile(path):
