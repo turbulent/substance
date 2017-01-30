@@ -81,7 +81,7 @@ class Engine(object):
     defaults['name'] = 'default'
     defaults['driver'] = 'virtualbox'
     defaults['id'] = None
-    defaults['box'] = 'turbulent/substance-box:0.5'
+    defaults['box'] = 'turbulent/substance-box:0.6'
     defaults['profile'] = EngineProfile().__dict__
     defaults['docker'] = OrderedDict()
     defaults['docker']['port'] = 2375
