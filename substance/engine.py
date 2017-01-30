@@ -215,10 +215,13 @@ class Engine(object):
 
   def getSyncher(self):
     syncMode = self.config.get('devroot').get('mode')
+    keyfile = self.getSSHPrivateKey()
+    if keyfile.isFail():
+      return keyfile
     if syncMode == 'rsync':
-      return SubwatchSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+      return SubwatchSyncher(engine=self, keyfile=keyfile.getOK())
     elif syncMode == 'unison':
-      return UnisonSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+      return UnisonSyncher(engine=self, keyfile=keyfile.getOK())
     else:
       raise NotImplementedError()
     
@@ -507,23 +510,17 @@ class Engine(object):
   def uploadKeys(self):
     ''' pass '''
     ops = []
-    key = self.core.config.get('ssh', {}).get('privateKey')
-    if key:
-      keyfile = expandLocalPath(key)
-      if not os.path.isfile(keyfile):
-        return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
-      self.logAdapter.info("Uploading private key: %s" % keyfile)
-      ops.append( self.readLink().bind(Link.upload, localPath=keyfile, remotePath=".ssh/id_dsa") )
+    key = self.getSSHPrivateKey()
+    pkey = self.getSSHPublicKey()
 
-    pkey = self.core.config.get('ssh', {}).get('publicKey')
-    if pkey:
-      pkeyfile = expandLocalPath(pkey)
-      if not os.path.isfile(pkeyfile):
-        return Fail(FileDoesNotExist("Inexistent public key: %s" %pkey))
-      self.logAdapter.info("Uploading public key: %s" % pkeyfile)
-      ops.append( self.readLink().bind(Link.upload, localPath=pkeyfile, remotePath=".ssh/id_dsa.pub") )
-      ops.append( self.readLink().bind(Link.runCommand, cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys", stream=True, interactive=True) )
- 
+    key = self.core.config.get('ssh', {}).get('privateKey')
+    self.logAdapter.info("Uploading private key: %s" % key)
+    ops.append( self.readLink().bind(Link.upload, localPath=key, remotePath=".ssh/id_dsa") )
+  
+    self.logAdapter.info("Uploading public key: %s" % pkey)
+    ops.append( self.readLink().bind(Link.upload, localPath=pkey, remotePath=".ssh/id_dsa.pub") )
+    ops.append( self.readLink().bind(Link.runCommand, cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys", stream=True, interactive=True) )
+
     return Try.sequence(ops)
  
   def envSwitch(self, subenvName, restart=False):
@@ -540,6 +537,25 @@ class Engine(object):
     return self.readLink() \
       .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) \
       .then(self.envRegister)
+
+  def getSSHPrivateKey(self):
+    key = self.core.config.get('ssh', {}).get('privateKey')
+    if key:
+      keyfile = expandLocalPath(key)
+      if not os.path.isfile(keyfile):
+        return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
+      return OK(keyfile)
+    return self.core.getInsecureKeyFile()
+
+  def getSSHPublicKey(self):
+    key = self.core.config.get('ssh', {}).get('publicKey')
+    if key:
+      keyfile = expandLocalPath(key)
+      if not os.path.isfile(keyfile):
+        return Fail(FileDoesNotExist("Inexistent public key: %s" %key))
+      return OK(keyfile)
+    return self.core.getInsecurePubKeyFile()
+    
 
   def envRegister(self):
     return self.readLink() \
