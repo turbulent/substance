@@ -53,7 +53,7 @@ class SubHosts(Hosts):
   @staticmethod
   def unregister(name):
     try:
-      logger.info("Hosts unregister %s: %s" % (name))
+      logger.info("Hosts unregister %s" % (name))
       hosts = SubHosts.checkoutFromSystem()
       if hosts.exists(names=[name]):
         hosts.removeEntry(name)
