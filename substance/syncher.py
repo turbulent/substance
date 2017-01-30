@@ -97,7 +97,7 @@ class UnisonSyncher(object):
       raise NotImplementedException()
     return getSupportFile(os.path.join('support', 'unison', osTarget))
 
-class SubstanceSyncher(object):
+class SubwatchSyncher(object):
 
   PARTIAL_DIR = '.~subsync~'
   def __init__(self, engine, keyfile):

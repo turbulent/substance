@@ -12,7 +12,7 @@ from substance.utils import mergeDict, parseDotEnv, expandLocalPath
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
-from substance.syncher import SubstanceSyncher, UnisonSyncher
+from substance.syncher import SubwatchSyncher, UnisonSyncher
 from substance.exceptions import (
   FileSystemError, 
   ConfigValidationError,
@@ -216,7 +216,7 @@ class Engine(object):
   def getSyncher(self):
     syncMode = self.config.get('devroot').get('mode')
     if syncMode == 'rsync':
-      return SubstanceSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+      return SubwatchSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
     elif syncMode == 'unison':
       return UnisonSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
     else:
