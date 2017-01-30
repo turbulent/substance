@@ -78,7 +78,7 @@ class Box(object):
     if len(parts) > 1:
       box['registry'] = parts[1]
     else:
-      box['registry'] = "bbeausej.developers.turbulent.ca"
+      box['registry'] = "substance.developers.turbulent.ca/registry"
 
     # XXX Configure this default from core?
 

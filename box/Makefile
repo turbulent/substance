@@ -7,7 +7,7 @@ define BOXYML
 name: $(BOX_NAME)
 version: $(BOX_VERSION)
 description: Substance Box base image
-registry: http://bbeausej.developers.turbulent.ca/$(BOX_NS)/$(BOX_NAME)-$(BOX_VERSION).json
+registry: http://substance.developers.turbulent.ca/registry/$(BOX_NS)/$(BOX_NAME)-$(BOX_VERSION).json
 endef
 export BOXYML
 
@@ -50,8 +50,8 @@ build/$(BOX_NAME)-$(BOX_VERSION).json: support/boxjson.m4 build/$(BOX_NAME)-$(BO
 		support/boxjson.m4 > build/substance-box-$(BOX_VERSION).json
   
 upload:
-	scp build/$(BOX_NAME)-$(BOX_VERSION).box developers:substance-registry/box/$(BOX_NS)/$(BOX_NAME)-$(BOX_VERSION).box
-	scp build/$(BOX_NAME)-$(BOX_VERSION).json developers:substance-registry/box/$(BOX_NS)/$(BOX_NAME)-$(BOX_VERSION).json
+	scp build/$(BOX_NAME)-$(BOX_VERSION).box substance@developers:www/registry/box/$(BOX_NS)/$(BOX_NAME)-$(BOX_VERSION).box
+	scp build/$(BOX_NAME)-$(BOX_VERSION).json substance@developers:www/registry/box/$(BOX_NS)/$(BOX_NAME)-$(BOX_VERSION).json
 
 clean:
 	rm -rf build/*
