@@ -100,7 +100,7 @@ class Engine(object):
       '-ignore', 'Path */data'
     ]
     defaults['devroot']['excludes'] = [
-      '*.swp',
+      '{.*,*}.sw[pon]',
       '.bash*',
       '.composer',
       '.git',
@@ -545,7 +545,7 @@ class Engine(object):
       if not os.path.isfile(keyfile):
         return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
       return OK(keyfile)
-    return self.core.getInsecureKeyFile()
+    return OK(self.core.getInsecureKeyFile())
 
   def getSSHPublicKey(self):
     key = self.core.config.get('ssh', {}).get('publicKey')
