@@ -513,13 +513,16 @@ class Engine(object):
     key = self.getSSHPrivateKey()
     pkey = self.getSSHPublicKey()
 
-    key = self.core.config.get('ssh', {}).get('privateKey')
-    self.logAdapter.info("Uploading private key: %s" % key)
-    ops.append( self.readLink().bind(Link.upload, localPath=key, remotePath=".ssh/id_dsa") )
+    if key.isOK():
+      key = key.getOK()
+      self.logAdapter.info("Uploading private key: %s" % key)
+      ops.append( self.readLink().bind(Link.upload, localPath=key, remotePath=".ssh/id_dsa") )
   
-    self.logAdapter.info("Uploading public key: %s" % pkey)
-    ops.append( self.readLink().bind(Link.upload, localPath=pkey, remotePath=".ssh/id_dsa.pub") )
-    ops.append( self.readLink().bind(Link.runCommand, cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys", stream=True, interactive=True) )
+    if pkey.isOK():
+      pkey = pkey.getOK()
+      self.logAdapter.info("Uploading public key: %s" % pkey)
+      ops.append( self.readLink().bind(Link.upload, localPath=pkey, remotePath=".ssh/id_dsa.pub") )
+      ops.append( self.readLink().bind(Link.runCommand, cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys", stream=True, interactive=True) )
 
     return Try.sequence(ops)
  
@@ -554,7 +557,7 @@ class Engine(object):
       if not os.path.isfile(keyfile):
         return Fail(FileDoesNotExist("Inexistent public key: %s" %key))
       return OK(keyfile)
-    return self.core.getInsecurePubKeyFile()
+    return OK(self.core.getInsecurePubKeyFile())
     
 
   def envRegister(self):
