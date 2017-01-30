@@ -4,7 +4,7 @@ from substance.monads import *
 from substance.logs import *
 from substance.constants import Constants
 from exceptions import *
-from vbox import (vboxManager)
+from vbox import (vboxManager, _vboxLineEnding)
 import machine
 from netaddr import (IPAddress, IPNetwork)
 
@@ -153,7 +153,7 @@ def parsePortForwards(vminfo):
   '''
   Parse Virtual Box machine info for forwarded ports.
   '''
-  lines = vminfo.split("\n")
+  lines = vminfo.split(_vboxLineEnding())
   ports = []
   nic = None
   for line in lines:
@@ -257,13 +257,15 @@ def _netFrom(net):
     return OK(IPNetwork(net))
   except Exception as err:
     return Fail(err)
-    
+
 def _mapAsBlocks(data, func):
-  blocks = [ x for x in data.strip().split("\n\n") if x ]
+  sep = _vboxLineEnding()
+  sep = "%s%s" % (sep, sep)
+  blocks = [ x for x in data.strip().split(sep) if x ]
   return OK(blocks).mapM(func)
 
 def _extractClassFromBlock(block, actions, cls):
-  lines = block.split("\n")
+  lines = block.split(_vboxLineEnding())
 
   info = OrderedDict()
   for expr, field in actions:
