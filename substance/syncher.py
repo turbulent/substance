@@ -24,13 +24,26 @@ logger = logging.getLogger(__name__)
 #logging.getLogger("subwatch.client").setLevel(logging.WARNING)
 #logging.getLogger("subwatch.watcher").setLevel(logging.WARNING)
 
-class UnisonSyncher(object):
-
+class BaseSyncher(object):
   def __init__(self, engine, keyfile):
     self.keyfile = keyfile
     self.engine = engine
+
+  def ensureKeyPerms(self):
+    try:
+      # XXX Hack for perms on insecure file. Temporary until distribution is sorted out.
+      os.chmod(self.keyfile, 0600)
+    except Exception as err:
+      pass 
+    return OK(None)
+ 
+class UnisonSyncher(BaseSyncher):
+
+  def __init__(self, engine, keyfile):
+    super(UnisonSyncher, self).__init__(engine, keyfile)
   
   def start(self, direction):
+    self.ensureKeyPerms()
     unisonPath = self.getUnisonBin()
     unisonArgs = self.getUnisonArgs(direction)
     unisonEnv = self.getUnisonEnv()
@@ -65,7 +78,7 @@ class UnisonSyncher(object):
     # SSH config
     transport = "-p %s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" % self.engine.getSSHPort()
     if self.keyfile is not None:
-      transport += " -i \'%s\'" % Shell.normalizePath(self.keyfile)
+      transport += " -i %s" % Shell.normalizePath(self.keyfile)
     
     # Assemble everything
     args = ['-batch', '-repeat', 'watch', '-sshargs', transport] + userArgs + directionArgs + ignoreArgs + rootArgs
@@ -76,7 +89,8 @@ class UnisonSyncher(object):
     path = self.getUnisonSupportDirectory() + os.pathsep + os.environ.get('PATH','')
     # Tell unison to save all replica state to ~/.substance/unison
     unisonDir = Shell.normalizePath(os.path.join(self.engine.core.getBasePath(), 'unison'))
-    return { 'UNISON': unisonDir, 'PATH': path }
+    homeDir = os.environ.get('HOME', os.path.expanduser('~'))
+    return { 'UNISON': unisonDir, 'PATH': path, 'HOME': homeDir }
   
   def getUnisonSupportDirectory(self):
     osTarget = None
@@ -97,12 +111,11 @@ class UnisonSyncher(object):
       raise NotImplementedException()
     return getSupportFile(os.path.join('support', 'unison', osTarget))
 
-class SubwatchSyncher(object):
+class SubwatchSyncher(BaseSyncher):
 
   PARTIAL_DIR = '.~subsync~'
   def __init__(self, engine, keyfile):
-    self.keyfile = keyfile
-    self.engine = engine
+    super(SubwatchSyncher, self).__init__(engine, keyfile)
     self.localAgent = LocalWatchAgent(self.processLocalEvent)
     self.remoteAgent = RemoteWatchAgent(self.processRemoteEvent)
     self.synching = {Syncher.UP:{}, Syncher.DOWN:{}}
@@ -124,14 +137,6 @@ class SubwatchSyncher(object):
         return OK(folder)
     return Fail(NameError("%s is not a folder." % path))
 
-  def ensureKeyPerms(self):
-    try:
-      # XXX Hack for perms on insecure file. Temporary until distribution is sorted out.
-      os.chmod(self.keyfile, 0600)
-    except Exception as err:
-      pass 
-    return OK(None)
- 
   def start(self, direction=Syncher.BOTH):
     op = self.ensureKeyPerms() \
       .then(defer(self.initialSync, direction=direction))
