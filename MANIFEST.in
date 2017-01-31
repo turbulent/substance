@@ -1,2 +1,2 @@
 include *.rst
-recursive-include support/*
+recursive-include support *
