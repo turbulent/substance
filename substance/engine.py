@@ -12,7 +12,7 @@ from substance.utils import mergeDict, parseDotEnv, expandLocalPath
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
-from substance.syncher import SubstanceSyncher
+from substance.syncher import SubwatchSyncher, UnisonSyncher
 from substance.exceptions import (
   FileSystemError, 
   ConfigValidationError,
@@ -36,7 +36,7 @@ class EngineProfile(object):
 
 
 class EngineFolder(object):
-  def __init__(self, name, mode, hostPath, guestPath, uid=None, gid=None, umask=None, excludes=[]):
+  def __init__(self, name, mode, hostPath, guestPath, uid=None, gid=None, umask=None, excludes=[], syncArgs=[]):
     self.name = name
     self.mode = mode
     self.hostPath = hostPath
@@ -45,6 +45,7 @@ class EngineFolder(object):
     self.gid = gid if gid else 1000
     self.umask = umask if umask else "0022"
     self.excludes = excludes
+    self.syncArgs = syncArgs
 
  
   def setExcludes(self, exs=[]):
@@ -80,7 +81,7 @@ class Engine(object):
     defaults['name'] = 'default'
     defaults['driver'] = 'virtualbox'
     defaults['id'] = None
-    defaults['box'] = 'turbulent/substance-box:0.5'
+    defaults['box'] = 'turbulent/substance-box:0.6'
     defaults['profile'] = EngineProfile().__dict__
     defaults['docker'] = OrderedDict()
     defaults['docker']['port'] = 2375
@@ -93,19 +94,20 @@ class Engine(object):
     defaults['network']['sshPort'] = 4500
     defaults['devroot'] = OrderedDict()
     defaults['devroot']['path'] = os.path.join('~','devroot')
-    defaults['devroot']['mode'] = 'rsync'
+    defaults['devroot']['mode'] = 'unison'
+    defaults['devroot']['syncArgs'] = [
+      '-ignore', 'Path */var',
+      '-ignore', 'Path */data'
+    ]
     defaults['devroot']['excludes'] = [
-      '*.*.swp',
+      '{.*,*}.sw[pon]',
       '.bash*',
       '.composer',
       '.git',
-      '.idea'
+      '.idea',
       '.npm',
       '.ssh',
-      '.viminfo',
-      '*node_modules*',
-      'data/*',
-      'var/*'
+      '.viminfo'
     ]
     return defaults
   
@@ -142,7 +144,7 @@ class Engine(object):
     mode = devroot.get('mode', None)
     if not mode:
       return Fail(ConfigValidationError("devroot mode is not set."))
-    elif mode not in ['sharedfolder','rsync']:
+    elif mode not in ['sharedfolder','rsync','unison']:
       #XXX Fix hardcoded values.
       return Fail(ConfigValidationError("devroot mode '%s' is not valid." % mode)) 
 
@@ -212,7 +214,16 @@ class Engine(object):
     return self.name + tld
 
   def getSyncher(self):
-    return SubstanceSyncher(engine=self, keyfile=self.core.getInsecureKeyFile())
+    syncMode = self.config.get('devroot').get('mode')
+    keyfile = self.getSSHPrivateKey()
+    if keyfile.isFail():
+      return keyfile
+    if syncMode == 'rsync':
+      return SubwatchSyncher(engine=self, keyfile=keyfile.getOK())
+    elif syncMode == 'unison':
+      return UnisonSyncher(engine=self, keyfile=keyfile.getOK())
+    else:
+      raise NotImplementedError()
     
   def clearDriverID(self):
     self.config.set('id', None)
@@ -499,23 +510,20 @@ class Engine(object):
   def uploadKeys(self):
     ''' pass '''
     ops = []
-    key = self.core.config.get('ssh', {}).get('privateKey')
-    if key:
-      keyfile = expandLocalPath(key)
-      if not os.path.isfile(keyfile):
-        return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
-      self.logAdapter.info("Uploading private key: %s" % keyfile)
-      ops.append( self.readLink().bind(Link.upload, localPath=keyfile, remotePath=".ssh/id_dsa") )
+    key = self.getSSHPrivateKey()
+    pkey = self.getSSHPublicKey()
 
-    pkey = self.core.config.get('ssh', {}).get('publicKey')
-    if pkey:
-      pkeyfile = expandLocalPath(pkey)
-      if not os.path.isfile(pkeyfile):
-        return Fail(FileDoesNotExist("Inexistent public key: %s" %pkey))
-      self.logAdapter.info("Uploading public key: %s" % pkeyfile)
-      ops.append( self.readLink().bind(Link.upload, localPath=pkeyfile, remotePath=".ssh/id_dsa.pub") )
+    if key.isOK():
+      key = key.getOK()
+      self.logAdapter.info("Uploading private key: %s" % key)
+      ops.append( self.readLink().bind(Link.upload, localPath=key, remotePath=".ssh/id_dsa") )
+  
+    if pkey.isOK():
+      pkey = pkey.getOK()
+      self.logAdapter.info("Uploading public key: %s" % pkey)
+      ops.append( self.readLink().bind(Link.upload, localPath=pkey, remotePath=".ssh/id_dsa.pub") )
       ops.append( self.readLink().bind(Link.runCommand, cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys", stream=True, interactive=True) )
- 
+
     return Try.sequence(ops)
  
   def envSwitch(self, subenvName, restart=False):
@@ -532,6 +540,25 @@ class Engine(object):
     return self.readLink() \
       .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) \
       .then(self.envRegister)
+
+  def getSSHPrivateKey(self):
+    key = self.core.config.get('ssh', {}).get('privateKey')
+    if key:
+      keyfile = expandLocalPath(key)
+      if not os.path.isfile(keyfile):
+        return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
+      return OK(keyfile)
+    return OK(self.core.getInsecureKeyFile())
+
+  def getSSHPublicKey(self):
+    key = self.core.config.get('ssh', {}).get('publicKey')
+    if key:
+      keyfile = expandLocalPath(key)
+      if not os.path.isfile(keyfile):
+        return Fail(FileDoesNotExist("Inexistent public key: %s" %key))
+      return OK(keyfile)
+    return OK(self.core.getInsecurePubKeyFile())
+    
 
   def envRegister(self):
     return self.readLink() \
@@ -696,14 +723,15 @@ class Engine(object):
     #XXX Dynamic mounts / remove hardcoded values.
     devroot = self.config.get('devroot')
     pfolder = EngineFolder(
-      name='devroot',
+      name='devroot', 
       mode=devroot.get('mode'),
       hostPath=os.path.expanduser(devroot.get('path')),
       guestPath='/substance/devroot',
       uid=1000,
       gid=1000,
       umask="0022",
-      excludes=devroot.get('excludes', [])
+      excludes=devroot.get('excludes', []),
+      syncArgs=devroot.get('syncArgs', [])
     )
     return [pfolder]
  

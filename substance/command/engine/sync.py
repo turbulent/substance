@@ -4,7 +4,7 @@ from substance.monads import *
 from substance.logs import *
 from substance import (Command, Engine)
 from substance.exceptions import (SubstanceError)
-from substance.syncher import SubstanceSyncher
+from substance.syncher import SubwatchSyncher
 from substance.constants import Syncher
 
 class Sync(Command):

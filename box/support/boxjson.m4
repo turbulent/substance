@@ -1,1 +1,0 @@
-{"name":"BOX_NAME","namespace":"BOX_NS","version":"BOX_VERSION","archiveURL":"http:\/\/substance.developers.turbulent.ca\/registry\/box\/BOX_NS\/BOX_NAME-BOX_VERSION.box","archiveSHA1":"BOX_SHA","registry":"substance.developers.turbulent.ca\/registry"}
