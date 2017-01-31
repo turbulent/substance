@@ -1,4 +1,6 @@
 import re
+import os
+import platform
 
 from substance.shell import Shell
 from substance.monads import *
@@ -65,3 +67,9 @@ def checkVersion(vstring):
   else:
     msg = "VirtualBox version %s and up is required. %s currently installed." % (VBOX_VERSION_MIN, vstring)
     return Fail(VirtualBoxVersionError(msg))
+
+def _vboxLineEnding():
+  if platform.system().startswith("CYGWIN"):
+    # Special case: os.linesep reports LF because of Cygwin but VBoxManage will output CRLF because of Windows
+    return "\r\n"
+  return os.linesep

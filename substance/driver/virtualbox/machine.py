@@ -4,7 +4,7 @@ from substance.monads import *
 from substance.logs import *
 from substance.constants import Constants
 from substance.exceptions import (MachineDoesNotExist, SubstanceDriverError)
-from vbox import vboxManager
+from vbox import (vboxManager,_vboxLineEnding)
 from exceptions import *
 from substance.shell import Shell
 
@@ -169,7 +169,7 @@ def parseMachinesList(vms):
   '''
   matcher = re.compile(r'"([^"]+)" {([^}]+)}')
   machines = {}
-  for line in vms.split("\n"):
+  for line in vms.split(_vboxLineEnding()):
     parts = matcher.match(line)
     if parts:
       machines[parts.group(2)] = parts.group(1)
@@ -188,7 +188,7 @@ def parseMachineInfo(machInfo):
   '''
   Parse Virtual Box machine info into a dict.
   '''
-  lines = machInfo.split("\n")
+  lines = machInfo.split(_vboxLineEnding())
   machDict = OrderedDict()
   #rotKey = OrderedDict()
   for line in lines:
