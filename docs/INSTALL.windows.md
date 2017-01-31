@@ -42,6 +42,6 @@ Installation on 32-bit Windows is NOT supported.
 
 6. Install `substance` alpha via `pip` by running the command
 
-    $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.7a2
+    $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.8a3
 
 
