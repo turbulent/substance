@@ -513,7 +513,14 @@ class Engine(object):
     key = self.getSSHPrivateKey()
     pkey = self.getSSHPublicKey()
 
-    key = self.core.config.get('ssh', {}).get('privateKey')
+    if key.isFail():
+      return key
+    if pkey.isFail():
+      return pkey
+
+    key = key.getOK()
+    pkey = pkey.getOK()
+    
     self.logAdapter.info("Uploading private key: %s" % key)
     ops.append( self.readLink().bind(Link.upload, localPath=key, remotePath=".ssh/id_dsa") )
   
