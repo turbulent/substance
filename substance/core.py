@@ -85,9 +85,6 @@ class Core(object):
     defaults['tld'] = '.dev'
     defaults['devroot'] = os.path.join('~', 'substance')
     defaults['defaultBox'] = 'turbulent/substance-box:0.6'
-    defaults['virtualbox'] = OrderedDict()
-    defaults['virtualbox']['network'] = "172.21.21.0/24"
-    defaults['virtualbox']['interface'] = None
     defaults['ssh'] = OrderedDict()
     defaults['ssh']['privateKey'] = None
     defaults['ssh']['publicKey'] = None
