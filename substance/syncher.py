@@ -90,7 +90,7 @@ class UnisonSyncher(BaseSyncher):
     # Tell unison to save all replica state to ~/.substance/unison
     unisonDir = Shell.normalizePath(os.path.join(self.engine.core.getBasePath(), 'unison'))
     homeDir = os.environ.get('HOME', os.path.expanduser('~'))
-    return { 'UNISON': unisonDir, 'PATH': path, 'HOME': homeDir, 'SSH_AUTH_SOCK': os.environ.get('SSH_AUTH_SOCK') }
+    return { 'UNISON': unisonDir, 'PATH': path, 'HOME': homeDir, 'SSH_AUTH_SOCK': os.environ.get('SSH_AUTH_SOCK', '') }
   
   def getUnisonSupportDirectory(self):
     osTarget = None
