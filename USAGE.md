@@ -16,7 +16,7 @@ For Windows installation, see [docs/INSTALL.windows.md](docs/INSTALL.windows.md)
 - Install subwatch alpha
   - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0``
 - Install substance alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.8a3``  
+  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.8a4``  
 
 
 ## Usage
