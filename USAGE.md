@@ -26,7 +26,7 @@ For Windows installation, see [docs/INSTALL.windows.md](docs/INSTALL.windows.md)
 To start using a substance environment, first create an engine. For the sake of this example we will create an engine named `work`.
 
 ```
-substance engine init work --memory 2048 --cpus 2 --box turbulent/substance-box:0.5
+substance engine create work --memory 2048 --cpus 2 --box turbulent/substance-box:0.6
 ```
 
 Launch your engine with the launch command:
