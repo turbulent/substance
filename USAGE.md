@@ -12,12 +12,11 @@ For Windows installation, see [docs/INSTALL.windows.md](docs/INSTALL.windows.md)
 - Install homebrew python
   - ``brew install python``
 - Ensure pip is up to date
--   - ``pip install -U pip``
+  -  ``pip install -U pip``
 - Install subwatch alpha
   - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0``
 - Install substance alpha
   - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.8a4``  
-
 
 ## Usage
 
@@ -34,7 +33,7 @@ Launch your engine with the launch command:
 ```
 substance engine launch work
 ```
-After a few minutes, substance will have pulled the box and launched your engine. By default substance will create a devroot directory for this new engine in `$HOME/substance/work`. 
+After a few minutes, substance will have pulled the box and launched your engine. By default substance will create a devroot directory for this new engine in `$HOME/substance/work`.
 
 We need to tell substance to use our new engine as the default engine for substance commands. This is done with the `use` command:
 
@@ -46,7 +45,7 @@ You can start the synch process :
 
 ```substance sync```
 
-While this process runs, files between your local machine and the engine's devroot are kept in sync by subwatch.
+Keep this listener running while you develop. When this process runs, files between your local machine and the engine's devroot are kept in sync by subwatch.
 
 
 ### Update substance to the latest
@@ -63,7 +62,7 @@ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@VERSION
 
 ### Setting up your project for substance
 
-At the top level of your project source code create a folder named ``.substance``. In this folder, create the following base structure:
+At the top level of your project source code create a folder named ``.substance``. In this folder. A system to initialize projects is in the works, but for now create the following base structure or copy it from a recent project:
 
 ```
 .
@@ -79,6 +78,7 @@ At the top level of your project source code create a folder named ``.substance`
 |-- dockwrkr.yml.jinja
 |-- logs
 |-- spool
+|-- subenv.yml
 `-- var
     |-- heap
     |   `-- cache
@@ -92,9 +92,9 @@ Ensure the `var` directory and it's children have mode 0777.
 
 ### Environment configuration
 
-In your `.substance` folder you should create a `.env` file that will host the configuration/environment variable you will need when templating files in your project subenv. 
+In your `.substance` folder you should create a `.env` file that will host the configuration/environment variable you will need when templating files in your project subenv.
 
-The special variable called `SUBENV_FQDN` controls the DNS name for your project. Make sure you set it. Also, make sure this name is in the same TLD as configured in your substance config. (`~/.substance/substance.yml`)
+The special variable called `SUBENV_FQDN` controls the DNS name for your project. Make sure you set it. Also, make sure this name is in the same TLD as configured in your substance config. (`~/.substance/subenv.yml`)
 
 Here is a sample `.env` :
 ```
@@ -106,9 +106,9 @@ When resolving variables ; subenv will also look for a `.env` file at the root o
 
 ### Configuring containers
 
-Substance uses `dockwrkr` to manage containers in the work engine. Your project must define the containers it requires to function and their configuration in the form of a `dockwrkr.yml`` file. 
+Substance uses `dockwrkr` to manage containers in the work engine. Your project must define the containers it requires to function and their configuration in the form of a `dockwrkr.yml`` file.
 
-Your `.substance` directory must contain a dockwrkr.yml.jinja template for this file that will be used by substance to resolve environment and configuration variable before writing the file in your project environment in the work engine.
+Your `.substance` directory must contain a dockwrkr.yml.jinja that will be used by substance to resolve environment and configuration variable before writing the file in your project environment in the work engine.
 
 Refer to the [dockwrkr](https://gitlab.turbulent.ca/turbulent/dockwrkr) manual for details on this configuration as well as the subenv command for details on the variables available. All variables you defined in your `.env` file can be used in the jinja template.
 
@@ -246,13 +246,13 @@ containers:
       - "{{SUBENV_ENVPATH}}/conf/logrotate:/vol/conf"
       - "/var/lib/docker/containers:/vol/docker-logs"
  ```
- 
+
 ### Running your project
 
 Make sure your files are synched (`substance engine sync work`) and then you can switch to your project to star working.
 
 ```
-substance switch myproject --restart
+substance switch myproject-foldername --restart
 ```
 
 The above command will make substance read your .substance directory for your project, template all files and folder to create your project subenv. Once ready, the --restart flag will make substance create and start all containers. Since we set the `work` engine as our default engine with the `use` command, we did not need to specify an engine here.
@@ -263,6 +263,11 @@ You should be able to visit it using ```https://myproject.dev```
 
 ### Post-setup steps
 
-Substance has no hooks currently to bootstrap your project datastores (MySQL, redis) or setup your fixtures. You must now load up your database model by 
+Substance has no hooks currently to bootstrap your project datastores (MySQL, redis) or setup your fixtures so you'll need to initialize those yourself.
 
+The following commands are useful to use while configuring your application.
 
+```
+substance ssh <box name>     SSH into the specific docker container if you want to diagnose issues connecting your "web" box to the various services it uses.
+substance logs               Get a live feed of all containers logs simultaneously
+```

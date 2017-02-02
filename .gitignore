@@ -4,3 +4,4 @@ substance.egg-info
 *.pyc
 box/packer_cache
 box/build
+.DS_Store
