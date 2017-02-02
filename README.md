@@ -5,11 +5,11 @@ Local docker-powered development environments
 
 # Overview
 
-substance is a integrated tool for defining and running a multi-continer docker development environments. It is backed by Virtual Box, the docker engine and ``dockwrkr`` to compose containers.
+## Why?
+Substance combines a virtual machine and docker into one self contained tool. Complex projects can be distributed with a .substance folder which defines all the environmental details in one so you can spend more time developing and less time setting up servers.
 
-With substance you create an `engine` which runs it's own virtual machine with the docker daemon and synchronizes a `devroot` folder with your project source code to the engine. 
-
-substance then allows you to switch from project to project simply by having a simple `.substance` folder in the root of your project source to define the containers and folders/volumes needed to run your project.
+## How
+Substance is backed by Virtual Box, the docker engine and ``dockwrkr`` to compose containers. With substance you create an `engine` which runs it's own virtual machine with the docker daemon and synchronizes a `devroot` folder with your project source code to the engine. Substance then allows you to switch from project to project simply by having a simple `.substance` folder in the root of your project source to define the containers and folders/volumes needed to run your project.
 
 # Commands
 
@@ -24,14 +24,13 @@ substance then allows you to switch from project to project simply by having a s
   stop                Stop all or specific container(s)
   restart             Restart all or specified container(s)
   recreate            Recreate all or specified container(s)
-  ssh                 Connect using SSH to the engine or directly into a container
+  ssh                 Connect using SSH to the engine or directly into a container by appending the container name
   status              Show substance engine and env status
   logs                Display current subenv logs
   sync                Synchronize & watch the devroot of the current engine
   engine              Substance engine management
   box                 Substance box management
-  ```
-
+```
 
 # Engine commands
 
@@ -42,7 +41,7 @@ substance then allows you to switch from project to project simply by having a s
   launch              Launch an engine's virtual machine
   halt                Halt an engine's vm gracefully or forcefully.
   suspend             Suspend an engine gracefully.
-  deprovision         Destroy an engine's assocaited virtual machine
+  deprovision         Destroy an engine's associated virtual machine
   edit                Edit an engine configuration
   ssh                 Connect using SSH to the engine's virtual machine.
   env                 Print the shell variables to set up the local docker client environment
@@ -157,8 +156,6 @@ script:
   - chmod -R 777 var
   - chmod -R 700 database
 ```
-
-
 
 # Setup
 
