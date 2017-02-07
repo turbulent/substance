@@ -172,12 +172,15 @@ class Program(CLI):
     return OrderedDict(zip(k, v))
 
   def getCommand(self, commandName):
-    if commandName not in self.commands:
-      raise InvalidCommandError("Invalid command '%s' specified" % commandName)
+    if commandName in self.commands:
+      commandModule = self.commands[commandName]
+      commandClass = commandName.title()
+    else:
+      commandModule = 'substance.command.fallback'
+      commandClass = 'Fallback'
  
-    commandModule = self.commands[commandName]
     module_ = importlib.import_module(commandModule)
-    class_ = getattr(module_, commandName.title())
+    class_ = getattr(module_, commandClass)
     command = class_()
     command.parent = self
     command.name = commandName
@@ -230,9 +233,6 @@ class Program(CLI):
       else: 
         self.cmdString = self.args[0]
         self.commandInput = self.args[1:]
-
-      if self.cmdString not in self.commands:
-        return self.exitError("Invalid command '%s' specified for '%s'.\n\nUse 'help %s' for available commands." % (self.cmdString, self.name, self.name))
 
       self.runCommand(self.cmdString)
     except Exception as err:

@@ -18,7 +18,7 @@ class Status(Command):
     return "Show substance engine and env status"
 
   def main(self):
-    return self.core.loadCurrentEngine(name=self.getOption('engine')) \
+    return self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
       .bind(Engine.envLoadCurrent) \
       .bind(Engine.envStatus, full=True) \
       .bind(self.printStatus) \

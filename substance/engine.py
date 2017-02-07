@@ -109,6 +109,10 @@ class Engine(object):
       '.ssh',
       '.viminfo'
     ]
+    aliases = [ 'make', 'composer', 'npm', 'watch' ]
+    defaults['aliases'] = { alias: { 'container': 'web', 'user': 'heap', 'cwd': '/vol/website', 'args': [alias] } for alias in aliases }
+    defaults['aliases']['watch']['container'] = 'devs'
+
     return defaults
   
   def validateConfig(self, config):
@@ -655,6 +659,14 @@ class Engine(object):
 
     cmd = "subenv run dockwrkr exec -t -i %(opts)s %(container)s 'bash -c \"%(initCommands)s\"'" % tpl
     return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
+
+  def envExecAlias(self, alias, args):
+    aliases = self.config.get('aliases')
+    if aliases and alias in aliases:
+      cmd = aliases[alias]
+      args = cmd['args'] + args
+      return self.envExec(container=cmd['container'], cmd=args, cwd=cmd['cwd'], user=cmd['user'])
+    return Fail(None)
 
   def envStop(self, time=10, containers=[]):
     cmds = []

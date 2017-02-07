@@ -10,7 +10,6 @@ class Docker(Command):
     return PassThroughParser
 
   def getShellOptions(self, optparser):
-    optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
     return optparser
 
   def getUsage(self):
@@ -20,7 +19,7 @@ class Docker(Command):
     return "Run a docker command on an engine"
 
   def main(self):
-    return self.core.loadCurrentEngine(name=self.getOption('engine')) \
+    return self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.envLoadCurrent) \
       .bind(Engine.envDocker, command=' '.join(self.args)) \

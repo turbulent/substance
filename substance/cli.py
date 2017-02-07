@@ -31,9 +31,11 @@ class SubstanceCLI(Program):
     self.addCommand('sync', 'substance.command.sync')
     self.addCommand('engine', 'substance.command.engine')
     self.addCommand('box', 'substance.command.box')
+    self.addCommand('aliases', 'substance.command.aliases')
     return self
 
   def getShellOptions(self, optparser):
+    optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
     optparser.add_option("-f", dest="configFile", help="Override default config file")
     optparser.add_option("-d", dest="debug", help="Activate debugging output", default=False, action="store_true")
     optparser.add_option("-y", dest="assumeYes", help="Assume yes when prompted", default=False, action="store_true")

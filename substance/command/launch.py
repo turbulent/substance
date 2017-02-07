@@ -12,12 +12,17 @@ class Launch(Command):
     return "Launch the current engine's virtual machine"
 
   def getShellOptions(self, optparser):
-    optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
     return optparser
 
   def main(self):
 
-    return self.core.readCurrentEngineName() \
+    engine = self.parent.getOption('engine')
+    if engine:
+      engine = OK(engine)
+    else:
+      engine = self.core.readCurrentEngineName()
+
+    return engine \
       .bind(self.core.loadEngine) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.launch) \

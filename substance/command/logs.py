@@ -20,7 +20,7 @@ class Logs(Command):
 
   def main(self):
 
-    op = self.core.loadCurrentEngine(name=self.getOption('engine')) \
+    op = self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
       .bind(Engine.envLoadCurrent) 
 
     if self.getOption('list'):

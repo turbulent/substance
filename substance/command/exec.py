@@ -13,7 +13,6 @@ class Exec(Command):
     return "Execute a command within a container"
 
   def getShellOptions(self, optparser):
-    optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
     optparser.add_option("-u", "--user", dest="user", help="User to connect", default=None)
     optparser.add_option("-d", "--cwd", dest="cwd", help="Change to this directory upon connect", default=None)
     return optparser
@@ -35,7 +34,7 @@ class Exec(Command):
     if not container:
       return self.exitError("Please provide a container name to exec on.")
 
-    return self.core.loadCurrentEngine(name=self.getOption('engine')) \
+    return self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
       .bind(Engine.envExec, container=container, user=self.getOption('user'), cwd=self.getOption('cwd'), cmd=self.args[1:]) \
       .catch(self.exitError)
