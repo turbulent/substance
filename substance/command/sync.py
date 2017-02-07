@@ -6,6 +6,7 @@ from substance.constants import Syncher
 
 class Sync(Command):
   def getShellOptions(self, optparser):
+    optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
     optparser.add_option("-u","--up", dest="up", help="Synchronize UP to the engine only.", default=False, action="store_true")
     optparser.add_option("-d","--down", dest="down", help="Synchronize DOWN from the engine only.", default=False, action="store_true")
     return optparser
