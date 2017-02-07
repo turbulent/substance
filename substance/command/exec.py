@@ -7,7 +7,7 @@ import shlex
 class Exec(Command):
 
   def getUsage(self):
-    return "substance exec [opts] [CONTAINNER] [CMD...]"
+    return "substance exec [opts] [CONTAINER] [CMD...]"
   
   def getHelpTitle(self):
     return "Execute a command within a container"
