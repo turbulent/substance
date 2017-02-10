@@ -41,6 +41,7 @@ class UnisonSyncher(BaseSyncher):
 
   def __init__(self, engine, keyfile):
     super(UnisonSyncher, self).__init__(engine, keyfile)
+    self.ignoreArchives = False
   
   def start(self, direction):
     self.ensureKeyPerms()
@@ -82,6 +83,8 @@ class UnisonSyncher(BaseSyncher):
     
     # Assemble everything
     args = ['-batch', '-repeat', 'watch', '-sshargs', transport] + userArgs + directionArgs + ignoreArgs + rootArgs
+    if self.ignoreArchives and '-ignorearchives' not in args:
+      args.insert(0, '-ignorearchives')
     return args
   
   def getUnisonEnv(self):
