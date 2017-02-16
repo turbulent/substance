@@ -5,8 +5,7 @@ from tabulate import tabulate
 
 class Switch(Command):
   def getShellOptions(self, optparser):
-    optparser.add_option("-e","--engine", dest="engine", help="Engine to run this command on", default=None)
-    optparser.add_option("-r","--restart", dest="restart", help="Once switched, restart containers", default=False, action="store_true")
+    optparser.add_option("-k","--keep-containers", dest="keepcontainers", help="Perform switch but do not restart containers", default=False, action="store_true")
     return optparser
 
   def getUsage(self):
@@ -20,7 +19,8 @@ class Switch(Command):
     if not subenv:
       return self.exitError("Please specify a subenv name to switch to.")
 
-    self.core.loadCurrentEngine(name=self.getOption('engine')) \
+    restart = not self.getOption('keepcontainers')
+    self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
       .bind(Engine.loadConfigFile) \
-      .bind(Engine.envSwitch, subenvName=subenv, restart=self.getOption('restart')) \
+      .bind(Engine.envSwitch, subenvName=subenv, restart=restart) \
       .catch(self.exitError)
