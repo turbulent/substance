@@ -109,9 +109,10 @@ class Engine(object):
       '.ssh',
       '.viminfo'
     ]
-    aliases = [ 'make', 'composer', 'npm', 'watch' ]
+    aliases = [ 'make', 'composer', 'npm', 'heap', 'watch' ]
     defaults['aliases'] = { alias: { 'container': 'web', 'user': 'heap', 'cwd': '/vol/website', 'args': [alias] } for alias in aliases }
     defaults['aliases']['watch']['container'] = 'devs'
+    defaults['aliases']['heap']['args'][0] = 'vendor/bin/heap'
 
     return defaults
   
