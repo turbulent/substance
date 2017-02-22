@@ -1,22 +1,12 @@
 # Substance usage & insallation (OSX)
 
-For Windows installation, see [docs/INSTALL.windows.md](docs/INSTALL.windows.md)
-
 ## Installation
 
-- Download [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) 5.1.x+ and install the [VM Extensions](http://download.virtualbox.org/virtualbox/5.1.6/Oracle_VM_VirtualBox_Extension_Pack-5.1.6-110634.vbox-extpack).
-- Make sure Xcode CLI is installed
-  - ``xcode-select --install``
-- Ensure homebrew is installed
-  - ``/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"``
-- Install homebrew python
-  - ``brew install python``
-- Ensure pip is up to date
-  -  ``pip install -U pip``
-- Install subwatch alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0``
-- Install substance alpha
-  - ``pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.8a4``  
+For Windows installation, see [docs/INSTALL.windows.md](docs/INSTALL.windows.md)
+
+For macOS installation, see [docs/INSTALL.macos.md](docs/INSTALL.macos.md)
+
+For Linux installation, see [docs/INSTALL.linux.md](docs/INSTALL.linux.md)
 
 ## Usage
 
@@ -41,14 +31,41 @@ We need to tell substance to use our new engine as the default engine for substa
 substance use work
 ```
 
-You can start the synch process :
+### Syncing local files to and from the engine
 
-```substance sync```
+You can start the synch process like so:
 
-Keep this listener running while you develop. When this process runs, files between your local machine and the engine's devroot are kept in sync by subwatch.
+```
+substance sync
+```
 
+This will make sure all local files located under `~/substance/[engine name]` are kept in sync with the engine's local file system.
 
-### Update substance to the latest
+Always keep this process running while you develop! 
+
+### Work on a project
+
+To start working on a project, `git clone` the project in `~/substance/[engine name]/[project name]`. Make sure your files are properly sync'ed, then instruct substance to switch to that project and initialize the development environment by issuing the following command:
+
+```
+substance switch myprojectname
+```
+
+This will download the proper docker images and start the docker containers required for the project to work.
+
+At this point, your environment is up-and-running, but the project may require further initialization steps. Check with your project lead for project-specific initialization steps.
+
+### Consulting logs
+
+To view logs of the various services of your environment:
+
+```
+substance logs [containername] [servicename]
+```
+
+This will automatically tail the logs matching the filters you provided. For example, `substance logs web php` will tail the PHP logs produced by the PHP-FPM process running in the `web` container.
+
+## Updating substance to a new version
 
 In the event that an update to the alpha is distributed, these commands will allow you to update the substance tools on your machine without losing data or engines.
 
@@ -59,8 +76,9 @@ pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@VERSION
 pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@VERSION
 ```
 
+## Setting up your project for substance
 
-### Setting up your project for substance
+**Warning: Some of this information may be a little out-of-date. We will soon provide an automated tool to do this work. In the mean time, please talk to the substance developers directly if you want to setup your project for substance.**
 
 At the top level of your project source code create a folder named ``.substance``. In this folder. A system to initialize projects is in the works, but for now create the following base structure or copy it from a recent project:
 
@@ -247,27 +265,3 @@ containers:
       - "/var/lib/docker/containers:/vol/docker-logs"
  ```
 
-### Running your project
-
-Make sure your files are synched (`substance engine sync work`) and then you can switch to your project to star working.
-
-```
-substance switch myproject-foldername --restart
-```
-
-The above command will make substance read your .substance directory for your project, template all files and folder to create your project subenv. Once ready, the --restart flag will make substance create and start all containers. Since we set the `work` engine as our default engine with the `use` command, we did not need to specify an engine here.
-
-Our project is now up and running!
-
-You should be able to visit it using ```https://myproject.dev```
-
-### Post-setup steps
-
-Substance has no hooks currently to bootstrap your project datastores (MySQL, redis) or setup your fixtures so you'll need to initialize those yourself.
-
-The following commands are useful to use while configuring your application.
-
-```
-substance ssh <box name>     SSH into the specific docker container if you want to diagnose issues connecting your "web" box to the various services it uses.
-substance logs               Get a live feed of all containers logs simultaneously
-```
