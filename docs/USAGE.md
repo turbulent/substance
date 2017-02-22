@@ -2,11 +2,11 @@
 
 ## Installation
 
-For Windows installation, see [docs/INSTALL.windows.md](docs/INSTALL.windows.md)
+For Windows installation, see [INSTALL.windows.md](INSTALL.windows.md)
 
-For macOS installation, see [docs/INSTALL.macos.md](docs/INSTALL.macos.md)
+For macOS installation, see [INSTALL.macos.md](INSTALL.macos.md)
 
-For Linux installation, see [docs/INSTALL.linux.md](docs/INSTALL.linux.md)
+For Linux installation, see [INSTALL.linux.md](INSTALL.linux.md)
 
 ## Usage
 

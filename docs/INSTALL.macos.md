@@ -6,37 +6,25 @@
 
 2. Make sure Xcode CLI is installed
 
-```
-xcode-select --install
-```
+        $ xcode-select --install
 
 3. Ensure homebrew is installed
 
-```
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"``
-```
+        $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"``
 
 4. Install homebrew python (the python interpreter which ships with macOS is unsuitable for substance)
 
-```
-brew install python
-```
+        $ brew install python
 
 5. Ensure pip is up to date
 
-```
-pip install -U pip
-```
+        $ pip install -U pip
 
 6. Install subwatch alpha
 
-```
-pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
-```
+        $ pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
 
 7. Install substance alpha
 
-```
-pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.9a1
-```
+        $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.9a1
 

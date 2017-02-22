@@ -159,4 +159,4 @@ script:
 
 # Setup
 
-[USAGE](USAGE.md)
+[docs/USAGE.md](USAGE.md)
