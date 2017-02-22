@@ -5,3 +5,4 @@ substance.egg-info
 box/packer_cache
 box/build
 .DS_Store
+*.swp
