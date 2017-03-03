@@ -18,7 +18,8 @@ from substance.utils import (
   getSupportFile,
   streamDownload,
   makeXHRRequest,
-  sha1sum
+  sha1sum,
+  expandLocalPath
 )
 from substance.config import (Config)
 from substance.driver.virtualbox import VirtualBoxDriver
@@ -206,7 +207,8 @@ class Core(object):
   #-- Link handling
 
   def getLink(self, type="ssh"):
-    link = Link(keyFile=self.getInsecureKeyFile())
+    file = self.getSSHPrivateKey()
+    link = Link(keyFile=file.getOrElse(self.getInsecureKeyFile()), useAgent=self.config.get('ssh', {}).get('agent', False))
     return link
 
   #-- Database
@@ -240,6 +242,24 @@ class Core(object):
 
   #-- Keys handling
 
+  def getSSHPrivateKey(self):
+    key = self.config.get('ssh', {}).get('privateKey')
+    if key:
+      keyfile = expandLocalPath(key)
+      if not os.path.isfile(keyfile):
+        return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
+      return OK(keyfile)
+    return OK(self.getInsecureKeyFile())
+
+  def getSSHPublicKey(self):
+    key = self.config.get('ssh', {}).get('publicKey')
+    if key:
+      keyfile = expandLocalPath(key)
+      if not os.path.isfile(keyfile):
+        return Fail(FileDoesNotExist("Inexistent public key: %s" %key))
+      return OK(keyfile)
+    return OK(self.getInsecurePubKeyFile())
+    
   def getInsecureKeyFile(self):
     return getSupportFile('support/substance_insecure')
 

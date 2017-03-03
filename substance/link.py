@@ -26,8 +26,9 @@ except ImportError:
 
 class Link(object):
   
-  def __init__(self, keyFile):
+  def __init__(self, keyFile, useAgent=False):
     self.keyFile = keyFile
+    self.useAgent = useAgent
     self.key = None
     self.username = "substance"
     self.port = 22
@@ -73,8 +74,15 @@ class Link(object):
   def loadKey(self):
     try:
       if not self.key:
+        if self.useAgent:
+          keys = paramiko.agent.Agent().get_keys()
+          if keys:
+            self.key = keys[0]
+            logger.debug("Connecting using key #0 from SSH Agent")
+
+      if not self.key:
         self.key = paramiko.rsakey.RSAKey.from_private_key_file(self.keyFile, password=None)
-      logger.debug("Connecting using key: %s" % self.keyFile)
+        logger.debug("Connecting using key: %s" % self.keyFile)
     except Exception as err:
       return Fail(err)
     return OK(self.key) 

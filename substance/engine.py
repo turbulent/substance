@@ -8,7 +8,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
-from substance.utils import mergeDict, parseDotEnv, expandLocalPath
+from substance.utils import mergeDict, parseDotEnv
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
@@ -220,7 +220,7 @@ class Engine(object):
 
   def getSyncher(self):
     syncMode = self.config.get('devroot').get('mode')
-    keyfile = self.getSSHPrivateKey()
+    keyfile = self.core.getSSHPrivateKey()
     if keyfile.isFail():
       return keyfile
     if syncMode == 'rsync':
@@ -515,8 +515,8 @@ class Engine(object):
   def uploadKeys(self):
     ''' pass '''
     ops = []
-    key = self.getSSHPrivateKey()
-    pkey = self.getSSHPublicKey()
+    key = self.core.getSSHPrivateKey()
+    pkey = self.core.getSSHPublicKey()
 
     if key.isOK():
       key = key.getOK()
@@ -547,24 +547,6 @@ class Engine(object):
       .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) \
       .then(self.envRegister)
 
-  def getSSHPrivateKey(self):
-    key = self.core.config.get('ssh', {}).get('privateKey')
-    if key:
-      keyfile = expandLocalPath(key)
-      if not os.path.isfile(keyfile):
-        return Fail(FileDoesNotExist("Inexistent private key: %s" %key))
-      return OK(keyfile)
-    return OK(self.core.getInsecureKeyFile())
-
-  def getSSHPublicKey(self):
-    key = self.core.config.get('ssh', {}).get('publicKey')
-    if key:
-      keyfile = expandLocalPath(key)
-      if not os.path.isfile(keyfile):
-        return Fail(FileDoesNotExist("Inexistent public key: %s" %key))
-      return OK(keyfile)
-    return OK(self.core.getInsecurePubKeyFile())
-    
 
   def envRegister(self):
     return self.readLink() \
