@@ -252,11 +252,15 @@ class Link(object):
 
     import select
 
+    logger.debug("Opening interactive POSIX shell")
     sys.stdout.write('\r\n*** Begin interactive session.\r\n')
     oldtty = termios.tcgetattr(sys.stdin)
 
-    channel = self.client.invoke_shell()
+    channel = self.client.get_transport().open_session()
     forward = paramiko.agent.AgentRequestHandler(channel)
+
+    channel.get_pty()
+    channel.invoke_shell()
 
     if cmd:
       channel.send(cmd)
