@@ -89,6 +89,7 @@ class Core(object):
     defaults['ssh'] = OrderedDict()
     defaults['ssh']['privateKey'] = None
     defaults['ssh']['publicKey'] = None
+    defaults['ssh']['keyFormat'] = 'RSA'
     defaults['current'] = OrderedDict()
     defaults['engine'] = None
     defaults['subenv'] = None
@@ -208,7 +209,7 @@ class Core(object):
 
   def getLink(self, type="ssh"):
     file = self.getSSHPrivateKey()
-    link = Link(keyFile=file.getOrElse(self.getInsecureKeyFile()), useAgent=self.config.get('ssh', {}).get('agent', False))
+    link = Link(keyFile=file.getOrElse(self.getInsecureKeyFile()), useAgent=self.config.get('ssh', {}).get('agent', False), keyFormat=self.config.get('ssh', {}).get('keyFormat', 'RSA'))
     return link
 
   #-- Database
