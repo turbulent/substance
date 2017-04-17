@@ -59,7 +59,7 @@ class VirtualBoxDriver(Driver):
       'gateway': netrange[1].format(),
       'netmask': netrange.netmask.format(),
       'lowerIP': netrange[2].format(),
-      'upperIP': netrange[-1].format()
+      'upperIP': netrange[-2].format()
     }
 
     return OK(netconfig)
