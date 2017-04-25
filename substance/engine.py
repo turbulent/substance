@@ -649,7 +649,7 @@ class Engine(object):
       cmd = aliases[alias]
       args = cmd['args'] + args
       return self.envExec(container=cmd['container'], cmd=args, cwd=cmd['cwd'], user=cmd['user'])
-    return Fail(None)
+    return Fail("Invalid command '%s' specified for '%s'.\n\nUse 'substance help' for available commands." % (alias, 'substance'))
 
   def envStop(self, time=10, containers=[]):
     cmds = []

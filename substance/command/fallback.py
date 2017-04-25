@@ -1,13 +1,11 @@
-from substance.monads import *
-from substance.logs import *
 from substance import (Engine, Command)
-from substance.exceptions import (SubstanceError)
+from substance.exceptions import (LinkCommandError)
 
 class Fallback(Command):
 
   def getUsage(self):
     return ""
-  
+
   def getHelpTitle(self):
     return ""
 
@@ -18,7 +16,7 @@ class Fallback(Command):
   def execute(self, args=None):
     self.input = args
     self.args = args
-   
+
     self.main()
 
   def main(self):
@@ -26,6 +24,9 @@ class Fallback(Command):
       .bind(Engine.loadConfigFile) \
       .bind(Engine.envExecAlias, alias=self.name, args=self.args) \
       .catch(self.onEngineException)
-  
-  def onEngineException(self, e):
-    return self.exitError("Invalid command '%s' specified for '%s'.\n\nUse 'substance help' for available commands." % (self.name, 'substance'))
+
+  def onEngineException(self, err):
+    if isinstance(err, LinkCommandError):
+      # Hide message, forward status code instead
+      return self.exitError(None, code=err.code)
+    return self.exitError(err)
