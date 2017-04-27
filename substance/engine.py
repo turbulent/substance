@@ -530,6 +530,22 @@ class Engine(object):
       ops.append( self.readLink().bind(Link.runCommand, cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys", stream=True, interactive=True) )
 
     return Try.sequence(ops)
+  
+  def exposePort(self, local_port, public_port):
+    keyfile = self.core.getSSHPrivateKey()
+    if keyfile.isFail():
+      return keyfile
+    keyfile = Shell.normalizePath(keyfile.getOK())
+    forward_descr = "0.0.0.0:%s:127.0.0.1:%s" % (public_port, local_port)
+    engineIP = self.getSSHIP()
+    enginePort = str(self.getSSHPort())
+    cmdPath = "ssh"
+    cmdArgs = ["ssh", "-N", "-L", forward_descr, engineIP, "-l", "substance", "-p", enginePort, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-i", keyfile]
+    if public_port < 1024:
+      cmdPath = "sudo"
+      cmdArgs = ["sudo"] + cmdArgs
+    self.logAdapter.info("Exposing port %s as %s; kill the process (CTRL-C) to un-expose.", local_port, public_port)
+    Shell.execvp(cmdPath, cmdArgs, {})
  
   def envSwitch(self, subenvName, restart=False):
     self.logAdapter.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))

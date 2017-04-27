@@ -110,6 +110,14 @@ class Shell(object):
       return Fail(UserInterruptError())
 
   @staticmethod
+  def execvp(cmdPath, cmdArgs, cmdEnv=None):
+    logger.debug("EXECVPE: `%s %s` with environment %s", cmdPath, subprocess.list2cmdline(cmdArgs), cmdEnv)
+    if cmdEnv:
+      os.execvpe(cmdPath, cmdArgs, cmdEnv)
+    else:
+      os.execvp(cmdPath, cmdArgs)
+
+  @staticmethod
   def chmod(path, mode):
     try:
       os.chmod(path, mode)
