@@ -111,7 +111,7 @@ class Shell(object):
 
   @staticmethod
   def execvp(cmdPath, cmdArgs, cmdEnv=None):
-    logger.debug("EXECVPE: `%s %s` with environment %s", cmdPath, subprocess.list2cmdline(cmdArgs), cmdEnv)
+    logger.debug("EXECVPE: `%s` with environment %s", subprocess.list2cmdline(cmdArgs), cmdEnv)
     if cmdEnv:
       os.execvpe(cmdPath, cmdArgs, cmdEnv)
     else:
