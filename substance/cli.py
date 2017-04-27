@@ -32,6 +32,7 @@ class SubstanceCLI(Program):
     self.addCommand('engine', 'substance.command.engine')
     self.addCommand('box', 'substance.command.box')
     self.addCommand('aliases', 'substance.command.aliases')
+    self.addCommand('hatch', 'substance.command.hatch')
     return self
 
   def getShellOptions(self, optparser):
