@@ -1,5 +1,7 @@
 import os
+import socket
 import logging
+from contextlib import closing
 from collections import (OrderedDict, namedtuple)
 import substance.core
 from substance.monads import *
@@ -531,7 +533,7 @@ class Engine(object):
 
     return Try.sequence(ops)
   
-  def exposePort(self, local_port, public_port):
+  def exposePort(self, local_port, public_port, scheme):
     keyfile = self.core.getSSHPrivateKey()
     if keyfile.isFail():
       return keyfile
@@ -545,6 +547,13 @@ class Engine(object):
       cmdPath = "sudo"
       cmdArgs = ["sudo"] + cmdArgs
     self.logAdapter.info("Exposing port %s as %s; kill the process (CTRL-C) to un-expose.", local_port, public_port)
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_DGRAM)) as s:
+      s.connect(("8.8.8.8", 80))
+      ip = s.getsockname()[0]
+      if scheme:
+        self.logAdapter.info("%s://%s:%s is now available.", scheme, ip, public_port)
+      else:
+        self.logAdapter.info("Others can now connect to port %s via IP %s", public_port, ip)
     Shell.execvp(cmdPath, cmdArgs, {})
  
   def envSwitch(self, subenvName, restart=False):
