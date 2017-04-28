@@ -553,7 +553,7 @@ class Engine(object):
       if scheme:
         self.logAdapter.info("%s://%s:%s is now available.", scheme, ip, public_port)
       else:
-        self.logAdapter.info("Others can now connect to port %s via IP %s", public_port, ip)
+        self.logAdapter.info("Others can now connect to port %s via IP %s.", public_port, ip)
     Shell.execvp(cmdPath, cmdArgs, {})
  
   def envSwitch(self, subenvName, restart=False):
