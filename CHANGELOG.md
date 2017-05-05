@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10] - 2017-05-05
+### Added
+- `hatch` command for generating code from an external git-hosted template.
+- `expose` command for easily setuping SSH port-forwarding.
+- Preliminary compatibility with Windows 10 WSL
+- Ability to use SSH Agent keys when connecting to the engine via SSH.
+
+### Fixed
+- Wrong error message printed if alias command returns non-zero exit code.
+- Fixed incompatibility with recent VirtualBox version.
+
 ## [0.9a1] - 2017-02-01
 ### Added
 - Official Linux 64-bit support
