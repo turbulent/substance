@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `hatch` command for generating code from an external git-hosted template.
 - `expose` command for easily setuping SSH port-forwarding.
-- Preliminary compatibility with Windows 10 WSL
 - Ability to use SSH Agent keys when connecting to the engine via SSH.
 
 ### Fixed
