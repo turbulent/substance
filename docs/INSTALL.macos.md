@@ -26,5 +26,5 @@
 
 7. Install substance alpha
 
-        $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.9a1
+        $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.10
 
