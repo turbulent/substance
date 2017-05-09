@@ -31,10 +31,15 @@ class Hatch(Command):
     if not tpl.startswith('ssh://') and not tpl.startswith('https://') and not tpl.startswith('file://'):
       tpl = 'ssh://git@gitlab.turbulent.ca:6666/templates/%s.git' % tpl
 
+    cwd = os.getcwd()
+    if os.listdir(cwd):
+      print "\n!!! Current directory is not empty! Some files may be overwritten !!!\n"
+
     print "You are about to hatch a new project in the current working directory."
     print "  Template used: %s" % tpl
     print "  Ref (version): %s" % ref
-    print "  Path         : %s" % os.getcwd()
+    print "  Path         : %s" % cwd
+    print ""
 
     if not self.confirm("Are you SURE you wish to proceed?"):
       return self.exitOK("Come back when you've made up your mind!")
@@ -46,6 +51,10 @@ class Hatch(Command):
     print "Extracting template archive..."
     if self.proc(['tar', '-xf', 'tpl.tar.gz']):
       return self.exitError('Could not extract template archive!')
+
+    print "Getting list of files in template..."
+    out = subprocess.check_output(['tar', '-tf', 'tpl.tar.gz'], universal_newlines=True)
+    tplFiles = [l for l in out.split('\n') if l and os.path.isfile(l)]
 
     print "Cleaning up template archive..."
     if self.proc(['rm', 'tpl.tar.gz']):
@@ -87,8 +96,17 @@ class Hatch(Command):
 
       print "Replacing tokens in files..."
       sed = "; ".join(["s/%s/%s/g" % (k, variables[k]) for k in variables.keys()])
-      if self.proc(['find', '.', '-type', 'f', '-exec', 'sed', '-i', sed, '{}', '+']):
-        return self.exitError("Could not replace variables in files!")
+      for tplFile in tplFiles:
+        if self.proc(['sed', '-i.orig', sed, tplFile]):
+          return self.exitError("Could not replace variables in files!")
+        bakFile = tplFile + ".orig"
+        if os.path.isfile(bakFile):
+          if self.proc(['rm', bakFile]):
+            logger.warn("Could not unlink backup file %s; you may have to remove it manually.", bakFile)
+
+      # Remove hatchfile
+      if self.proc(['rm', hatchfile]):
+        return self.exitError('Could not unlink %s!' % hatchfile)
 
     print "Project hatched!"
     return self.exitOK()
