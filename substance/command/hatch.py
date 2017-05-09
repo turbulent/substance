@@ -2,6 +2,7 @@ import subprocess
 import os
 import random
 import string
+import readline # This is important, we need to import this to make raw_input nicer
 from substance import (Command)
 from substance.logs import (logging)
 from substance.config import (Config)
