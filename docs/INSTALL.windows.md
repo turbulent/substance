@@ -16,11 +16,11 @@ Installation on 32-bit Windows is NOT supported.
       `C:\cygwin64\setup`
    3. Double-click on `setup-x86-64.exe`, and perform the install. Keep the
       default location and make sure the following packages are selected:
-      1. `git` (under "Devel")
-      2. `python` (under "Python")
-      3. `mintty` (under "Shells")
-      4. `gcc-core` (under "Devel")
-      5. `python-devel` (under "Python")
+      1. `mintty` (under "Shells")
+      2. `git` (under "Devel")
+      3. `gcc-core` (under "Devel")
+      4. `python2` (under "Python")
+      5. `python2-devel` (under "Python")
       6. `libffi-devel` (under "Libs")
       7. `openssl-devel` (under "Net")
    4. Optionally, you can create a shortcut to `setup-x86-64.exe` and add it to
