@@ -543,9 +543,9 @@ class Engine(object):
     enginePort = str(self.getSSHPort())
     cmdPath = "ssh"
     cmdArgs = ["ssh", "-N", "-L", forward_descr, engineIP, "-l", "substance", "-p", enginePort, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-i", keyfile]
-    if public_port < 1024:
-      cmdPath = "sudo"
-      cmdArgs = ["sudo"] + cmdArgs
+    sudo = False
+    if public_port < 1024 and not Shell.isCygwin():
+      sudo = True
     self.logAdapter.info("Exposing port %s as %s; kill the process (CTRL-C) to un-expose.", local_port, public_port)
     with closing(socket.socket(socket.AF_INET, socket.SOCK_DGRAM)) as s:
       s.connect(("8.8.8.8", 80))
@@ -554,7 +554,7 @@ class Engine(object):
         self.logAdapter.info("%s://%s:%s is now available.", scheme, ip, public_port)
       else:
         self.logAdapter.info("Others can now connect to port %s via IP %s.", public_port, ip)
-    Shell.execvp(cmdPath, cmdArgs, {})
+    Shell.execvp(cmdPath, cmdArgs, {}, sudo=sudo)
  
   def envSwitch(self, subenvName, restart=False):
     self.logAdapter.info("Switch engine '%s' to subenv '%s'" % (self.name, subenvName))

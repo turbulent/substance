@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 class Shell(object):
 
   @staticmethod
+  def isCygwin():
+    return platform.system().startswith("CYGWIN")
+
+  @staticmethod
   def printConfirm(msg, assumeYes=False):
     if assumeYes:
       return OK(True)
@@ -38,7 +42,7 @@ class Shell(object):
     try:
       mustSleep = False
       if sudo and not shell:
-        if platform.system().startswith("CYGWIN"):
+        if Shell.isCygwin():
           mustSleep = True
           cmd = ["cygstart", "--action=runas"] + cmd
         else:
@@ -110,8 +114,12 @@ class Shell(object):
       return Fail(UserInterruptError())
 
   @staticmethod
-  def execvp(cmdPath, cmdArgs, cmdEnv=None):
+  def execvp(cmdPath, cmdArgs, cmdEnv=None, sudo=False):
     logger.debug("EXECVPE: `%s` with environment %s", subprocess.list2cmdline(cmdArgs), cmdEnv)
+    if sudo:
+      pass
+      #cmdPath = "sudo"
+      #cmdArgs = ["sudo"] + cmdArgs
     if cmdEnv:
       os.execvpe(cmdPath, cmdArgs, cmdEnv)
     else:
@@ -145,7 +153,7 @@ class Shell(object):
   
   @staticmethod
   def normalizePath(path):
-    if platform.system().startswith("CYGWIN"):
+    if Shell.isCygwin():
       path = check_output(["cygpath", "-w", path]).strip()
     return path
 
