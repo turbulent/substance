@@ -117,9 +117,8 @@ class Shell(object):
   def execvp(cmdPath, cmdArgs, cmdEnv=None, sudo=False):
     logger.debug("EXECVPE: `%s` with environment %s", subprocess.list2cmdline(cmdArgs), cmdEnv)
     if sudo:
-      pass
-      #cmdPath = "sudo"
-      #cmdArgs = ["sudo"] + cmdArgs
+      cmdPath = "sudo"
+      cmdArgs = ["sudo"] + cmdArgs
     if cmdEnv:
       os.execvpe(cmdPath, cmdArgs, cmdEnv)
     else:
