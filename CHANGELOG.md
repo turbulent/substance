@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.1] - 2017-05-09
+### Fixed
+- `hatch` wizard now uses the `readline` module whenever available.
+- `hatch` replacements now properly work under Mac OS X.
+- `hatch` now warns when running in non-empty directory.
+- `hatch` now only runs replacements on files contained in the template.
+- `expose` for ports <= 1024 now properly work under Windows Cygwin.
+
 ## [0.10] - 2017-05-05
 ### Added
 - `hatch` command for generating code from an external git-hosted template.
