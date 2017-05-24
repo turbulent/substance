@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.2] - Unreleased
+### Fixed
+- `sync` crash under macOS with Python 2.7.13
+
 ## [0.10.1] - 2017-05-09
 ### Fixed
 - `hatch` wizard now uses the `readline` module whenever available.
