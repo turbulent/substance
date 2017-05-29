@@ -22,13 +22,13 @@ Make sure you are running a 64-bit Linux distribution. 32-bit is NOT supported. 
    or `python2-devel`, depending on your distribution.
 4. Self-update pip:
 
-        $ pip install -U pip
+        $ sudo pip install -U pip
 
-5. Install `subwatch` alpha via `pip` by running the command
+5. Install `subwatch` via `pip` by running the command:
 
-        $ pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
+        $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
 
-6. Install `substance` alpha via `pip` by running the command
+6. Install `substance` (replace `[VERSION]` with the latest stable version or `master`):
 
-        $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.10
+        $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@[VERSION]
 

@@ -36,11 +36,11 @@ Installation on 32-bit Windows is NOT supported.
 
 5. Run `which python && which pip` to make SURE that you are running both
    executables from `/usr/bin`, NOT something like `C:\Python`!
-6. Install `subwatch` alpha via `pip` by running the command
+6. Install `subwatch`:
 
         $ pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
 
-7. Install `substance` alpha via `pip` by running the command
+7. Install `substance` (replace `[VERSION]` with the latest stable version or `master`):
 
-        $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.10
+        $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@[VERSION]
 

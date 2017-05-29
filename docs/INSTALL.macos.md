@@ -16,15 +16,28 @@
 
         $ brew install python
 
-5. Ensure pip is up to date
+5. Make sure that running the command `python` executes the one under `/usr/local/bin`:
 
-        $ pip install -U pip
+        $ which python
+        /usr/local/bin/python
+        $ which pip
+        /usr/local/bin/pip
 
-6. Install subwatch alpha
+   If this command outputs some other path like `/usr/bin/python`, you're in trouble. You should add the following line to your `.profile` or `.bash_profile` file:
 
-        $ pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
+        export PATH=/usr/local/bin:$PATH
 
-7. Install substance alpha
+   Start a new terminal, and that should fix the issue (test it with the `which` commands above).
 
-        $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@0.10.1
+6. Ensure pip is up to date
+
+        $ sudo pip install -U pip
+
+7. Install `subwatch`:
+
+        $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
+
+8. Install `substance` (replace `[VERSION]` with the latest stable version or `master`):
+
+        $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@[VERSION]
 
