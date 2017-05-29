@@ -22,11 +22,9 @@
         /usr/local/bin/python
         $ which pip
         /usr/local/bin/pip
-
    If this command outputs some other path like `/usr/bin/python`, you're in trouble. You should add the following line to your `.profile` or `.bash_profile` file:
 
         export PATH=/usr/local/bin:$PATH
-
    Start a new terminal, and that should fix the issue (test it with the `which` commands above).
 
 6. Ensure pip is up to date
