@@ -2,7 +2,7 @@
 
 ## Instructions
 
-1. Download [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) 5.1.x+ and install the [VM Extensions](http://download.virtualbox.org/virtualbox/5.1.6/Oracle_VM_VirtualBox_Extension_Pack-5.1.6-110634.vbox-extpack).
+1. Download [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads) 5.1.x+ and install the VM Extensions.
 
 2. Make sure Xcode CLI is installed
 
