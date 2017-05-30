@@ -1,0 +1,19 @@
+stages:
+  - build
+
+variables:
+  VERSION: 0.10.x
+
+############### STAGE: build ###############
+
+build-documentation:
+  stage: build
+  script:
+    - cd docs
+#    - VERSION=$(echo ${CI_BUILD_REF_NAME}|awk 'BEGIN { FS="." } ; { print $1 "." $2 }')
+    - make html VERSION=$VERSION RELEASE=$CI_BUILD_REF_NAME
+    - ssh doc@developers.turbulent.ca mkdir -p substance/$CI_BUILD_REF_NAME
+    - rsync -r build/html/* doc@developers.turbulent.ca:substance/$CI_BUILD_REF_NAME/
+#  only:
+#    - /^\d+\.\d+\.(x|\d+)(\.\d+)?$/
+
