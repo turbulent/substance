@@ -23,5 +23,5 @@ to run your project.
 ## Documentation
 
 For installation and usage, consult the [Substance
-Documentation](docs/source/index.rst).
+Documentation](http://doc.developers.turbulent.ca/substance/master/).
 
