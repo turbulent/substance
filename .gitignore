@@ -1,8 +1,19 @@
+# Misc
 build
 dist
-substance.egg-info
-*.pyc
 box/packer_cache
 box/build
+
+# Python/pip
+*.pyc
+substance.egg-info
+
+# OS
 .DS_Store
+*~
+
+# vi
 *.swp
+
+# Docs
+/docs/build
