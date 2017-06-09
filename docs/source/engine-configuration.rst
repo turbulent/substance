@@ -34,6 +34,14 @@ This configures how the local directory for the engine will behave.
 * ``syncArgs`` lists additional arguments to pass to ``unison`` when ``mode`` is set
   to ``unison``.
 
+.. note::
+
+   The ``subwatch`` mode is the legacy way to sync files. It does not work as
+   expected under all conditions. You should really use ``unison`` instead. If
+   ``unison`` really isn't working out for you, then try ``subwatch``, but
+   expect bugs. You will also have to install the ``subwatch`` module
+   separately using ``pip``.
+
 ``docker``
 ----------
 

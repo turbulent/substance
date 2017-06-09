@@ -14,7 +14,6 @@ from substance.utils import mergeDict, parseDotEnv
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
-from substance.syncher import SubwatchSyncher, UnisonSyncher
 from substance.exceptions import (
   FileSystemError, 
   ConfigValidationError,
@@ -226,8 +225,10 @@ class Engine(object):
     if keyfile.isFail():
       return keyfile
     if syncMode == 'rsync':
+      from substance.syncher.rsync import SubwatchSyncher
       return SubwatchSyncher(engine=self, keyfile=keyfile.getOK())
     elif syncMode == 'unison':
+      from substance.syncher.unison import UnisonSyncher
       return UnisonSyncher(engine=self, keyfile=keyfile.getOK())
     else:
       raise NotImplementedError()

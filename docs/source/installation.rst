@@ -46,10 +46,6 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
     $ sudo pip install -U pip
 
-#. Install ``subwatch``::
-
-    $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
-
 #. Install ``substance`` (replace ``[VERSION]`` with the latest stable version
    or ``master``)::
 
@@ -100,10 +96,6 @@ Installation on 32-bit Windows is NOT supported.
      $ python -m ensurepip
      $ pip install -U pip
 
-#. Install ``subwatch``::
-
-     $ pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
-
 #. Install ``substance`` (replace ``[VERSION]`` with the latest stable version
    or ``master``)::
 
@@ -132,9 +124,6 @@ Substance has been tested on Mint, Ubuntu, and Arch Linux.
    Arch), you need to install a separate ``python2`` package and use the
    commands ``python2`` and ``pip2`` for the rest of this guide. Also install
    ``python-devel`` or ``python2-devel``, depending on your distribution.
-#. Install ``subwatch`` via ``pip`` by running the command::
-
-     $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/subwatch.git@1.0
 
 #. Install ``substance`` (replace ``[VERSION]`` with the latest stable version
    or ``master``)::
