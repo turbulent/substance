@@ -1,3 +1,4 @@
+from builtins import object
 import os
 import subprocess
 from substance.monads import *
@@ -51,7 +52,7 @@ class SubenvAPI(object):
 
     def varfilter(o):
       if vars is not None:
-        return {k:v for k,v in o.iteritems() if k in vars} 
+        return {k:v for k,v in o.items() if k in vars} 
       else:
         return o
 

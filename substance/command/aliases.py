@@ -1,3 +1,4 @@
+from __future__ import print_function
 from substance.monads import *
 from substance.logs import *
 from substance import (Engine, Command)
@@ -27,8 +28,8 @@ class Aliases(Command):
     if aliases:
       prefix = self.getOption('prefix')
       suffix = self.getOption('suffix')
-      exports = [ "alias %s%s%s=\"substance -e %s %s\"" % (prefix,alias,suffix,engine.name,alias) for alias in aliases.keys() ]
-      print "\n".join(exports)
+      exports = [ "alias %s%s%s=\"substance -e %s %s\"" % (prefix,alias,suffix,engine.name,alias) for alias in list(aliases.keys()) ]
+      print("\n".join(exports))
       return OK(True)
     else:
       return Fail("Engine %s has no aliases." % engine.name)

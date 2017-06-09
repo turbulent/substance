@@ -1,3 +1,4 @@
+from __future__ import print_function
 from substance.monads import *
 from substance.logs import *
 from substance import (Engine, Command)

@@ -1,3 +1,5 @@
+from builtins import input
+from builtins import object
 import os
 import sys
 import platform
@@ -28,7 +30,7 @@ class Shell(object):
 
     logger.info(msg)
     try:
-      res = raw_input('Proceed? [N/y] ')
+      res = input('Proceed? [N/y] ')
       if res.lower().startswith('y'):
         logger.info('... proceeding')
         return OK(True)
@@ -133,7 +135,7 @@ class Shell(object):
       return Fail(ShellCommandError(code=1, message="Failed to chmod %s: %s" % (path,err)))
     
   @staticmethod
-  def makeDirectory(path, mode=0750):
+  def makeDirectory(path, mode=0o750):
     if not os.path.exists(path):
       try:
         os.makedirs(path, mode)

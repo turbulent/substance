@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 import sys
 import yaml
 import requests
@@ -21,7 +24,7 @@ logger = logging.getLogger(__name__)
 _yaml_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
 
 def _dict_representer(dumper, data):
-    return dumper.represent_dict(data.iteritems())
+    return dumper.represent_dict(iter(data.items()))
 
 def _dict_constructor(loader, node):
     return collections.OrderedDict(loader.construct_pairs(node))
@@ -48,7 +51,7 @@ def readYAML(filename):
     stream = open(filename, "r")
     contents = yaml.load(stream)
     return contents
-  except yaml.YAMLError, exc:
+  except yaml.YAMLError as exc:
     msg = "Syntax error in file %s"
     if hasattr(exc, 'problem_mark'):
       mark = exc.problem_mark
@@ -89,14 +92,14 @@ def streamDownload(url, destination):
       else:
         progress = 0
         startTime = time()
-        chunkSize = contentLength/100
+        chunkSize = old_div(contentLength,100)
         for chunk in r.iter_content(chunk_size=chunkSize):
           if chunk:
             progress += len(chunk)
             fd.write(chunk)
             done = int(50 * progress / contentLength)
             elapsed = (time() - startTime)
-            speed = humanReadableBytes(progress / elapsed)
+            speed = humanReadableBytes(old_div(progress, elapsed))
             left = humanReadableBytes(contentLength - progress)
             sys.stdout.write("\r%s [%s%s] %s/s %s left" % (basename,  '=' * done, ' ' * (50-done), speed, left) )
             sys.stdout.flush()
@@ -191,7 +194,7 @@ def parseDotEnv(dotenvdata, env={}):
 def makeSymlink(source, link, force=False):
   try:
     os.symlink(source, link)
-  except OSError, e:
+  except OSError as e:
     if e.errno == errno.EEXIST and force:
       os.remove(link)
       os.symlink(source, link)
