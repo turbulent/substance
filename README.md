@@ -1,4 +1,3 @@
-
 ![alt text](docs/source/_static/substance.png "substance")
 
 Local Docker-powered development environments
