@@ -11,7 +11,8 @@ On macOS
 Substance is not compatible with the Python distribution that ships with macOS.
 You must use `Homebrew`_ to install the latest Python 2.x release.
 
-#. Download `Oracle VirtualBox`_ and install the VM Extensions.
+#. Download and install `Oracle VirtualBox`_. Make sure ``VBoxManage`` is in
+   your ``PATH`` environment variable.
 #. Make sure Xcode CLI is installed::
 
     $ xcode-select --install
@@ -60,10 +61,9 @@ to run Substance on Windows.
 Disclaimer: Substance has only been tested on Windows 10 Pro 64-bit edition.
 Installation on 32-bit Windows is NOT supported.
 
-#. Install `Oracle VirtualBox`_. Also install extension pack (separate
-   download). Make sure VBoxManage is in your ``PATH`` environment variable
-   (System -> Advanced System Settings -> Environment Variables -> Path -> add
-   path to your VirtualBox installation directory).
+#. Install `Oracle VirtualBox`_. Make sure VBoxManage is in your ``PATH``
+   environment variable (System -> Advanced System Settings -> Environment
+   Variables -> Path -> add path to your VirtualBox installation directory).
 #. Install Cygwin 64-bit. Here are the steps:
 
    #. Create a directory ``C:\cygwin64`` on your main drive. Create a subdirectory
@@ -107,8 +107,8 @@ On Linux
 Make sure you are running a 64-bit Linux distribution. 32-bit is NOT supported.
 Substance has been tested on Mint, Ubuntu, and Arch Linux.
 
-#. Install `Oracle VirtualBox`_. Also install extension pack (separate
-   download). Make sure ``VBoxManage`` is in your ``PATH``.
+#. Install `Oracle VirtualBox`_. Make sure ``VBoxManage`` is in your ``PATH``
+   environment variable.
 #. Install the following software using your package manager. Of course,
    depending on the distribution, the package names may slightly vary (but you
    will usually find a proper equivalent):
