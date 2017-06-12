@@ -86,7 +86,7 @@ class Core(object):
     defaults['drivers'] = ['virtualbox']
     defaults['tld'] = '.dev'
     defaults['devroot'] = os.path.join('~', 'substance')
-    defaults['defaultBox'] = 'turbulent/substance-box:0.6'
+    defaults['defaultBox'] = 'turbulent/substance:0.6'
     defaults['ssh'] = OrderedDict()
     defaults['ssh']['privateKey'] = None
     defaults['ssh']['publicKey'] = None
@@ -161,7 +161,7 @@ class Core(object):
     return False
 
   def getDefaultBoxString(self):
-    return self.config.get('defaultBox', 'turbulent/substance-box:0.6')
+    return self.config.get('defaultBox', 'turbulent/substance:0.6')
 
   #-- Engine library management
 

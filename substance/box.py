@@ -32,10 +32,10 @@ class Box(object):
     self.archiveSHA1 = archiveSHA1
 
   def getRegistryURL(self):
-    return "http://%(registry)s/box/%(namespace)s/%(name)s-%(version)s.json" % self.__dict__
+    return "https://%(registry)s/%(namespace)s/%(name)s/%(version)s.json" % self.__dict__
 
   def getArchiveURL(self):
-    return "http://%(registry)s/box/%(namespace)s/%(name)s-%(version)s.box" % self.__dict__
+    return "https://%(registry)s/%(namespace)s/%(name)s/%(version)s.box" % self.__dict__
 
   def getDescriptor(self):
     return {'name':self.name, 'registry':self.registry, 'namespace': self.namespace}
@@ -73,15 +73,12 @@ class Box(object):
 
     box['boxstring'] = name
     parts = name.split("@", 1)
-    # turbulent/substance-box:0.1@public-registry
     boxstring = parts[0]
 
     if len(parts) > 1:
       box['registry'] = parts[1]
     else:
-      box['registry'] = "substance.developers.turbulent.ca/registry"
-
-    # XXX Configure this default from core?
+      box['registry'] = "dl.bintray.com/turbulent/substance-images"
 
     parts = boxstring.split("/", 1)
     if len(parts) <= 1:
@@ -104,6 +101,7 @@ class Box(object):
       return OK(self)
 
     manifestURL = self.getRegistryURL()
+    logger.debug("Downloading manifest: %s", manifestURL)
     return Try.attempt(makeXHRRequest, url=manifestURL) \
       .catch(lambda err: Fail(InvalidBoxName("Failed to fetch the box manifest for %s. Does this box exist?" % self.boxstring))) \
       .bind(defer(self.download))
@@ -115,18 +113,18 @@ class Box(object):
     return "%s/%s:%s" % (self.namespace, self.name, self.version)
 
   def delete(self):
-    logger.info("Removing box %s from box cache" % self.getShortBoxString())
+    logger.info("Removing box %s from box cache", self.getShortBoxString())
     return Try.sequence([
       Shell.nukeDirectory(self.getPath()),
       self.core.getDB().removeBoxRecord(self)
     ])
-    
+
   def download(self, boxResult):
     archiveURL = boxResult['archiveURL']
     archiveSHA = boxResult['archiveSHA1']
     archive = self.getArchivePath()
 
-    logger.info("Downloading %s:%s (%s)" % (self.name, self.version, boxResult['archiveURL']))
+    logger.info("Downloading %s:%s (%s)", self.name, self.version, boxResult['archiveURL'])
 
     return Try.sequence([
       Shell.makeDirectory(os.path.dirname(archive)),
@@ -140,16 +138,16 @@ class Box(object):
     return sha1sum(self.getArchivePath())
 
   def verifyArchive(self, expectedSHA):
-    logger.info("Verifying archive for %s" % self.getImageName())
+    logger.info("Verifying archive for %s", self.getImageName())
     sha = self.getArchiveHash()
     if sha == expectedSHA:
       return OK(self)
     else:
-      Try.attempt(lambda: os.remove(archive))
+      Try.attempt(lambda: os.remove(self.getArchivePath()))
       return Fail(BoxArchiveHashMismatch("Box archive hash mismatch. Failed download?"))
 
   def unpackArchive(self):
-    return Try.sequence([ 
+    return Try.sequence([
       Try.attempt(untar, self.getArchivePath(), self.getPath()),
       Shell.rmFile(self.getArchivePath())
     ])
