@@ -22,7 +22,7 @@ to run your project.
 ## Documentation
 
 For installation and usage, consult the [Substance
-Documentation](http://doc.developers.turbulent.ca/substance/master/).
+Documentation](https://substance.readthedocs.io/en/latest/).
 
 ## License
 
