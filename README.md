@@ -29,3 +29,9 @@ Documentation](https://substance.readthedocs.io/en/latest/).
 All work found under this repository is licensed under the [Apache
 License 2.0](LICENSE).
 
+Substance ships with pre-compiled binaries of
+[Unison](https://www.cis.upenn.edu/~bcpierce/unison/) for Mac, Windows, and
+Linux systems. Unison is released under the GNU Public License. You are free to
+replace the pre-compiled binaries with your own, making sure that they are
+network-compatible with version 2.48.4.
+
