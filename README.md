@@ -26,6 +26,6 @@ Documentation](http://doc.developers.turbulent.ca/substance/master/).
 
 ## License
 
-All work found under this repository is licensed under the [LICENSE](Apache
-License 2.0).
+All work found under this repository is licensed under the [Apache
+License 2.0](LICENSE).
 
