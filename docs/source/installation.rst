@@ -47,10 +47,9 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
     $ sudo pip install -U pip
 
-#. Install ``substance`` (replace ``[VERSION]`` with the latest stable version
-   or ``master``)::
+#. Install ``substance``::
 
-    $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@[VERSION]
+    $ sudo pip install substance
 
 On Windows
 ----------
@@ -96,10 +95,9 @@ Installation on 32-bit Windows is NOT supported.
      $ python -m ensurepip
      $ pip install -U pip
 
-#. Install ``substance`` (replace ``[VERSION]`` with the latest stable version
-   or ``master``)::
+#. Install ``substance``::
 
-     $ pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@[VERSION]
+     $ pip install substance
 
 On Linux
 --------
@@ -124,10 +122,9 @@ Substance has been tested on Mint, Ubuntu, and Arch Linux.
    Python 2). Refer to your distribution's package manager for the actual
    package names.
 
-#. Install ``substance`` (replace ``[VERSION]`` with the latest stable version
-   or ``master``)::
+#. Install ``substance``::
 
-     $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@[VERSION]
+     $ sudo pip install substance
 
 Upgrading Substance to a new version
 ------------------------------------
@@ -136,7 +133,7 @@ On all supported platforms, these commands will allow you to update the
 Substance on your machine without losing data or engines::
 
   $ sudo pip uninstall substance
-  $ sudo pip install git+https://gitlab.turbulent.ca/bbeausej/substance.git@[VERSION]
+  $ sudo pip install substance
 
 .. _Oracle VirtualBox: https://www.virtualbox.org/wiki/Downloads
 .. _Homebrew: https://brew.sh/
