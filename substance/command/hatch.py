@@ -2,7 +2,7 @@ import subprocess
 import os
 import random
 import string
-import urllib.request, urllib.parse, urllib.error
+import urllib
 try:
   import readline # Make raw_input nicer to use, but don't make it required
   readline
