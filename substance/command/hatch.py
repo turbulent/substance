@@ -1,10 +1,13 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 from builtins import input
 from builtins import range
 import subprocess
 import os
 import random
 import string
+import urllib.request, urllib.parse, urllib.error
 try:
   import readline # Make raw_input nicer to use, but don't make it required
   readline
@@ -19,12 +22,26 @@ logger = logging.getLogger(__name__)
 class Hatch(Command):
 
   def getUsage(self):
-    return "substance hatch [options] TEMPLATE REF"
+    return "substance hatch [options] TEMPLATE [REVISION]"
 
   def getHelpTitle(self):
-    return "Create a new project based on a git template"
+    return "Create a new project based on a git or tarball template."
+
+  def getHelpDetails(self):
+    return "\n".join([
+      "Arguments:",
+      "  TEMPLATE     Git repository, or short name. Examples of valid TEMPLATEs:",
+      "               php-project        (resolves to https://github.com/turbulent/template-php-project)",
+      "               bob/my-template    (resolves to https://github.com/bob/my-template)",
+      "               ssh://git@gitlab.turbulent.ca:6666/templates/heap-project.git",
+      "               https://www.example.com/path/to/tarball.tar.gz",
+      "               file:///home/bob/my-git-template-directory",
+      "",
+      "  REVISION     Refers to the git ref of the template repository. Defaults to 'master'."
+    ])
 
   def getShellOptions(self, optparser):
+    optparser.add_option("-s", "--strip", dest="strip", default="1", help="Strip X number of directories from tarball", action="store_true")
     return optparser
 
   def main(self):
@@ -33,10 +50,14 @@ class Hatch(Command):
       return self.exitError("You MUST provide a template name or git repository URL!")
     ref = self.getArg(1)
     if not ref:
-      return self.exitError("You MUST provide a version or git ref for the template!")
+      ref = "master"
 
     if not tpl.startswith('ssh://') and not tpl.startswith('https://') and not tpl.startswith('file://'):
-      tpl = 'ssh://git@gitlab.turbulent.ca:6666/templates/%s.git' % tpl
+      splt = tpl.split("/", 2)
+      if len(splt) == 2:
+        tpl = 'https://github.com/%s/%s/archive/%s.tar.gz' % (splt[0], splt[1], ref)
+      else:
+        tpl = 'https://github.com/turbulent/template-%s/archive/%s.tar.gz' % (tpl, ref)
 
     cwd = os.getcwd()
     if os.listdir(cwd):
@@ -44,7 +65,8 @@ class Hatch(Command):
 
     print("You are about to hatch a new project in the current working directory.")
     print("  Template used: %s" % tpl)
-    print("  Ref (version): %s" % ref)
+    if not tpl.endswith('.tar.gz'):
+      print("  Ref (version): %s" % ref)
     print("  Path         : %s" % cwd)
     print("")
 
@@ -52,15 +74,21 @@ class Hatch(Command):
       return self.exitOK("Come back when you've made up your mind!")
 
     print("Downloading template archive...")
-    if self.proc(['git', 'archive', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
-      return self.exitError('Could not download template %s@%s!' % (tpl, ref))
+    if tpl.endswith('.tar.gz'):
+      # With tar archives, everything is usually packaged in a single directory at root of archive
+      strip = self.getOption('strip')
+      urllib.request.urlretrieve(tpl, 'tpl.tar.gz')
+    else:
+      strip = "0" # git archive never packages in a single root directory
+      if self.proc(['git', 'archive', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
+        return self.exitError('Could not download template %s@%s!' % (tpl, ref))
 
     print("Extracting template archive...")
-    if self.proc(['tar', '-xf', 'tpl.tar.gz']):
+    if self.proc(['tar', '-xf', 'tpl.tar.gz', '--strip', strip]):
       return self.exitError('Could not extract template archive!')
 
     print("Getting list of files in template...")
-    out = subprocess.check_output(['tar', '-tf', 'tpl.tar.gz'], universal_newlines=True)
+    out = subprocess.check_output(['tar', '-tf', 'tpl.tar.gz', '--strip', strip, '--show-transformed-names'], universal_newlines=True)
     tplFiles = [l for l in out.split('\n') if l and os.path.isfile(l)]
 
     print("Cleaning up template archive...")
@@ -74,6 +102,12 @@ class Hatch(Command):
       res = config.loadConfigFile()
       if res.isFail():
         return self.exitError("Could not open %s for reading: %s" % (hatchfile, res.getError()))
+
+      # Execute pre-script if any
+      for cmd in config.get('pre-script', []):
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+
       vardefs = config.get('vars', {})
       # Autogenerate a secret
       chars = string.ascii_lowercase + string.ascii_uppercase + string.digits
@@ -110,6 +144,11 @@ class Hatch(Command):
         if os.path.isfile(bakFile):
           if self.proc(['rm', bakFile]):
             logger.warn("Could not unlink backup file %s; you may have to remove it manually.", bakFile)
+
+      # Execute post-script if any
+      for cmd in config.get('post-script', []):
+        print(cmd)
+        subprocess.call(cmd, shell=True)
 
       # Remove hatchfile
       if self.proc(['rm', hatchfile]):
