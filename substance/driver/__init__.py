@@ -1,4 +1,3 @@
-from builtins import object
 import logging
 from substance.logs import DriverLogAdapter
 

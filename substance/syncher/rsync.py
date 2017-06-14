@@ -1,13 +1,8 @@
-from __future__ import print_function
-from future import standard_library
-from functools import reduce
-standard_library.install_aliases()
-from builtins import object
 import os
 import time
 import platform
 import logging
-import queue
+import Queue
 import fnmatch
 from collections import OrderedDict
 
@@ -109,7 +104,7 @@ class SubwatchSyncher(BaseSyncher):
 
   def expungeSynching(self, direction):
     dirs = self.synching[direction]
-    for dir in list(dirs.keys()):
+    for dir in dirs.keys():
       t = self.synching[direction][dir]
       if (time.time() - t) > 0:
         logger.debug("Expiring ignore of (%s)%s" % (direction, dir))
@@ -255,7 +250,7 @@ class SubwatchSyncher(BaseSyncher):
         if part == parts[-1]:
           inc[p] = os.sep+"***"
 
-    for path, opt in inc.items():
+    for path, opt in inc.iteritems():
       path = ''.join(path.rsplit(os.sep, 1)) if path.endswith(os.sep) else path
       filters.append("+ "+path+opt)
 
@@ -321,11 +316,11 @@ class Rsync(object):
     return "\n".join(self.filters)
  
   def getCommandOpt(self):
-    return ''.join(list(self.opt.keys()))
+    return ''.join(self.opt.keys())
  
   def getCommandLongOpt(self):
     opts = ""
-    for k, v in self.longopt.items():
+    for k, v in self.longopt.iteritems():
       if v is True:
         opts += " --%s" % k
       elif v:

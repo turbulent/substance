@@ -1,4 +1,3 @@
-from builtins import object
 import sys
 import os
 import logging
@@ -154,6 +153,9 @@ class Link(object):
 
       # Setup our buffers
       bufsize = 1024
+      stdin = ''
+      stdout = ''
+      stderr = ''
 
       # Star the command stream 
       if shell:
@@ -166,10 +168,7 @@ class Link(object):
       watchHandles = [channel]
       if interactive:
         watchHandles.append(sys.stdin)
-      
-      # Shim for Python 2 AND 3 in order to write actual bytes, not strings
-      sysout = getattr(sys.stdout, 'buffer', sys.stdout)
-      syserr = getattr(sys.stderr, 'buffer', sys.stderr)
+
       while isAlive:
         self.resizePTY(channel)
         r, w, e = select.select(watchHandles, [], [])
@@ -185,14 +184,18 @@ class Link(object):
               isAlive = False
             else:
               if stream:
-                sysout.write(d)
-                sysout.flush()
+                sys.stdout.write(d)
+                sys.stdout.flush()
+              if capture:
+                stdout += d
 
           if channel.recv_stderr_ready():
             d = channel.recv_stderr(bufsize)
             if stream:
-              syserr.write(d)
-              syserr.flush()
+              sys.stderr.write(d)
+              sys.stderr.flush()
+            if capture:
+              stderr += d
 
         if sys.stdin in r and isAlive and interactive:
           x = os.read(sys.stdin.fileno(), bufsize)
@@ -204,14 +207,14 @@ class Link(object):
       code = channel.recv_exit_status()
 
       if code != 0:
-        return Fail(LinkCommandError(cmd=cmd, message="An error occured when running command." , stdout='', stderr='', code=code, link=self))
+        return Fail(LinkCommandError(cmd=cmd, message="An error occured when running command." , stdout=stdout, stderr=stderr, code=code, link=self))
 
-      return OK(LinkResponse(link=self, cmd=cmd, stdin='', stdout='', stderr='', code=code))
+      return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=code))
     except Exception as err:
       logger.debug("%s" % err)
       return Fail(err)
     except KeyboardInterrupt as err:
-      return Fail(LinkCommandError(cmd=cmd, message="User Interrupted." , stdout='', stderr='', code=1, link=self))
+      return Fail(LinkCommandError(cmd=cmd, message="User Interrupted." , stdout=stdout, stderr=stderr, code=1, link=self))
     finally:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
@@ -277,7 +280,6 @@ class Link(object):
 
       isAlive = True
 
-      sysout = getattr(sys.stdout, 'buffer', sys.stdout) # Shim for Python 2 AND 3
       while isAlive:
         self.resizePTY(channel)
         r, w, e = select.select([channel, sys.stdin], [], [])
@@ -287,8 +289,8 @@ class Link(object):
             if len(x) == 0:
               isAlive = False
             else:
-              sysout.write(x)
-              sysout.flush()
+              sys.stdout.write(x)
+              sys.stdout.flush()
           except socket.timeout:
             pass
         if sys.stdin in r and isAlive:
@@ -309,15 +311,14 @@ class Link(object):
     sys.stdout.write("Line-buffered terminal emulation. Press F6 or ^Z to send EOF.\r\n\r\n")
         
     def writeall(sock):
-      sysout = getattr(sys.stdout, 'buffer', sys.stdout) # Shim for Python 2 AND 3
       while True:
         data = sock.recv(256)
         if not data:
-          sysout.write('\r\n*** EOF ***\r\n\r\n')
-          sysout.flush()
+          sys.stdout.write('\r\n*** EOF ***\r\n\r\n')
+          sys.stdout.flush()
           break
-        sysout.write(data)
-        sysout.flush()
+        sys.stdout.write(data)
+        sys.stdout.flush()
         
     writer = threading.Thread(target=writeall, args=(chan,))
     writer.start()

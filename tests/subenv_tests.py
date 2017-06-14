@@ -1,4 +1,3 @@
-from builtins import range
 import unittest
 import os
 import tempfile
@@ -66,7 +65,7 @@ class TestSubenv(tests.TestBase):
     filedata[os.path.join("conf", "tpl2.jinja")] = tpl2
 
     ops = []
-    for file, data in filedata.items():
+    for file, data in filedata.iteritems():
        ops.append( Try.attempt(writeToFile, os.path.join(specpath, file), data) )
  
     self.assertIsInstance(Try.sequence(ops), OK)
@@ -86,7 +85,7 @@ class TestSubenv(tests.TestBase):
 
     self.assertTrue(os.path.isdir(envPath))
 
-    for f,fd in self.env['files'].items():
+    for f,fd in self.env['files'].iteritems():
       root, ext = os.path.splitext(f)
       if ext == '.jinja':
         self.assertTrue(os.path.isfile(os.path.join(envPath, root)))
@@ -111,7 +110,7 @@ class TestSubenv(tests.TestBase):
     ls = self.api.ls()
     self.assertIsInstance(ls, OK)
     ls = ls.getOK()
-    names = [x.name for x in ls]
+    names = map(lambda x: x.name, ls)
     self.assertIn(self.env['name'], names)
 
     op = self.api.delete(self.env['name'])
@@ -120,7 +119,7 @@ class TestSubenv(tests.TestBase):
     ls = self.api.ls()
     self.assertIsInstance(ls, OK)
     ls = ls.getOK()
-    names = [x.name for x in ls]
+    names = map(lambda x: x.name, ls)
     self.assertNotIn(self.env['name'], names)
 
   def randString(self):

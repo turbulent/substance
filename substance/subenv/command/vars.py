@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import logging
 import shlex
@@ -28,7 +27,7 @@ class Vars(Command):
 
   def printEnvVars(self, vars=None):
     vars = {} if not vars else vars
-    for k, v in vars.items():
+    for k, v in vars.iteritems():
       print("%s=\"%s\"" % (k, v))
     return OK(None)
       

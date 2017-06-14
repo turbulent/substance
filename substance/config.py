@@ -1,4 +1,3 @@
-from builtins import object
 import os
 import logging
 from substance.monads import *
@@ -7,7 +6,6 @@ from substance.utils import (readYAML, writeYAML, mergeDict)
 from substance.exceptions import (FileSystemError, FileDoesNotExist, ConfigValidationError)
 
 from collections import namedtuple
-from functools import reduce
 
 logger = logging.getLogger(__name__)
 

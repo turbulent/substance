@@ -1,4 +1,3 @@
-from __future__ import print_function
 from substance.monads import *
 from substance.logs import *
 from substance import (Engine, Command)
@@ -26,6 +25,6 @@ class Env(Command):
 
   def outputDockerEnv(self, engine):
     env = engine.getDockerEnv()
-    for k, v in env.items():
+    for k, v in env.iteritems():
       print("export %s=\"%s\"" % (k,v))
     return OK(None)

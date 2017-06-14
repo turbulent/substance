@@ -1,14 +1,11 @@
-from __future__ import absolute_import
-from builtins import range
 import re
 import os
 import platform
-import sys
 
 from substance.shell import Shell
 from substance.monads import *
 from substance.logs import *
-from .exceptions import *
+from exceptions import *
 from substance.exceptions import *
 
 VBOX_VERSION_MIN = (5,0,0)
@@ -26,11 +23,11 @@ def vboxExec(cmd, params=""):
     .catch(onVboxError)
 
 def onVboxCommand(sh):
-  return OK(sh.get('stdout', '').decode(sys.stdout.encoding))
+  return OK(sh.get('stdout', ''))
 
 def onVboxError(err):
   if isinstance(err, ShellCommandError):
-    codeMatch = re.search(r'error: Details: code (VBOX_[A-Z_0-9]*)', err.stderr.decode(sys.stderr.encoding), re.M)
+    codeMatch = re.search(r'error: Details: code (VBOX_[A-Z_0-9]*)', err.stderr, re.M)
     code = codeMatch.group(1) if codeMatch else None
     return Fail(VirtualBoxError(message=err.stderr, code=code))
 

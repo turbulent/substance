@@ -1,4 +1,3 @@
-from builtins import object
 from substance.monads import *
 from substance.logs import *
 from substance.constants import Tables

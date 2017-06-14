@@ -1,4 +1,3 @@
-from builtins import object
 import sys
 import os
 import logging
@@ -99,7 +98,7 @@ class Core(object):
   def makeDefaultConfig(self, data=None):
     logger.info("Generating default substance configuration in %s", self.config.getConfigFile())
     defaults = self.getDefaultConfig()
-    for kkk, vvv in defaults.items():
+    for kkk, vvv in defaults.iteritems():
       self.config.set(kkk, vvv)
     self.config.set("basePath", self.basePath)
     return self.config.saveConfig()

@@ -1,7 +1,3 @@
-from __future__ import print_function
-from builtins import str
-from builtins import map
-from builtins import object
 import os
 import socket
 import logging
@@ -291,7 +287,7 @@ class Engine(object):
       cf['profile']['cpus'] = profile.cpus
       cf['profile']['memory'] = profile.memory
 
-    for ck, cv in cf.items():
+    for ck, cv in cf.iteritems():
       self.config.set(ck, cv)
 
     return OK(self.config)
@@ -516,7 +512,7 @@ class Engine(object):
     #hostsCmd = "hostnamectl set-hostname %s" % dns
     serviceCmd = "service hostname restart"
     cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (echoCmd, hostsCmd, hostCmd, serviceCmd)
-    cmds = list(map(defer(self.link.runCommand, stream=True, sudo=False), [cmd]))
+    cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
     return Try.sequence(cmds) 
 
   def uploadKeys(self):
@@ -764,7 +760,7 @@ class Engine(object):
   def mountFolders(self):
     self.logAdapter.info("Mounting engine folders")
     folders = self.getEngineFolders()
-    return Try.of(list(map(self.mountFolder, folders)))
+    return Try.of(map(self.mountFolder, folders))
  
   def mountFolder(self, folder):
     mountCmd = "mount -t vboxsf -o umask=%(umask)s,gid=%(gid)s,uid=%(uid)s %(name)s %(guestPath)s" % folder.__dict__

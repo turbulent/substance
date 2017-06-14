@@ -1,17 +1,12 @@
-from __future__ import absolute_import
-from builtins import map
-from builtins import zip
-from builtins import object
 import re
 from collections import OrderedDict
 from substance.monads import *
 from substance.logs import *
 from substance.constants import Constants
 from substance.exceptions import (MachineDoesNotExist, SubstanceDriverError)
-from .vbox import (vboxManager,_vboxLineEnding)
-from .exceptions import *
+from vbox import (vboxManager,_vboxLineEnding)
+from exceptions import *
 from substance.shell import Shell
-from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +129,7 @@ def readMachineID(name):
   Retrieve the driver specific machine ID for a machine name.
   '''
   def findMachineID(machs):
-    revmach = dict(list(zip(list(machs.values()), list(machs.keys()))))
+    revmach = dict(zip(machs.values(), machs.keys()))
     return OK(revmach[name]) if name in revmach else Fail(MachineDoesNotExist("No Machine ID found for \"%s\"" %name))
 
   return vboxManager("list", "vms") \
@@ -254,7 +249,7 @@ def parseSharedFolders(machInfo):
       acc.append(SharedFolder(name=machInfo[k], hostPath=machInfo["SharedFolderPathMachineMapping%s"%idx], vboxName=k))
     return acc
 
-  return OK(reduce(extractFolders, list(machInfo.keys()), []))
+  return OK(reduce(extractFolders, machInfo.keys(), []))
  
 # -- Modify
 
@@ -308,10 +303,10 @@ def removeSharedFolder(folder, uuid):
   return vboxManager("sharedfolder", "remove \"%s\" --name \"%s\"" % (uuid, folder.name))
 
 def addSharedFolders(folders, uuid):
-  return OK(list(map(defer(addSharedFolder, uuid=uuid), folders)))
+  return OK(map(defer(addSharedFolder, uuid=uuid), folders))
 
 def removeSharedFolders(folders, uuid):
-  return OK(list(map(defer(removeSharedFolder, uuid=uuid), folders)))
+  return OK(map(defer(removeSharedFolder, uuid=uuid), folders))
 
 def clearSharedFolders(uuid):
   return readSharedFolders(uuid) \
