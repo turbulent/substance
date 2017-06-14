@@ -73,10 +73,10 @@ Installation on 32-bit Windows is NOT supported.
       default location and make sure the following packages are selected:
 
       * ``mintty`` (under "Shells")
-      * ``python`` or ``python2`` (under "Python")
-      * ``python-devel`` or ``python2-devel`` (under "Python")
       * ``git`` (under "Devel")
       * ``gcc-core`` (under "Devel")
+      * ``python2`` (under "Python")
+      * ``python2-devel`` (under "Python")
       * ``libffi-devel`` (under "Libs")
       * ``openssl-devel`` (under "Net")
 
@@ -87,8 +87,8 @@ Installation on 32-bit Windows is NOT supported.
 #. Launch Cygwin Terminal (``mintty``). All the magic happens from there!
 #. Run ``which python && which pip`` to make SURE that you are running both
    executables from ``/usr/bin``, NOT something like ``C:\Python``!
-#. Execute the command ``python --version``. This should print the current
-   Python version.
+#. Execute the command ``python --version``. You should see an output like
+   ``Python 2.7.12``.
 #. Make sure ``pip`` is installed and is upgraded to the latest version by running
    the commands::
 
@@ -116,11 +116,12 @@ Substance has been tested on Mint, Ubuntu, and Arch Linux.
    * ``libffi-devel``
    * ``openssl-devel``
 
-#. Substance is compatible wih both Python 2.7 and Python 3+. Simply install
-   your favorite Python distribution. You also need the ``devel`` package for
-   python (it is usually called ``python-devel`` or ``python2-devel`` for
-   Python 2). Refer to your distribution's package manager for the actual
-   package names.
+#. Make sure to have Python 2 available. On some distributions (like Ubuntu
+   14.04), this is the default Python interpreter, which means you can use
+   ``python`` and ``pip``. On other, more state-of-the-art distributions (like
+   Arch), you need to install a separate ``python2`` package and use the
+   commands ``python2`` and ``pip2`` for the rest of this guide. Also install
+   ``python-devel`` or ``python2-devel``, depending on your distribution.
 
 #. Install ``substance``::
 
