@@ -4,13 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.11.1] - Unreleased
+## [0.12.0] - 2017-06-14
 ### Added
 - `hatch` now supports downloading templates from tarballs
 - `hatch` now defaults to GitHub tarball archives when using short template
   names
 - `hatch` now supports new `pre-script` and `post-script` elements in
   `hatch.yml`.
+### Changed
+- Aborted Python 3 support. We will revisit this feature when Python 3 is the
+  default on the most-used Linux distributions and Mac OS X Homebrew.
 
 ## [0.11.0] - 2017-06-12
 ### Added
