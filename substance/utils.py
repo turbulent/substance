@@ -80,7 +80,7 @@ def streamDownload(url, destination):
 
   try:
     with open(destination, 'wb') as fd:
-      r = requests.get(url, stream=True, timeout=1)
+      r = requests.get(url, stream=True, timeout=5)
       r.raise_for_status()
       contentLength = int(r.headers.get('content-length'))
   
