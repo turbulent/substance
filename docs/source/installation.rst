@@ -51,6 +51,10 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
     $ sudo pip install substance
 
+#. Finally, install ``watchdog``, which is required for ``substance sync``::
+
+    $ sudo pip install watchdog
+
 On Windows
 ----------
 
