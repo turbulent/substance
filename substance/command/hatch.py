@@ -80,11 +80,11 @@ class Hatch(Command):
         return self.exitError('Could not download template %s@%s!' % (tpl, ref))
 
     print "Extracting template archive..."
-    if self.proc(['tar', '-xf', 'tpl.tar.gz', '--strip', strip]):
+    if self.proc([self.getTar(), '-xf', 'tpl.tar.gz', '--strip', strip]):
       return self.exitError('Could not extract template archive!')
 
     print "Getting list of files in template..."
-    out = subprocess.check_output(['tar', '-tf', 'tpl.tar.gz', '--strip', strip, '--show-transformed-names'], universal_newlines=True)
+    out = subprocess.check_output([self.getTar(), '-tf', 'tpl.tar.gz', '--strip', strip, '--show-transformed-names'], universal_newlines=True)
     tplFiles = [l for l in out.split('\n') if l and os.path.isfile(l)]
 
     print "Cleaning up template archive..."
@@ -165,3 +165,10 @@ class Hatch(Command):
         return False
     return True
 
+  def getTar(self):
+    # Hack around Mac OS X's old-ass BSD 'tar'
+    if self.proc(['which', 'gnutar']):
+      # gnutar not found, use 'tar' and hope for the best
+      return 'tar'
+    # This is a Mac OS X install, use 'gnutar' which is better
+    return 'gnutar'

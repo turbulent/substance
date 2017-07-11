@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Fixed
+- Crash in `hatch` under Mac OS X due to BSD tar implementation.
+
 ## [0.12.1] - 2017-06-20
 ### Fixed
 - Timeout error under macOS when pulling a box from bintray.com
