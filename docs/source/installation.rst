@@ -51,7 +51,8 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
     $ sudo pip install substance
 
-#. Finally, install ``watchdog``, which is required for ``substance sync``::
+#. Finally, install ``watchdog``, which is required for ``substance sync``
+   under macOS::
 
     $ sudo pip install watchdog
 
@@ -77,6 +78,7 @@ Installation on 32-bit Windows is NOT supported.
       default location and make sure the following packages are selected:
 
       * ``mintty`` (under "Shells")
+      * ``make`` (under "Devel")
       * ``git`` (under "Devel")
       * ``gcc-core`` (under "Devel")
       * ``python2`` (under "Python")
