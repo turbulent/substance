@@ -27,7 +27,7 @@ class Box(object):
         self.name = name
         self.version = version
         self.namespace = namespace
-        self.registry = registry
+            self.registry = registry
         self.boxstring = boxstring
         self.archiveSHA1 = archiveSHA1
 
