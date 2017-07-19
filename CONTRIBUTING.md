@@ -12,9 +12,10 @@ Contributions of all kinds are welcomed, don't be shy!
 
 ## Important Guidelines
 
-* Make sure to follow the coding conventions outlined in the `.editorconfig`
-  file.
-* Make sure to test your changes on both Python 2.7.x and 3.x.
+* Make sure to follow the [PEP8 Style
+  Guide](https://www.python.org/dev/peps/pep-0008/).
+* Make sure to test your changes on both Python 2.7.x. Python 3.x is not
+  supported.
 
 ## Code of Conduct
 
