@@ -1,10 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/) 
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- All Python source code now adheres to the [PEP 8 -- Style Guide for Python
+  Code](https://www.python.org/dev/peps/pep-0008/).
+
 ### Fixed
 - Crash in `hatch` under Mac OS X due to BSD tar implementation.
 
