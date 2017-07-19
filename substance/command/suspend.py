@@ -3,27 +3,28 @@ from substance.logs import *
 from substance import (Engine, Command)
 from substance.exceptions import (SubstanceError)
 
+
 class Suspend(Command):
 
-  def getUsage(self):
-    return "substance suspend"
-   
-  def getHelpTitle(self):
-    return "Suspend the current engine's virtual machine"
+    def getUsage(self):
+        return "substance suspend"
 
-  def getShellOptions(self, optparser):
-    return optparser
+    def getHelpTitle(self):
+        return "Suspend the current engine's virtual machine"
 
-  def main(self):
+    def getShellOptions(self, optparser):
+        return optparser
 
-    engine = self.parent.getOption('engine')
-    if engine:
-      engine = OK(engine)
-    else:
-      engine = self.core.readCurrentEngineName()
+    def main(self):
 
-    return engine \
-      .bind(self.core.loadEngine) \
-      .bind(Engine.loadConfigFile) \
-      .bind(Engine.suspend) \
-      .catch(self.exitError)
+        engine = self.parent.getOption('engine')
+        if engine:
+            engine = OK(engine)
+        else:
+            engine = self.core.readCurrentEngineName()
+
+        return engine \
+            .bind(self.core.loadEngine) \
+            .bind(Engine.loadConfigFile) \
+            .bind(Engine.suspend) \
+            .catch(self.exitError)

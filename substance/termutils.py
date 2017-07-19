@@ -4,8 +4,9 @@ import struct
 import platform
 import subprocess
 
-# from jtriley/terminalsize.py 
- 
+# from jtriley/terminalsize.py
+
+
 def getTerminalSize():
     """ getTerminalSize()
      - get width and height of console
@@ -26,8 +27,8 @@ def getTerminalSize():
         print "default"
         tuple_xy = (80, 25)      # default value
     return tuple_xy
- 
- 
+
+
 def _getTerminalSizeWindows():
     try:
         from ctypes import windll, create_string_buffer
@@ -46,7 +47,7 @@ def _getTerminalSizeWindows():
             return sizex, sizey
     except:
         pass
- 
+
 
 def _getTerminalSizeTPUT():
     # get terminal width
@@ -57,8 +58,8 @@ def _getTerminalSizeTPUT():
         return (cols, rows)
     except:
         pass
- 
- 
+
+
 def _getTerminalSizeLinux():
     def ioctl_GWINSZ(fd):
         try:
@@ -83,7 +84,8 @@ def _getTerminalSizeLinux():
         except:
             return None
     return int(cr[1]), int(cr[0])
- 
+
+
 if __name__ == "__main__":
     sizex, sizey = getTerminalSize()
-    print  'width =', sizex, 'height =', sizey
+    print 'width =', sizex, 'height =', sizey

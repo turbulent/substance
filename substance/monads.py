@@ -3,383 +3,366 @@ import functools
 from functools import (wraps)
 from functools import partial
 
+
 class Monad(object):
 
-  def bind(self, mf):
-    raise NotImplementedError
+    def bind(self, mf):
+        raise NotImplementedError
 
-  def map(self, mf):
-    raise NotImplementedError
+    def map(self, mf):
+        raise NotImplementedError
 
-  def __rshift__(self, f):
-    return self.bind(f)
+    def __rshift__(self, f):
+        return self.bind(f)
 
-  def __ilshift__(self, f):
-    return self.bind(f)
+    def __ilshift__(self, f):
+        return self.bind(f)
 
-#----------- EITHER
 
 class Maybe(Monad):
 
-  @staticmethod
-  def of(value=None):
-    if(value is None):
-      return Nothing()
-    else:
-      return Just(value)
+    @staticmethod
+    def of(value=None):
+        if(value is None):
+            return Nothing()
+        else:
+            return Just(value)
 
-  def get(self):
-    raise NotImplementedError
+    def get(self):
+        raise NotImplementedError
 
-  def isNothing(self):
-    if isinstance(self, Nothing):
-      return True 
+    def isNothing(self):
+        if isinstance(self, Nothing):
+            return True
 
-  def bind(self, mf):
-    if self.isNothing():
-      return self
-    return mf(self.get())
+    def bind(self, mf):
+        if self.isNothing():
+            return self
+        return mf(self.get())
 
-  def map(self, f):
-    if self.isNothing(): 
-      return self
-    return Just(f(self.get()))
+    def map(self, f):
+        if self.isNothing():
+            return self
+        return Just(f(self.get()))
 
-  def getOrElse(self, default):
-    return default if self.isNothing() else self.get()
-    
+    def getOrElse(self, default):
+        return default if self.isNothing() else self.get()
+
+
 class Just(Maybe):
-  value = None
+    value = None
 
-  def __init__(self, value):
-    self.value = value
+    def __init__(self, value):
+        self.value = value
 
-  def get(self):
-    return self.value
+    def get(self):
+        return self.value
 
-  def __repr__(self):
+    def __repr__(self):
         return "Just(%r)" % self.value
 
-  def __eq__(self, other):
-    if isinstance(other, Just):
-      return self.value == other.value
-    return False
+    def __eq__(self, other):
+        if isinstance(other, Just):
+            return self.value == other.value
+        return False
+
 
 class Nothing(Maybe):
-  def get(self):
-    raise NoValue
+    def get(self):
+        raise NoValue
 
-  def __repr__(self):
+    def __repr__(self):
         return "Nothing"
 
-  def __eq__(self, other):
-    return isinstance(other, Nothing)
+    def __eq__(self, other):
+        return isinstance(other, Nothing)
 
-#----------- EITHER
 
 class Either(Monad):
 
-  def isLeft(self):
-    return isinstance(self, Left)
-       
-  def isRight(self):
-    return isinstance(self, Right)
+    def isLeft(self):
+        return isinstance(self, Left)
 
-  def getLeft(self):
-    raise NotImplementedError
+    def isRight(self):
+        return isinstance(self, Right)
 
-  def getRight(self):
-    raise NotImplementedError
+    def getLeft(self):
+        raise NotImplementedError
 
-  def bind(self, mf):
-    if self.isLeft():
-      return self
-    return mf(self.getRight())
-  
-  def map(self, mf):
-    if self.isLeft():
-      return self
-    return Right(mf(self.getRight())) 
+    def getRight(self):
+        raise NotImplementedError
+
+    def bind(self, mf):
+        if self.isLeft():
+            return self
+        return mf(self.getRight())
+
+    def map(self, mf):
+        if self.isLeft():
+            return self
+        return Right(mf(self.getRight()))
+
 
 class Left(Either):
-  value = None
-  def __init__(self, value):
-    self.value = value
+    value = None
 
-  def getLeft(self):
-    return self.value
+    def __init__(self, value):
+        self.value = value
 
-  def __repr__(self):
+    def getLeft(self):
+        return self.value
+
+    def __repr__(self):
         return "Left(%r)" % self.value
 
-  def __eq__(self, other):
-    if isinstance(other, self.__class__):
-      return self.value == other.value
-    return False
- 
-  
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.value == other.value
+        return False
+
+
 class Right(Either):
-  value = None
-  def __init__(self, value):
-    self.value = value
+    value = None
 
-  def getRight(self):
-    return self.value
+    def __init__(self, value):
+        self.value = value
 
-  def __repr__(self):
+    def getRight(self):
+        return self.value
+
+    def __repr__(self):
         return "Right(%r)" % self.value
 
-  def __eq__(self, other):
-    if isinstance(other, self.__class__):
-      return self.value == other.value
-    return False
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.value == other.value
+        return False
 
-#----------- TRY
 
 class Try(Monad):
 
-  @staticmethod
-  def of(value):
-    return OK(value)
+    @staticmethod
+    def of(value):
+        return OK(value)
 
-  def isFail(self):
-    return isinstance(self, Fail)
-    
-  def isOK(self):
-    return isinstance(self, OK)
+    def isFail(self):
+        return isinstance(self, Fail)
 
-  def getError(self):
-    raise NotImplementedError
+    def isOK(self):
+        return isinstance(self, OK)
 
-  def getOK(self):
-    raise NotImplementedError
+    def getError(self):
+        raise NotImplementedError
 
-  def getOrElse(self, default):
-    return default if self.isFail() else self.getOK()
+    def getOK(self):
+        raise NotImplementedError
 
-  def bind(self, mf, *args, **kwargs):
-    if self.isFail():
-      return self
-    return mf(self.getOK(), *args, **kwargs)
+    def getOrElse(self, default):
+        return default if self.isFail() else self.getOK()
 
-  def map(self, f):
-    if self.isFail():
-      return self
-    return OK(f(self.getOK()))
+    def bind(self, mf, *args, **kwargs):
+        if self.isFail():
+            return self
+        return mf(self.getOK(), *args, **kwargs)
 
-  def thenIfTrue(self, f):
-    return self.thenIfBool(f, lambda: OK(False))
+    def map(self, f):
+        if self.isFail():
+            return self
+        return OK(f(self.getOK()))
 
-  def thenIfFalse(self, f):
-    return self.thenIfBool(lambda: OK(True), f)
+    def thenIfTrue(self, f):
+        return self.thenIfBool(f, lambda: OK(False))
 
-  def thenIfNone(self, f):
-    if self.isFail():
-      return self
-    if self.getOK() is None:
-      return self.then(f)
-    else:
-      return self
-        
-  def thenIfBool(self, fTrue, fFalse):
-    if self.isFail():
-      return self
-    if self.getOK() is True:
-      return self.then(fTrue)
-    else:
-      return self.then(fFalse)
+    def thenIfFalse(self, f):
+        return self.thenIfBool(lambda: OK(True), f)
 
-  def then(self, okF=None, failF=None):
-    if self.isFail(): 
-      if failF:
-        r = failF(self.getError())
-        if isinstance(r, Try):
-          return r
-        return self
-      else:
-        return self
-    else:
-      if okF:
-        r = okF()
-        if isinstance(r, Try):
-          return r
-        return OK(r)
-      else:
-        return self
+    def thenIfNone(self, f):
+        if self.isFail():
+            return self
+        if self.getOK() is None:
+            return self.then(f)
+        else:
+            return self
 
-  def catch(self, f):
-    return self.then(None, f)  
+    def thenIfBool(self, fTrue, fFalse):
+        if self.isFail():
+            return self
+        if self.getOK() is True:
+            return self.then(fTrue)
+        else:
+            return self.then(fFalse)
 
-  def catchError(self, err, f):
-    def catcher(x):
-      if isinstance(x, err):
-        return f(self.getError())
-    return self.then(None, catcher)
-      
-  def bindIfTrue(self, f):
-    return self.bindIf(f, lambda x: OK(False))
+    def then(self, okF=None, failF=None):
+        if self.isFail():
+            if failF:
+                r = failF(self.getError())
+                if isinstance(r, Try):
+                    return r
+                return self
+            else:
+                return self
+        else:
+            if okF:
+                r = okF()
+                if isinstance(r, Try):
+                    return r
+                return OK(r)
+            else:
+                return self
 
-  def bindIfFalse(self, f):
-    return self.bindIf(lambda x: OK(True), f)
+    def catch(self, f):
+        return self.then(None, f)
 
-  def bindIf(self, fTrue, fFalse):
-    if self.isFail():
-      return self
-    if self.getOK() is True:
-      return self.bind(fTrue)
-    else:
-      return self.bind(fFalse)
+    def catchError(self, err, f):
+        def catcher(x):
+            if isinstance(x, err):
+                return f(self.getError())
+        return self.then(None, catcher)
 
-  def mapM(self, mf):
-    def mapper(xs):
-      return mapM(self, mf, xs)
-    return self.bind(mapper)
+    def bindIfTrue(self, f):
+        return self.bindIf(f, lambda x: OK(False))
 
-  def mapM_(self, mf):
-    def mapper(xs):
-      return mapM_(self, mf, xs)
-    return self.bind(mapper)
+    def bindIfFalse(self, f):
+        return self.bindIf(lambda x: OK(True), f)
 
-  @staticmethod
-  def compose(*funcs):
-    def func(x):
-      return fold(lambda acc, f: acc.bind(f), funcs, Try.of(x))
-    return func
+    def bindIf(self, fTrue, fFalse):
+        if self.isFail():
+            return self
+        if self.getOK() is True:
+            return self.bind(fTrue)
+        else:
+            return self.bind(fFalse)
 
-  @staticmethod
-  def sequence(monads):
-    ''' Fold a list of monads into a monad containing the list of values '''
-    return reduce(lambda acc, mv: unshiftM(Try, acc, mv), reversed(monads), Try.of([]))
+    def mapM(self, mf):
+        def mapper(xs):
+            return mapM(self, mf, xs)
+        return self.bind(mapper)
 
-  @staticmethod
-  def attemptDeferred(f, expect=Exception):
-    def tryer(*args, **kwargs):
-      try:
-        return OK(f(*args, **kwargs))
-      except expect as e:
-        return Fail(e)
-    return tryer
+    def mapM_(self, mf):
+        def mapper(xs):
+            return mapM_(self, mf, xs)
+        return self.bind(mapper)
 
-  @staticmethod 
-  def attempt(f, *args, **kwargs):
-    return Try.attemptDeferred(f)(*args, **kwargs)
+    @staticmethod
+    def compose(*funcs):
+        def func(x):
+            return fold(lambda acc, f: acc.bind(f), funcs, Try.of(x))
+        return func
 
-  @staticmethod 
-  def raiseError(self, err=Exception):
-    raise(err)
+    @staticmethod
+    def sequence(monads):
+        ''' Fold a list of monads into a monad containing the list of values '''
+        return reduce(lambda acc, mv: unshiftM(Try, acc, mv), reversed(monads), Try.of([]))
 
-  def join(self):
-    return self if self.isFail() else self.getOK()
+    @staticmethod
+    def attemptDeferred(f, expect=Exception):
+        def tryer(*args, **kwargs):
+            try:
+                return OK(f(*args, **kwargs))
+            except expect as e:
+                return Fail(e)
+        return tryer
+
+    @staticmethod
+    def attempt(f, *args, **kwargs):
+        return Try.attemptDeferred(f)(*args, **kwargs)
+
+    @staticmethod
+    def raiseError(self, err=Exception):
+        raise(err)
+
+    def join(self):
+        return self if self.isFail() else self.getOK()
+
 
 class OK(Try):
-  value = None
-  def __init__(self, value):
-    self.value = value
+    value = None
 
-  def getOK(self):
-    return self.value
+    def __init__(self, value):
+        self.value = value
 
-  def __repr__(self):
+    def getOK(self):
+        return self.value
+
+    def __repr__(self):
         return "OK(%r)" % self.value
 
-  def __bool__(self):
-    return True
- 
-  def __eq__(self, other):
-    if isinstance(other, self.__class__):
-      return self.value == other.value
-    return False
+    def __bool__(self):
+        return True
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.value == other.value
+        return False
+
 
 class Fail(Try):
-  value = None
-  def __init__(self, value):
-    self.value = value
+    value = None
 
-  def getError(self):
-    return self.value
+    def __init__(self, value):
+        self.value = value
 
-  def __bool__(self):
-    return False
+    def getError(self):
+        return self.value
 
-  def __repr__(self):
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
         return "Fail(%r)" % self.value
 
-  def __eq__(self, other):
-    if isinstance(other, self.__class__):
-      return self.value == other.value
-    return False
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.value == other.value
+        return False
+
 
 def fold(f, xs, init=None):
-  return functools.reduce(f, xs, init)
+    return functools.reduce(f, xs, init)
 
-def compose(*funcs): 
-  def func(x):
-    return fold(lambda acc, f: f(acc), reversed(funcs), x)
-  return func
 
-def unshiftM(monad, monads, mv): 
-  ''' Prepend a monadic value to the list value of a monad '''
-  return monads.bind(lambda xs: mv.bind(lambda x: monad.of( [x] + xs)))
+def compose(*funcs):
+    def func(x):
+        return fold(lambda acc, f: f(acc), reversed(funcs), x)
+    return func
+
+
+def unshiftM(monad, monads, mv):
+    ''' Prepend a monadic value to the list value of a monad '''
+    return monads.bind(lambda xs: mv.bind(lambda x: monad.of([x] + xs)))
+
 
 def sequence(monad, monads):
-  ''' Fold a list of monads into a monad containing the list of values '''
-  return reduce(lambda acc, mv: unshiftM(monad, acc, mv), reversed(monads), monad.of([]))
+    ''' Fold a list of monads into a monad containing the list of values '''
+    return reduce(lambda acc, mv: unshiftM(monad, acc, mv), reversed(monads), monad.of([]))
+
 
 def mapM(monad, mf, xs):
-  ''' Map a monadic function over a list of values, lifting them into monadic context and convert the results to a monad containing a list of the values. '''
-  mapped = map(mf, xs)
-  sequenced = sequence(monad, mapped)
-  return sequenced
+    ''' Map a monadic function over a list of values, lifting them into monadic context and convert the results to a monad containing a list of the values. '''
+    mapped = map(mf, xs)
+    sequenced = sequence(monad, mapped)
+    return sequenced
+
 
 def mapM_(monad, mf, xs):
-  ''' Map a monadic  action to a structure, evaluate from left to right and ignore results. '''
-  map(mf, xs)
-  return monad.of(xs)
+    ''' Map a monadic  action to a structure, evaluate from left to right and ignore results. '''
+    map(mf, xs)
+    return monad.of(xs)
+
 
 def defer(f, *args, **kwargs):
-  fargs = args
-  fkwargs = kwargs
-  return partial(f, *fargs, **fkwargs)
+    fargs = args
+    fkwargs = kwargs
+    return partial(f, *fargs, **fkwargs)
+
 
 def failWith(exception):
-  return (lambda *x: Fail(exception))
+    return (lambda *x: Fail(exception))
+
 
 def chainSelf(self, *_, **__):
-  return self
+    return self
+
 
 def flatten(xs):
-  return [ x for sl in xs for x in sl]
-
-#class Retry(Monad):
-#
-#  @staticmethod
-#  def of(func):
-#    return RetryContinue(func)
-#
-#  def isContinue(self):
-#    return isinstance(self, Continue)
-#
-#  def isBreak(self):
-#    return isinstance(self, Break)
-#
-#  def isDone(self):
-#    return isinstance(self, Done)
-#
-#  def call(self):
-#    return self.value()
-#
-#  def bind(self, mf):
-#    value = self.call()
-#
-#    if value.isContinue():
-#    elif value.isBreak():
-#    elif value.isDone():
-#    
-#class Continue(Retry):
-#  pass
-#class Break(Retry):
-#  pass
-#class Done(Done):
-#  pass
-#
-#Retry(connect, timeout=60, retries=100).bind()
+    return [x for sl in xs for x in sl]

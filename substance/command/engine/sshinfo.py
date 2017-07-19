@@ -3,31 +3,32 @@ from substance.logs import *
 from substance import (Engine, Command)
 from substance.exceptions import (SubstanceError)
 
+
 class Sshinfo(Command):
 
-  def getUsage(self):
-    return "substance sshinfo [ENGINE NAME]"
-  
-  def getHelpTitle(self):
-    return "Obtain the ssh info configuration for connecting to an engine"
+    def getUsage(self):
+        return "substance sshinfo [ENGINE NAME]"
 
-  def getShellOptions(self, optparser):
-    return optparser
+    def getHelpTitle(self):
+        return "Obtain the ssh info configuration for connecting to an engine"
 
-  def main(self):
+    def getShellOptions(self, optparser):
+        return optparser
 
-    name = self.getInputName()
+    def main(self):
 
-    self.core.loadEngine(name) \
-      .bind(Engine.loadConfigFile) \
-      .bind(self.outputSSHInfo) \
-      .catch(self.exitError)
+        name = self.getInputName()
 
-  def outputSSHInfo(self, engine):
-    host = engine.getSSHIP()
-    port = engine.getSSHPort()
-   
-    sshconfig = """Host %(name)s
+        self.core.loadEngine(name) \
+            .bind(Engine.loadConfigFile) \
+            .bind(self.outputSSHInfo) \
+            .catch(self.exitError)
+
+    def outputSSHInfo(self, engine):
+        host = engine.getSSHIP()
+        port = engine.getSSHPort()
+
+        sshconfig = """Host %(name)s
   HostName %(host)s
   User substance
   Port %(port)s
@@ -36,14 +37,14 @@ class Sshinfo(Command):
   StrictHostKeyChecking no
   PasswordAuthentication no
   LogLevel FATAL
-  ForwardAgent yes""" 
-  
-    sshconfig = sshconfig % ({
-        'name': engine.name,
-        'host': host, 
-        'port': port,  
-        'keyfile': self.core.getInsecureKeyFile()
-      })
+  ForwardAgent yes"""
 
-    print(sshconfig)
-    return OK(sshconfig)
+        sshconfig = sshconfig % ({
+            'name': engine.name,
+            'host': host,
+            'port': port,
+            'keyfile': self.core.getInsecureKeyFile()
+        })
+
+        print(sshconfig)
+        return OK(sshconfig)

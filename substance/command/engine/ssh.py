@@ -3,21 +3,22 @@ from substance.logs import *
 from substance import (Engine, Command)
 from substance.exceptions import (SubstanceError)
 
+
 class Ssh(Command):
 
-  def getUsage(self):
-    return "substance ssh [ENGINE NAME]"
-  
-  def getHelpTitle(self):
-    return "Connect using SSH to the engine's virtual machine."
+    def getUsage(self):
+        return "substance ssh [ENGINE NAME]"
 
-  def getShellOptions(self, optparser):
-    return optparser
+    def getHelpTitle(self):
+        return "Connect using SSH to the engine's virtual machine."
 
-  def main(self):
-    name = self.getInputName()
+    def getShellOptions(self, optparser):
+        return optparser
 
-    self.core.loadEngine(name) \
-      .bind(Engine.loadConfigFile) \
-      .bind(Engine.shell) \
-      .catch(self.exitError)
+    def main(self):
+        name = self.getInputName()
+
+        self.core.loadEngine(name) \
+            .bind(Engine.loadConfigFile) \
+            .bind(Engine.shell) \
+            .catch(self.exitError)
