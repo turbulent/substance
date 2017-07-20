@@ -38,7 +38,7 @@ class Hatch(Command):
 
     def getShellOptions(self, optparser):
         optparser.add_option("-s", "--strip", dest="strip", default="1",
-                             help="Strip X number of directories from tarball", action="store_true")
+                             help="Strip X number of leading components from tarball paths", action="store_true")
         return optparser
 
     def main(self):
@@ -76,21 +76,22 @@ class Hatch(Command):
         print "Downloading template archive..."
         if tpl.endswith('.tar.gz'):
             # With tar archives, everything is usually packaged in a single directory at root of archive
-            strip = self.getOption('strip')
+            strip = int(self.getOption('strip'))
             urllib.urlretrieve(tpl, 'tpl.tar.gz')
         else:
-            strip = "0"  # git archive never packages in a single root directory
+            strip = 0  # git archive never packages in a single root directory
             if self.proc(['git', 'archive', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
                 return self.exitError('Could not download template %s@%s!' % (tpl, ref))
 
         print "Extracting template archive..."
-        if self.proc([self.getTar(), '-xf', 'tpl.tar.gz', '--strip', strip]):
+        if self.proc(['tar', '--strip', str(strip), '-xf', 'tpl.tar.gz']):
             return self.exitError('Could not extract template archive!')
 
+        # Acquire list of files
         print "Getting list of files in template..."
-        out = subprocess.check_output([self.getTar(
-        ), '-tf', 'tpl.tar.gz', '--strip', strip, '--show-transformed-names'], universal_newlines=True)
-        tplFiles = [l for l in out.split('\n') if l and os.path.isfile(l)]
+        out = subprocess.check_output(['tar', '-tf', 'tpl.tar.gz'], universal_newlines=True)
+        tplFiles = ['/'.join(l.split('/')[strip:]) for l in out.split('\n') if l]
+        tplFiles = [l for l in tplFiles if os.path.isfile(l)]
 
         print "Cleaning up template archive..."
         if self.proc(['rm', 'tpl.tar.gz']):
@@ -173,11 +174,3 @@ class Hatch(Command):
             if confirm == 'n':
                 return False
         return True
-
-    def getTar(self):
-        # Hack around Mac OS X's old-ass BSD 'tar'
-        if self.proc(['which', 'gnutar']):
-            # gnutar not found, use 'tar' and hope for the best
-            return 'tar'
-        # This is a Mac OS X install, use 'gnutar' which is better
-        return 'gnutar'
