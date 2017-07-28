@@ -22,7 +22,6 @@ class Engine(SubProgram):
         self.addCommand('ssh', 'substance.command.engine.ssh')
         self.addCommand('env', 'substance.command.engine.env')
         self.addCommand('sshinfo', 'substance.command.engine.sshinfo')
-        self.addCommand('sync', 'substance.command.engine.sync')
         return self
 
     def getShellOptions(self, optparser):
