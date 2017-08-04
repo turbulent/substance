@@ -140,7 +140,7 @@ class Hatch(Command):
                 return self.exitOK("Operation aborted.")
 
             print "Replacing tokens in files..."
-            sed = "; ".join(["s/%s/%s/g" % (k, variables[k])
+            sed = "; ".join(["s/%s/%s/g" % (k, variables[k].replace('/', '\\/'))
                              for k in variables.keys()])
             for tplFile in tplFiles:
                 if self.proc(['sed', '-i.orig', sed, tplFile]):
