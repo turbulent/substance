@@ -50,7 +50,7 @@ class SubwatchSyncher(BaseSyncher):
                 return OK(folder)
         return Fail(NameError("%s is not a folder." % path))
 
-    def start(self, direction=Syncher.BOTH):
+    def start(self, direction=Syncher.BOTH, path=''):
         op = self.ensureKeyPerms() \
             .then(defer(self.initialSync, direction=direction))
         if op.isFail():

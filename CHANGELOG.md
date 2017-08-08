@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `substance sync` now accepts a sub-path argument to limit scope of sync.
+
 ### Changed
 - All Python source code now adheres to the [PEP 8 -- Style Guide for Python
   Code](https://www.python.org/dev/peps/pep-0008/).

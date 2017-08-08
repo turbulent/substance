@@ -18,10 +18,10 @@ class UnisonSyncher(BaseSyncher):
         super(UnisonSyncher, self).__init__(engine, keyfile)
         self.ignoreArchives = False
 
-    def start(self, direction):
+    def start(self, direction, path=''):
         self.ensureKeyPerms()
         unisonPath = self.getUnisonBin()
-        unisonArgs = self.getUnisonArgs(direction)
+        unisonArgs = self.getUnisonArgs(direction, path)
         unisonEnv = self.getUnisonEnv()
         if self.ignoreArchives:
             # It seems that in certain cases, unison does not observe the -ignorearchives flag correctly
@@ -34,6 +34,7 @@ class UnisonSyncher(BaseSyncher):
             ])
             if res.isFail():
                 return res
+        logger.info("Syncing local directory %s to remote directory %s", unisonArgs[-2], unisonArgs[-1])
         logger.debug("EXEC: %s", Shell.stringify([unisonPath] + unisonArgs, unisonEnv))
         os.execve(unisonPath, unisonArgs, unisonEnv)
 
@@ -42,11 +43,11 @@ class UnisonSyncher(BaseSyncher):
         logger.debug("Dir: %s", unisonDir)
         return os.path.join(unisonDir, 'unison')
 
-    def getUnisonArgs(self, direction):
+    def getUnisonArgs(self, direction, path=''):
         folder = self.engine.getEngineFolders()[0]
-        localRoot = Shell.normalizePath(folder.hostPath)
-        remoteRoot = 'ssh://substance@%s/%s' % (
-            self.engine.getSSHIP(), folder.guestPath)
+        localRoot = Shell.normalizePath(os.path.join(folder.hostPath, path))
+        remoteRoot = 'ssh://substance@%s/%s/%s' % (
+            self.engine.getSSHIP(), folder.guestPath.rstrip('/'), path.lstrip('/'))
 
         # Direction arguments
         if direction == Syncher.UP:
