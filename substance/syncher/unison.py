@@ -6,6 +6,8 @@ from substance.utils import pathComponents, getSupportFile
 from substance.constants import Syncher
 from substance.shell import Shell
 from substance.syncher import BaseSyncher
+from substance.monads import Try
+from substance.link import Link
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,18 @@ class UnisonSyncher(BaseSyncher):
         unisonPath = self.getUnisonBin()
         unisonArgs = self.getUnisonArgs(direction)
         unisonEnv = self.getUnisonEnv()
-        logger.debug("EXEC: %s, %s, %s", unisonPath, unisonArgs, unisonEnv)
+        if self.ignoreArchives:
+            # It seems that in certain cases, unison does not observe the -ignorearchives flag correctly
+            # So to make sure, we forcibly delete previous archives on both sides
+            res = Try.sequence([
+                # Delete host archives
+                Shell.call(["rm", "-rf", unisonEnv['UNISON']], shell=False),
+                # Delete guest archives
+                self.engine.readLink().bind(Link.runCommand, 'rm -rf /substance/.unison')
+            ])
+            if res.isFail():
+                return res
+        logger.debug("EXEC: %s", Shell.stringify([unisonPath] + unisonArgs, unisonEnv))
         os.execve(unisonPath, unisonArgs, unisonEnv)
 
     def getUnisonBin(self):

@@ -130,6 +130,13 @@ class Shell(object):
             os.execvp(cmdPath, cmdArgs)
 
     @staticmethod
+    def stringify(cmd, env={}):
+        envStr = ""
+        if env:
+            envStr = " ".join(["%s=%s" % (k, subprocess.list2cmdline([env[k]])) for k in env]) + " "
+        return "%s%s" % (envStr, subprocess.list2cmdline(cmd))
+
+    @staticmethod
     def chmod(path, mode):
         try:
             os.chmod(path, mode)

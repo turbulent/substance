@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Crash in `hatch` under Mac OS X due to BSD tar implementation.
 - Crash when running `substance engine`.
 - Crash in `hatch` when supplying values containing slash (`/`) characters.
+- `-i` option in `substance sync` is now guaranteed to work as expected.
 
 ## [0.12.1] - 2017-06-20
 ### Fixed
