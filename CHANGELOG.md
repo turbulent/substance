@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.13.0] - 2017-08-08
 ### Added
 - `substance sync` now accepts a sub-path argument to limit scope of sync.
 
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Crash in `hatch` under Mac OS X due to BSD tar implementation.
-- Crash when running `substance engine`.
+- Crash when running `substance engine` to get a list of sub-commands.
 - Crash in `hatch` when supplying values containing slash (`/`) characters.
 - `-i` option in `substance sync` is now guaranteed to work as expected.
 
