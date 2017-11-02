@@ -76,13 +76,6 @@ class Link(object):
     def loadKey(self):
         try:
             if not self.key:
-                if self.useAgent:
-                    keys = paramiko.agent.Agent().get_keys()
-                    if keys:
-                        logger.debug("Connecting using key #0 from SSH Agent")
-                        self.key = keys[0]
-
-            if not self.key:
                 logger.debug("Connecting using %s key: %s" %
                              (self.keyFormat, self.keyFile))
                 if self.keyFormat == 'DSA':
@@ -97,6 +90,7 @@ class Link(object):
 
         except Exception as err:
             return Fail(err)
+
         return OK(self.key)
 
     def connect(self):

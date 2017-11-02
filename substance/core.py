@@ -88,10 +88,6 @@ class Core(object):
         defaults['tld'] = '.dev'
         defaults['devroot'] = os.path.join('~', 'substance')
         defaults['defaultBox'] = 'turbulent/substance-box:0.6'
-        defaults['ssh'] = OrderedDict()
-        defaults['ssh']['privateKey'] = None
-        defaults['ssh']['publicKey'] = None
-        defaults['ssh']['keyFormat'] = 'RSA'
         defaults['current'] = OrderedDict()
         defaults['engine'] = None
         defaults['subenv'] = None
@@ -212,9 +208,7 @@ class Core(object):
     # -- Link handling
 
     def getLink(self, type="ssh"):
-        file = self.getSSHPrivateKey()
-        link = Link(keyFile=file.getOrElse(self.getInsecureKeyFile()), useAgent=self.config.get(
-            'ssh', {}).get('agent', False), keyFormat=self.config.get('ssh', {}).get('keyFormat', 'RSA'))
+        link = Link(keyFile=self.getInsecureKeyFile(), keyFormat='RSA')
         return link
 
     # -- Database
@@ -245,26 +239,6 @@ class Core(object):
     def getBoxes(self):
         return self.getDB().getBoxRecords() \
             .mapM(lambda r: OK(Box(self, r.get('name'), r.get('version'), r.get('namespace'), r.get('registry'), r.get('boxstring'), r.get('archiveSHA1'))))
-
-    # -- Keys handling
-
-    def getSSHPrivateKey(self):
-        key = self.config.get('ssh', {}).get('privateKey')
-        if key:
-            keyfile = expandLocalPath(key)
-            if not os.path.isfile(keyfile):
-                return Fail(FileDoesNotExist("Inexistent private key: %s" % key))
-            return OK(keyfile)
-        return OK(self.getInsecureKeyFile())
-
-    def getSSHPublicKey(self):
-        key = self.config.get('ssh', {}).get('publicKey')
-        if key:
-            keyfile = expandLocalPath(key)
-            if not os.path.isfile(keyfile):
-                return Fail(FileDoesNotExist("Inexistent public key: %s" % key))
-            return OK(keyfile)
-        return OK(self.getInsecurePubKeyFile())
 
     def getInsecureKeyFile(self):
         return getSupportFile('support/substance_insecure')

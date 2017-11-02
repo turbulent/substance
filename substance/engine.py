@@ -24,6 +24,7 @@ from substance.exceptions import (
     EngineProvisioned,
     EnvNotDefinedError
 )
+from substance.syncher.unison import UnisonSyncher
 
 logger = logging.getLogger(__name__)
 
@@ -225,17 +226,8 @@ class Engine(object):
 
     def getSyncher(self):
         syncMode = self.config.get('devroot').get('mode')
-        keyfile = self.core.getSSHPrivateKey()
-        if keyfile.isFail():
-            return keyfile
-        if syncMode == 'rsync':
-            from substance.syncher.rsync import SubwatchSyncher
-            return SubwatchSyncher(engine=self, keyfile=keyfile.getOK())
-        elif syncMode == 'unison':
-            from substance.syncher.unison import UnisonSyncher
-            return UnisonSyncher(engine=self, keyfile=keyfile.getOK())
-        else:
-            raise NotImplementedError()
+        keyfile = self.core.getInsecureKeyFile()
+        return UnisonSyncher(engine=self, keyfile=keyfile)
 
     def clearDriverID(self):
         self.config.set('id', None)
@@ -360,8 +352,7 @@ class Engine(object):
 
     def postLaunch(self):
         return self.setHostname() \
-            .then(self.mountFolders) \
-            .then(self.uploadKeys)
+            .then(self.mountFolders) 
 
     def saveDriverNetworkInfo(self, info):
         self.logAdapter.debug("Network information for machine: %s" % info)
@@ -525,36 +516,9 @@ class Engine(object):
         cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
         return Try.sequence(cmds)
 
-    def uploadKeys(self):
-        ''' pass '''
-        ops = []
-        key = self.core.getSSHPrivateKey()
-        pkey = self.core.getSSHPublicKey()
-
-        if key.isOK():
-            key = key.getOK()
-            self.logAdapter.info("Uploading private key: %s" % key)
-            ops.append(self.readLink().bind(
-                Link.upload, localPath=key, remotePath=".ssh/id_dsa"))
-
-        if pkey.isOK():
-            pkey = pkey.getOK()
-            self.logAdapter.info("Uploading public key: %s" % pkey)
-            ops.append(self.readLink().bind(
-                Link.upload, localPath=pkey, remotePath=".ssh/id_dsa.pub"))
-            ops.append(self.readLink().bind(
-                Link.runCommand,
-                cmd="t=$(tempfile); cat ~/.ssh/authorized_keys ~/.ssh/id_dsa.pub | sort -u > $t && mv $t ~/.ssh/authorized_keys",
-                stream=True,
-                interactive=True))
-
-        return Try.sequence(ops)
-
     def exposePort(self, local_port, public_port, scheme):
-        keyfile = self.core.getSSHPrivateKey()
-        if keyfile.isFail():
-            return keyfile
-        keyfile = Shell.normalizePath(keyfile.getOK())
+        keyfile = self.core.getInsecureKeyFile()
+        keyfile = Shell.normalizePath(keyfile)
         forward_descr = "0.0.0.0:%s:127.0.0.1:%s" % (public_port, local_port)
         engineIP = self.getSSHIP()
         enginePort = str(self.getSSHPort())
