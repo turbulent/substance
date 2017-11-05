@@ -44,7 +44,14 @@ class Link(object):
 
         while not self.connected:
             logger.debug("Connect attempt %s..." % tries)
+
+            def clearKeys(err):
+                self.client.get_host_keys().clear()
+                logger.debug("Clearing host keys...")
+                return OK(None)
+
             state = self.connect()  \
+                .catchError(paramiko.ssh_exception.BadHostKeyException, clearKeys) \
                 .catchError(paramiko.ssh_exception.SSHException, lambda err: OK(None)) \
                 .catchError(socket.error, lambda err: OK(None))
             if state.isFail():
@@ -96,7 +103,6 @@ class Link(object):
     def connect(self):
         try:
             self.client = paramiko.SSHClient()
-            self.client.load_system_host_keys()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             options = self.getConnectOptions()
             self.client.connect(**options)
@@ -113,8 +119,8 @@ class Link(object):
             'pkey': self.key,
             'allow_agent': True,
             'look_for_keys': True,
-            'timeout': 1,
-            'banner_timeout': 1
+            'timeout': 5,
+            'banner_timeout': 5
         }
 
     def command(self, cmd, *args, **kwargs):
