@@ -4,7 +4,7 @@ import logging
 import paramiko
 from paramiko.py3compat import u
 import socket
-from time import time
+from time import time, sleep
 from collections import namedtuple
 from substance.monads import *
 from substance.exceptions import *
@@ -61,7 +61,8 @@ class Link(object):
             if tries >= maxtries:
                 return Fail(LinkRetriesExceeded("Max retries exceeded"))
             tries += 1
-
+            sleep(0.8)
+            
         end = time()
         logger.debug("Connect time: %ss" % (end - start))
         self.connected = True
@@ -119,8 +120,8 @@ class Link(object):
             'pkey': self.key,
             'allow_agent': True,
             'look_for_keys': True,
-            'timeout': 5,
-            'banner_timeout': 5
+            'timeout': 1,
+            'banner_timeout': 1
         }
 
     def command(self, cmd, *args, **kwargs):

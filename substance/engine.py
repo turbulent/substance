@@ -755,8 +755,10 @@ class Engine(object):
         mountCmd = "mount -t vboxsf -o umask=%(umask)s,gid=%(gid)s,uid=%(uid)s %(name)s %(guestPath)s" % folder.__dict__
         mkdirCmd = "mkdir -p %(guestPath)s && chown -R %(uid)s:%(gid)s %(guestPath)s" % folder.__dict__
         # XXX Make this non VBOX specific
-        return self.link.runCommand(mkdirCmd, sudo=True) \
-            .then(defer(self.link.runCommand, mountCmd, sudo=True))
+        chain = self.link.runCommand(mkdirCmd, sudo=True)
+        if folder.mode is 'sharedfolder':
+            chain = chain.then(defer(self.link.runCommand, mountCmd, sudo=True))
+        return chain
 
     chainSelf = chainSelf
 
