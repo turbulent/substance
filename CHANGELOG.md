@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.0] - 2017-11-09
+
+### Added
+- New CLI command: `substance cleanup`, remove unused images and containers.
+
+### Fixed
+- SSH connection will no longer give up during the boot process.
+- The DHCP range used for the substance hoif will now start at a higher number to prevent gateway conflicts.
+- The boot process of substance boxes will no longer try to mount shared folders even if none are configured.
+- `substance switch` will no longer fail when inexistent linked containers are configured in the subenv.
+
+### Changed
+- `substance switch` will no longer force a pull on all images and only login once instead.
+- The default box is now a substance version constants instead of a configuration option.
+- Default Box is now turbulent/substance-box:0.7.
+- SSH handling now properly uses and forwards SSH agents to box.
+- The SSH privateKey/publicKey substance configuration options are now removed.
+
+
 ## [0.13.0] - 2017-08-08
 ### Added
 - `substance sync` now accepts a sub-path argument to limit scope of sync.
