@@ -551,7 +551,7 @@ class Engine(object):
 
         if restart:
             cmds.append("dockwrkr -y reset")
-            cmds.append("subenv run dockwrkr pull -a")
+            cmds.append("subenv run dockwrkr login")
             cmds.append("subenv run dockwrkr start -a")
 
         return self.readLink() \
