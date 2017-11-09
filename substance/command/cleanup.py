@@ -18,6 +18,5 @@ class Cleanup(Command):
 
     def main(self):
         return self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
-            .bind(Engine.envLoadCurrent) \
             .bind(Engine.envCleanup) \
             .catch(self.exitError)
