@@ -10,7 +10,7 @@ from substance.engine import Engine
 from substance.link import Link
 from substance.box import Box
 from substance.db import DB
-from substance.constants import Tables, EngineStates
+from substance.constants import Tables, EngineStates, DefaultEngineBox
 from substance.utils import (
     readYAML,
     writeYAML,
@@ -87,7 +87,6 @@ class Core(object):
         defaults['drivers'] = ['virtualbox']
         defaults['tld'] = '.dev'
         defaults['devroot'] = os.path.join('~', 'substance')
-        defaults['defaultBox'] = 'turbulent/substance-box:0.6'
         defaults['current'] = OrderedDict()
         defaults['engine'] = None
         defaults['subenv'] = None
@@ -159,7 +158,7 @@ class Core(object):
         return False
 
     def getDefaultBoxString(self):
-        return self.config.get('defaultBox', 'turbulent/substance-box:0.6')
+        return DefaultEngineBox
 
     # -- Engine library management
 

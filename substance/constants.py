@@ -23,6 +23,8 @@ Tables = Constants(
     BOXES="boxes"
 )
 
+DefaultEngineBox = 'turbulent/substance-box:0.7'
+
 EngineStates = Constants(
     RUNNING="running",
     STOPPED="stopped",
