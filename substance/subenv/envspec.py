@@ -7,7 +7,7 @@ from substance.utils import readDotEnv, writeToFile, makeSymlink
 from substance.exceptions import (InvalidEnvError, InvalidOptionError)
 from substance.config import (Config)
 from substance import Shell
-from substance.subenv import (SPECDIR, ENVFILE, CODELINK, CONFFILE)
+from substance.subenv.constants import (SPECDIR, ENVFILE, CODELINK, CONFFILE)
 import jinja2
 
 logger = logging.getLogger(__name__)

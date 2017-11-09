@@ -5,7 +5,7 @@ import shlex
 from substance.logs import *
 from substance.exceptions import (InvalidOptionError)
 from substance import Command
-from substance.subenv import (SPECDIR, SubenvAPI)
+from substance.subenv import (SubenvAPI)
 
 
 class Delete(Command):
