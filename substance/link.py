@@ -62,7 +62,7 @@ class Link(object):
                 return Fail(LinkRetriesExceeded("Max retries exceeded"))
             tries += 1
             sleep(0.8)
-            
+
         end = time()
         logger.debug("Connect time: %ss" % (end - start))
         self.connected = True
