@@ -352,7 +352,7 @@ class Engine(object):
 
     def postLaunch(self):
         return self.setHostname() \
-            .then(self.mountFolders) 
+            .then(self.mountFolders)
 
     def saveDriverNetworkInfo(self, info):
         self.logAdapter.debug("Network information for machine: %s" % info)
@@ -688,6 +688,12 @@ class Engine(object):
                 .map(self.__envStatus)
         else:
             return OK(self.__envStatus())
+
+    def envCleanup(self):
+        cmds = []
+        cmds.append('docker system prune -a')
+        return self.readLink() \
+            .bind(Link.runCommand, ' && '.join(cmds), interactive=True, stream=True, shell=False, capture=False)
 
     def envLogs(self, parts=[], pattern=None, follow=True, lines=None):
 

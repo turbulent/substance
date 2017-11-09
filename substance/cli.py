@@ -29,6 +29,7 @@ class SubstanceCLI(Program):
         self.addCommand('exec', 'substance.command.exec')
         self.addCommand('status', 'substance.command.status')
         self.addCommand('logs', 'substance.command.logs')
+        self.addCommand('cleanup', 'substance.command.cleanup')
         self.addCommand('sync', 'substance.command.sync')
         self.addCommand('engine', 'substance.command.engine')
         self.addCommand('box', 'substance.command.box')
