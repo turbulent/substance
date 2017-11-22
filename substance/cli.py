@@ -27,6 +27,7 @@ class SubstanceCLI(Program):
         self.addCommand('recreate', 'substance.command.recreate')
         self.addCommand('ssh', 'substance.command.ssh')
         self.addCommand('exec', 'substance.command.exec')
+        self.addCommand('run', 'substance.command.run')
         self.addCommand('status', 'substance.command.status')
         self.addCommand('logs', 'substance.command.logs')
         self.addCommand('cleanup', 'substance.command.cleanup')

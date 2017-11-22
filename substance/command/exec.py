@@ -26,7 +26,7 @@ class Exec(Command):
         (self.options, self.args) = self.parseShellInput(False)
 
         if len(self.args) == 0:
-            return self.exitError("Please provider a container name to exec on.")
+            return self.exitError("Please provide a container name to exec on.")
 
         self.container = self.args[0]
         self.main()

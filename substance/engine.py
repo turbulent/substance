@@ -22,7 +22,8 @@ from substance.exceptions import (
     EngineExistsError,
     EngineNotProvisioned,
     EngineProvisioned,
-    EnvNotDefinedError
+    EnvNotDefinedError,
+    InvalidCommandError
 )
 from substance.syncher.unison import UnisonSyncher
 
@@ -657,13 +658,17 @@ class Engine(object):
         cmd = "subenv run dockwrkr exec -t -i %(opts)s %(container)s 'bash -c \"%(initCommands)s\"'" % tpl
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
+    def envRun(self, task, args):
+        cmd = "subenv run dockwrkr run %s %s" % ( task, ' '.join(args))
+        return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
+
     def envExecAlias(self, alias, args):
         aliases = self.config.get('aliases')
         if aliases and alias in aliases:
             cmd = aliases[alias]
             args = cmd['args'] + args
             return self.envExec(container=cmd['container'], cmd=args, cwd=cmd['cwd'], user=cmd['user'])
-        return Fail("Invalid command '%s' specified for '%s'.\n\nUse 'substance help' for available commands." % (alias, 'substance'))
+        return Fail(InvalidCommandError("Invalid command '%s' specified for '%s'.\n\nUse 'substance help' for available commands." % (alias, 'substance')))
 
     def envStop(self, time=10, containers=[]):
         cmds = []
