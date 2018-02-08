@@ -67,6 +67,16 @@ are kept in sync with the engine's local file system.
 
 Always keep this process running while you develop!
 
+Known Issues
+^^^^^^^^^^^
+
+``Fatal error: Filesystem watcher error: cannot add a watcher: system limit reached``
+
+  This happens when the number of files being watched on the local system exceeds the
+  maximum amount of files permitted to be watched by a single user at the same time.
+  
+  To increase this limit, modify the value inside: ``/proc/sys/fs/inotify/max_user_watches``.
+
 Setup your first environment
 ----------------------------
 
