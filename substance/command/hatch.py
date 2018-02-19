@@ -170,7 +170,7 @@ class Hatch(Command):
     def confirm(self, prompt):
         confirm = ''
         while confirm != 'Y':
-            confirm = raw_input("%s (Y/n) " % prompt)
+            confirm = raw_input("%s (Y/n) " % prompt) or 'Y'
             if confirm == 'n':
                 return False
         return True
