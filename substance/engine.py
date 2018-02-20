@@ -10,7 +10,7 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
-from substance.utils import mergeDict, parseDotEnv
+from substance.utils import mergeDict, mergeDictOverwrite, parseDotEnv
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates)
@@ -78,6 +78,7 @@ class Engine(object):
         self.config = Config(configFile)
         self.logAdapter = EngineLogAdapter(logger, self.__dict__)
         self.currentEnv = None
+        self.subenvConfig = None
 
     def getDefaults(self):
         defaults = OrderedDict()
@@ -236,6 +237,12 @@ class Engine(object):
 
     def loadConfigFile(self):
         return self.config.loadConfigFile().bind(self.validateConfig).map(self.chainSelf)
+
+    def loadSubenvConfigFile(self):
+        basePath = os.path.expanduser(self.config.get('devroot').get('path'))
+        self.subenvConfig = Config(os.path.join(basePath,
+                                   '%s/.substance/subenv.yml' % self.currentEnv))
+        return self.subenvConfig.loadConfigFile().map(self.chainSelf)
 
     def loadState(self):
         ddebug("Engine load state %s" % self.name)
@@ -659,11 +666,15 @@ class Engine(object):
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
     def envRun(self, task, args):
-        cmd = "subenv run dockwrkr run %s %s" % ( task, ' '.join(args))
+        cmd = "subenv run dockwrkr run %s %s" % (task, ' '.join(args))
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
     def envExecAlias(self, alias, args):
         aliases = self.config.get('aliases')
+        if self.subenvConfig.get('aliases'):
+            aliases = mergeDictOverwrite(self.config.get('aliases'),
+                                         self.subenvConfig.get('aliases'))
+
         if aliases and alias in aliases:
             cmd = aliases[alias]
             args = cmd['args'] + args
