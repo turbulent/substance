@@ -85,7 +85,7 @@ class Hatch(Command):
             urllib.urlretrieve(tpl, 'tpl.tar.gz')
         else:
             strip = 0  # git archive never packages in a single root directory
-            if self.proc(['git', 'archive', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
+            if self.proc(['git', 'archive', '--verbose', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
                 return self.exitError('Could not download template %s@%s!' % (tpl, ref))
 
         print "Extracting template archive..."
