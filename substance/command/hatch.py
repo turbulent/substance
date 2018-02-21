@@ -174,8 +174,8 @@ class Hatch(Command):
 
     def confirm(self, prompt):
         confirm = ''
-        while confirm != 'Y' or confirm != 'y':
+        while confirm not in ('Y', 'y'):
             confirm = raw_input("%s (Y/n) " % prompt) or 'Y'
-            if confirm == 'n' or confirm == 'N':
+            if confirm in ('N', 'n'):
                 return False
         return True
