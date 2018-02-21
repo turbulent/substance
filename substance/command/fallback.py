@@ -22,7 +22,9 @@ class Fallback(Command):
 
     def main(self):
         return self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
+            .bind(Engine.envLoadCurrent) \
             .bind(Engine.loadConfigFile) \
+            .bind(Engine.loadSubenvConfigFile) \
             .bind(Engine.envExecAlias, alias=self.name, args=self.args) \
             .catch(self.onEngineException)
 

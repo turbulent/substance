@@ -1,5 +1,6 @@
 from substance.monads import *
 from substance.logs import *
+from substance.utils import mergeDictOverwrite
 from substance import (Engine, Command)
 from substance.exceptions import (SubstanceError)
 
@@ -21,12 +22,17 @@ class Aliases(Command):
 
     def main(self):
         return self.core.loadCurrentEngine(name=self.parent.getOption('engine')) \
+            .bind(Engine.envLoadCurrent) \
             .bind(Engine.loadConfigFile) \
+            .bind(Engine.loadSubenvConfigFile) \
             .bind(self.exportAliases) \
             .catch(self.exitError)
 
     def exportAliases(self, engine):
         aliases = engine.config.get('aliases')
+        if engine.subenvConfig.get('aliases'):
+            aliases = mergeDictOverwrite(engine.config.get('aliases'),
+                                         engine.subenvConfig.get('aliases'))
         if aliases:
             prefix = self.getOption('prefix')
             suffix = self.getOption('suffix')

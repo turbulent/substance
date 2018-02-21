@@ -195,6 +195,13 @@ def mergeDict(a, b, path=None):
     return a
 
 
+# merge 2 dicts and overwrite target keys with source keys if collision
+def mergeDictOverwrite(target, source):
+    merged = target.copy()
+    merged.update(source)
+    return merged
+
+
 def readDotEnv(filepath, env={}):
     with open(filepath) as f:
         return parseDotEnv(f, env)
