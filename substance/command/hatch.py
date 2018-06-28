@@ -45,34 +45,39 @@ class Hatch(Command):
         tpl = self.getArg(0)
         if not tpl:
             return self.exitError("You MUST provide a template name or git repository URL!")
-        ref = self.getArg(1)
-        if not ref:
-            ref = "master"
+        ref = self.getArg(1) or "master"
+
+        target_dir = "".join(tpl.split('/')[-1:]).split('.')[0]
 
         if not tpl.startswith('ssh://') and not tpl.startswith('https://') and not tpl.startswith('file://'):
             splt = tpl.split("/", 2)
             if len(splt) == 2:
                 tpl = 'https://github.com/%s/%s/archive/%s.tar.gz' % (
                     splt[0], splt[1], ref)
+                target_dir = splt[1]
             else:
+                target_dir = tpl
                 tpl = 'https://github.com/turbulent/template-%s/archive/%s.tar.gz' % (
                     tpl, ref)
+        install_dir = os.getcwd() + ("/%s" % target_dir)
+        if os.path.exists(install_dir):
+            print "\n!!! Install directory exists! Make sure it's empty or Some files may be overwritten !!!\n"
 
-        cwd = os.getcwd()
-        if os.listdir(cwd):
-            print "\n!!! Current directory is not empty! Some files may be overwritten !!!\n"
-
-        print "You are about to hatch a new project in the current working directory."
+        print "You are about to hatch a new project."
         print "  Template used: %s" % tpl
         print "  Ref (version): %s" % ref
         if not tpl.endswith('.tar.gz'):
             print "  Ref (version): %s" % ref
-        print "  Path         : %s" % cwd
+        print "  Path         : %s" % install_dir
         print ""
 
         if not self.confirm("Are you SURE you wish to proceed?"):
             return self.exitOK("Come back when you've made up your mind!")
 
+        if not os.path.exists(install_dir):
+            os.mkdir(target_dir, 0755)
+        os.chdir(target_dir)
+        print "Switching to directory: %s" % install_dir
         print "Downloading template archive..."
         if tpl.endswith('.tar.gz'):
             # With tar archives, everything is usually packaged in a single directory at root of archive
@@ -80,7 +85,7 @@ class Hatch(Command):
             urllib.urlretrieve(tpl, 'tpl.tar.gz')
         else:
             strip = 0  # git archive never packages in a single root directory
-            if self.proc(['git', 'archive', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
+            if self.proc(['git', 'archive', '--verbose', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
                 return self.exitError('Could not download template %s@%s!' % (tpl, ref))
 
         print "Extracting template archive..."
@@ -169,8 +174,8 @@ class Hatch(Command):
 
     def confirm(self, prompt):
         confirm = ''
-        while confirm != 'Y':
+        while confirm not in ('Y', 'y'):
             confirm = raw_input("%s (Y/n) " % prompt) or 'Y'
-            if confirm == 'n':
+            if confirm in ('N', 'n'):
                 return False
         return True
