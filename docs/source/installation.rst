@@ -23,7 +23,7 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
 #. Install Homebrew's Python distribution::
 
-    $ brew install python
+    $ brew install python@2
 
 #. Make sure that running the command ``python`` executes the one under
    ``/usr/local/bin``::
