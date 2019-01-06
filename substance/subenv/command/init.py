@@ -35,7 +35,7 @@ class Init(Command):
         env = {}
         envopts = self.options.define
         for opt in envopts:
-            if opt.index('=') == 0o1:
+            if '=' not in opt:
                 return Fail(InvalidOptionError("%s is not a valid define. Use VAR=val form." % opt))
             (var, val) = ''.join(shlex.split(opt)).split('=')
             env[var] = val
