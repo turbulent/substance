@@ -103,7 +103,6 @@ def streamDownload(url, destination):
                 progress = 0
                 startTime = time()
                 chunkSize = floor(contentLength / 100)
-                sys.stdout.write("chunksize is %s" % chunkSize)
                 for chunk in r.iter_content(chunk_size=chunkSize):
                     if chunk:
                         progress += len(chunk)
