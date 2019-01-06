@@ -185,7 +185,6 @@ class Link(object):
                 if channel in r:
                     if channel.recv_ready():
                         d = channel.recv(bufsize)
-                        logger.info("D = %s" %d)
                         if len(d) == 0:
                             isAlive = False
                         else:
@@ -197,7 +196,6 @@ class Link(object):
 
                     if channel.recv_stderr_ready():
                         d = channel.recv_stderr(bufsize)
-                        logger.info("DE = %s" %d)
                         if stream:
                             sys.stderr.write(d.decode())
                             sys.stderr.flush()
