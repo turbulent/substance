@@ -1,16 +1,19 @@
 import re
 import os
 import platform
+import logging
 
 from substance.shell import Shell
 from substance.monads import *
 from substance.logs import *
-from exceptions import *
+from .exceptions import *
 from substance.exceptions import *
 
 VBOX_VERSION_MIN = (5, 0, 0)
 VBOX_VERSION_CHECKED = None
 
+
+logger = logging.getLogger(__name__)
 
 def vboxManager(cmd, params=""):
     '''
@@ -49,7 +52,12 @@ def parseVersion(vstring):
     if vstring is None or vstring == "":
         return fail
 
-    parts = vstring.split("_")
+    logger.info("VSTR %s " % vstring)
+
+    parts = vstring.split('_')
+
+    logger.info("PARTS %s " % parts)
+
     if len(parts) == 0:
         return fail
 

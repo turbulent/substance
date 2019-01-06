@@ -133,7 +133,7 @@ class Engine(object):
         ops.append(self.confValidateDevroot(config.get('devroot', {})))
 
         def dd(err):
-            print("%s" % err)
+            print(("%s" % err))
             return ConfigValidationError(err.message)
 
         return Try.sequence(ops) \
@@ -292,7 +292,7 @@ class Engine(object):
             cf['profile']['cpus'] = profile.cpus
             cf['profile']['memory'] = profile.memory
 
-        for ck, cv in cf.iteritems():
+        for ck, cv in cf.items():
             self.config.set(ck, cv)
 
         return OK(self.config)
@@ -521,7 +521,7 @@ class Engine(object):
         serviceCmd = "service hostname restart"
         cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (
             echoCmd, hostsCmd, hostCmd, serviceCmd)
-        cmds = map(defer(self.link.runCommand, stream=True, sudo=False), [cmd])
+        cmds = list(map(defer(self.link.runCommand, stream=True, sudo=False), [cmd]))
         return Try.sequence(cmds)
 
     def exposePort(self, local_port, public_port, scheme):
@@ -771,7 +771,7 @@ class Engine(object):
     def mountFolders(self):
         self.logAdapter.info("Mounting engine folders")
         folders = self.getEngineFolders()
-        return Try.of(map(self.mountFolder, folders))
+        return Try.of(list(map(self.mountFolder, folders)))
 
     def mountFolder(self, folder):
         mountCmd = "mount -t vboxsf -o umask=%(umask)s,gid=%(gid)s,uid=%(uid)s %(name)s %(guestPath)s" % folder.__dict__

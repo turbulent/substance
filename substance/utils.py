@@ -9,6 +9,7 @@ import os
 import errno
 import hashlib
 import tarfile
+from math import floor
 from time import time
 from pkg_resources import Requirement, resource_filename, require
 from substance.exceptions import (
@@ -23,7 +24,7 @@ _yaml_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
 
 
 def _dict_representer(dumper, data):
-    return dumper.represent_dict(data.iteritems())
+    return dumper.represent_dict(iter(data.items()))
 
 
 def _dict_constructor(loader, node):
@@ -55,7 +56,7 @@ def readYAML(filename):
         stream = open(filename, "r")
         contents = yaml.load(stream)
         return contents
-    except yaml.YAMLError, exc:
+    except yaml.YAMLError as exc:
         msg = "Syntax error in file %s"
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
@@ -101,7 +102,8 @@ def streamDownload(url, destination):
             else:
                 progress = 0
                 startTime = time()
-                chunkSize = contentLength / 100
+                chunkSize = floor(contentLength / 100)
+                sys.stdout.write("chunksize is %s" % chunkSize)
                 for chunk in r.iter_content(chunk_size=chunkSize):
                     if chunk:
                         progress += len(chunk)
@@ -221,7 +223,7 @@ def parseDotEnv(dotenvdata, env={}):
 def makeSymlink(source, link, force=False):
     try:
         os.symlink(source, link)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EEXIST and force:
             os.remove(link)
             os.symlink(source, link)

@@ -2,7 +2,7 @@ import subprocess
 import os
 import random
 import string
-import urllib
+import urllib.request, urllib.parse, urllib.error
 try:
     import readline  # Make raw_input nicer to use, but don't make it required
     readline
@@ -61,44 +61,44 @@ class Hatch(Command):
                     tpl, ref)
         install_dir = os.getcwd() + ("/%s" % target_dir)
         if os.path.exists(install_dir):
-            print "\n!!! Install directory exists! Make sure it's empty or Some files may be overwritten !!!\n"
+            print("\n!!! Install directory exists! Make sure it's empty or Some files may be overwritten !!!\n")
 
-        print "You are about to hatch a new project."
-        print "  Template used: %s" % tpl
-        print "  Ref (version): %s" % ref
+        print("You are about to hatch a new project.")
+        print("  Template used: %s" % tpl)
+        print("  Ref (version): %s" % ref)
         if not tpl.endswith('.tar.gz'):
-            print "  Ref (version): %s" % ref
-        print "  Path         : %s" % install_dir
-        print ""
+            print("  Ref (version): %s" % ref)
+        print("  Path         : %s" % install_dir)
+        print("")
 
         if not self.confirm("Are you SURE you wish to proceed?"):
             return self.exitOK("Come back when you've made up your mind!")
 
         if not os.path.exists(install_dir):
-            os.mkdir(target_dir, 0755)
+            os.mkdir(target_dir, 0o755)
         os.chdir(target_dir)
-        print "Switching to directory: %s" % install_dir
-        print "Downloading template archive..."
+        print("Switching to directory: %s" % install_dir)
+        print("Downloading template archive...")
         if tpl.endswith('.tar.gz'):
             # With tar archives, everything is usually packaged in a single directory at root of archive
             strip = int(self.getOption('strip'))
-            urllib.urlretrieve(tpl, 'tpl.tar.gz')
+            urllib.request.urlretrieve(tpl, 'tpl.tar.gz')
         else:
             strip = 0  # git archive never packages in a single root directory
             if self.proc(['git', 'archive', '--verbose', '-o', 'tpl.tar.gz', '--remote=' + tpl, ref]):
                 return self.exitError('Could not download template %s@%s!' % (tpl, ref))
 
-        print "Extracting template archive..."
+        print("Extracting template archive...")
         if self.proc(['tar', '--strip', str(strip), '-xf', 'tpl.tar.gz']):
             return self.exitError('Could not extract template archive!')
 
         # Acquire list of files
-        print "Getting list of files in template..."
+        print("Getting list of files in template...")
         out = subprocess.check_output(['tar', '-tf', 'tpl.tar.gz'], universal_newlines=True)
         tplFiles = ['/'.join(l.split('/')[strip:]) for l in out.split('\n') if l]
         tplFiles = [l for l in tplFiles if os.path.isfile(l)]
 
-        print "Cleaning up template archive..."
+        print("Cleaning up template archive...")
         if self.proc(['rm', 'tpl.tar.gz']):
             return self.exitError('Could not unlink temporary template archive!')
 
@@ -122,14 +122,14 @@ class Hatch(Command):
                 '%hatch_secret%': ''.join(random.SystemRandom().choice(chars) for _ in range(32))
             }
             if vardefs:
-                print "This project has variables. You will now be prompted to enter values for each variable."
+                print("This project has variables. You will now be prompted to enter values for each variable.")
                 for varname in vardefs:
                     val = ''
                     required = vardefs[varname].get('required', False)
                     default = vardefs[varname].get('default', '')
                     description = vardefs[varname].get('description', '')
                     while not val:
-                        val = raw_input("%s (%s) [%s]: " % (
+                        val = input("%s (%s) [%s]: " % (
                             varname, description, default))
                         if default and not val:
                             val = default
@@ -138,15 +138,15 @@ class Hatch(Command):
                     variables[varname] = val
 
             summary = "\n".join(["  %s: %s" % (k, variables[k])
-                                 for k in variables.keys()])
-            print "Summary: "
-            print summary
+                                 for k in list(variables.keys())])
+            print("Summary: ")
+            print(summary)
             if not self.confirm("OK to replace tokens?"):
                 return self.exitOK("Operation aborted.")
 
-            print "Replacing tokens in files..."
+            print("Replacing tokens in files...")
             sed = "; ".join(["s/%s/%s/g" % (k, variables[k].replace('/', '\\/'))
-                             for k in variables.keys()])
+                             for k in list(variables.keys())])
             for tplFile in tplFiles:
                 if self.proc(['sed', '-i.orig', sed, tplFile]):
                     return self.exitError("Could not replace variables in files!")
@@ -165,7 +165,7 @@ class Hatch(Command):
             if self.proc(['rm', hatchfile]):
                 return self.exitError('Could not unlink %s!' % hatchfile)
 
-        print "Project hatched!"
+        print("Project hatched!")
         return self.exitOK()
 
     def proc(self, cmd, variables=None):
@@ -175,7 +175,7 @@ class Hatch(Command):
     def confirm(self, prompt):
         confirm = ''
         while confirm not in ('Y', 'y'):
-            confirm = raw_input("%s (Y/n) " % prompt) or 'Y'
+            confirm = input("%s (Y/n) " % prompt) or 'Y'
             if confirm in ('N', 'n'):
                 return False
         return True

@@ -30,7 +30,7 @@ class Shell(object):
 
         logger.info(msg)
         try:
-            res = raw_input('Proceed? [N/y] ')
+            res = input('Proceed? [N/y] ')
             if res.lower().startswith('y'):
                 logger.info('... proceeding')
                 return OK(True)
@@ -70,14 +70,16 @@ class Shell(object):
     @staticmethod
     def procCommand(cmd, cwd=None):
         try:
-            logger.debug("COMMAND: %s", cmd)
+            logger.debug("PROC COMMAND: %s", cmd)
             proc = Popen(shlex.split(cmd), shell=False,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
             pout, perr = proc.communicate()
+            cmdOut = pout.decode()
+            cmdErr = perr.decode()
             if proc.returncode == 0:
-                return OK({"stdout": pout, "stderr": perr})
+                return OK({"stdout": cmdOut, "stderr": cmdErr})
             else:
-                return Fail(ShellCommandError(code=proc.returncode, message=pout, stdout=pout, stderr=perr))
+                return Fail(ShellCommandError(code=proc.returncode, message=cmdOut, stdout=cmdOut, stderr=cmdErr))
         except KeyboardInterrupt:
             logger.info("CTRL-C Received...Exiting.")
             return Fail(UserInterruptError())
@@ -85,7 +87,7 @@ class Shell(object):
     @staticmethod
     def streamCommand(cmd, cwd=None, shell=False):
         try:
-            logger.debug("COMMAND: %s", cmd)
+            logger.debug("STREAM COMMAND: %s", cmd)
             proc = Popen(shlex.split(cmd), shell=shell,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
             stdout = ''
@@ -94,12 +96,14 @@ class Shell(object):
                 d = proc.stdout.read(1)
                 if d != '':
                     stdout += d
+                    logger.info("STREAM STDOUT READ %s" % d)
                     sys.stdout.write(d)
                     sys.stdout.flush()
 
                 de = proc.stderr.read(1)
                 if de != '':
                     stderr += de
+                    logger.info("STREAM STDERR READ %s" % de)
                     sys.stderr.write(de)
                     sys.stderr.flush()
 
@@ -145,7 +149,7 @@ class Shell(object):
             return Fail(ShellCommandError(code=1, message="Failed to chmod %s: %s" % (path, err)))
 
     @staticmethod
-    def makeDirectory(path, mode=0750):
+    def makeDirectory(path, mode=0o750):
         if not os.path.exists(path):
             try:
                 os.makedirs(path, mode)

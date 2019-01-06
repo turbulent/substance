@@ -7,6 +7,7 @@ from substance.exceptions import (
     FileSystemError, FileDoesNotExist, ConfigValidationError)
 
 from collections import namedtuple
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 

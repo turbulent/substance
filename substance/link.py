@@ -159,9 +159,9 @@ class Link(object):
 
             # Setup our buffers
             bufsize = 1024
-            stdin = ''
-            stdout = ''
-            stderr = ''
+            stdin =  b''
+            stdout = b''
+            stderr = b''
 
             # Star the command stream
             if shell:
@@ -185,19 +185,21 @@ class Link(object):
                 if channel in r:
                     if channel.recv_ready():
                         d = channel.recv(bufsize)
+                        logger.info("D = %s" %d)
                         if len(d) == 0:
                             isAlive = False
                         else:
                             if stream:
-                                sys.stdout.write(d)
+                                sys.stdout.write(d.decode())
                                 sys.stdout.flush()
                             if capture:
                                 stdout += d
 
                     if channel.recv_stderr_ready():
                         d = channel.recv_stderr(bufsize)
+                        logger.info("DE = %s" %d)
                         if stream:
-                            sys.stderr.write(d)
+                            sys.stderr.write(d.decode())
                             sys.stderr.flush()
                         if capture:
                             stderr += d
@@ -207,9 +209,12 @@ class Link(object):
                     if len(x) == 0:
                         isAlive = False
                     else:
-                        channel.send(x)
+                        channel.send(x.decode())
 
             code = channel.recv_exit_status()
+            stdout = stdout.decode()
+            stdin = stdin.decode()
+            stderr = stderr.decode()
 
             if code != 0:
                 return Fail(LinkCommandError(cmd=cmd, message="An error occured when running command.", stdout=stdout, stderr=stderr, code=code, link=self))

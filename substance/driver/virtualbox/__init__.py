@@ -8,12 +8,13 @@ from substance.driver import Driver
 from substance.constants import (EngineStates)
 from substance.exceptions import (FileDoesNotExist)
 
-from vbox import (vboxManager)
-import network
-import machine
-from exceptions import *
+from .vbox import (vboxManager)
+from . import network
+from . import machine
+from .exceptions import *
 
 from netaddr import (IPAddress, IPNetwork)
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class VirtualBoxDriver(Driver):
         self.logAdapter.info(
             "Generating default virtualbox config in %s" % self.config.getConfigFile())
         defaults = self.getDefaultConfig()
-        for kkk, vvv in defaults.iteritems():
+        for kkk, vvv in defaults.items():
             self.config.set(kkk, vvv)
         return self.config.saveConfig()
 
@@ -201,7 +202,7 @@ class VirtualBoxDriver(Driver):
         basePort = 4500
         self.logAdapter.debug("Base port: %s" % basePort)
         self.logAdapter.debug("Desired port: %s" % desiredPort)
-        unavailable = map(lambda x: x.hostPort, usedPorts)
+        unavailable = [x.hostPort for x in usedPorts]
         port = desiredPort if desiredPort >= basePort else basePort
         while port in unavailable or port < basePort:
             self.logAdapter.debug("Port %s is in use." % port)

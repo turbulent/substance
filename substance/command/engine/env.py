@@ -26,6 +26,6 @@ class Env(Command):
 
     def outputDockerEnv(self, engine):
         env = engine.getDockerEnv()
-        for k, v in env.iteritems():
-            print("export %s=\"%s\"" % (k, v))
+        for k, v in env.items():
+            print(("export %s=\"%s\"" % (k, v)))
         return OK(None)

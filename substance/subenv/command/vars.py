@@ -29,8 +29,8 @@ class Vars(Command):
 
     def printEnvVars(self, vars=None):
         vars = {} if not vars else vars
-        for k, v in vars.iteritems():
-            print("%s=\"%s\"" % (k, v))
+        for k, v in vars.items():
+            print(("%s=\"%s\"" % (k, v)))
         return OK(None)
 
     def getInputVars(self):

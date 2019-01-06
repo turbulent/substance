@@ -2,6 +2,7 @@ import logging
 import functools
 from functools import (wraps)
 from functools import partial
+from functools import reduce
 
 
 class Monad(object):
@@ -339,14 +340,14 @@ def sequence(monad, monads):
 
 def mapM(monad, mf, xs):
     ''' Map a monadic function over a list of values, lifting them into monadic context and convert the results to a monad containing a list of the values. '''
-    mapped = map(mf, xs)
+    mapped = list(map(mf, xs))
     sequenced = sequence(monad, mapped)
     return sequenced
 
 
 def mapM_(monad, mf, xs):
     ''' Map a monadic  action to a structure, evaluate from left to right and ignore results. '''
-    map(mf, xs)
+    list(map(mf, xs))
     return monad.of(xs)
 
 

@@ -3,9 +3,9 @@ from collections import OrderedDict
 from substance.monads import *
 from substance.logs import *
 from substance.constants import Constants
-from exceptions import *
-from vbox import (vboxManager, _vboxLineEnding)
-import machine
+from .exceptions import *
+from .vbox import (vboxManager, _vboxLineEnding)
+from . import machine
 from netaddr import (IPAddress, IPNetwork)
 
 # -- Structs

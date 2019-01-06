@@ -9,6 +9,7 @@ from substance.config import (Config)
 from substance import Shell
 from substance.subenv.constants import (SPECDIR, ENVFILE, CODELINK, CONFFILE)
 import jinja2
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class SubenvSpec(object):
         reserved = ['SUBENV_NAME', 'SUBENV_LASTAPPLIED',
                     'SUBENV_ENVPATH', 'SUBENV_SPECPATH', 'SUBENV_BASEPATH']
         vars = envVars.copy()
-        for k in vars.keys():
+        for k in list(vars.keys()):
             if k in reserved:
                 del vars[k]
 
@@ -117,7 +118,7 @@ class SubenvSpec(object):
             'SUBENV_BASEPATH': self.basePath
         })
 
-        env = "\n".join(["%s=\"%s\"" % (k, v) for k, v in envVars.iteritems()])
+        env = "\n".join(["%s=\"%s\"" % (k, v) for k, v in envVars.items()])
         return Try.attempt(writeToFile, dotenv, env)
 
     def assertConfig(self):
@@ -127,18 +128,18 @@ class SubenvSpec(object):
 
     def applyScript(self):
         commands = self.config.get('script', [])
-        return Try.sequence(map(self.applyCommand,  commands))
+        return Try.sequence(list(map(self.applyCommand,  commands)))
 
     def applyCommand(self, cmd):
         logger.info("Running environment command: %s" % cmd)
         return Shell.call(cmd, cwd=self.envPath, shell=True)
 
     def applyDirs(self):
-        ops = [Shell.makeDirectory(self.envPath, 0750)]
+        ops = [Shell.makeDirectory(self.envPath, 0o750)]
         for dir in self.struct['dirs']:
             sourceDir = os.path.join(self.specPath, dir)
             destDir = os.path.join(self.envPath, dir)
-            mode = os.stat(sourceDir).st_mode & 0777
+            mode = os.stat(sourceDir).st_mode & 0o777
             logger.debug("Creating directory '%s' mode: %s" % (dir, mode))
             ops.append(Shell.makeDirectory(destDir).bind(
                 defer(Shell.chmod, mode=mode)))
@@ -228,8 +229,8 @@ class SubenvSpec(object):
         if os.path.isfile(baseEnvFile):
             self.envFiles.append(baseEnvFile)
 
-        map(lambda x: logger.info("Loading dotenv file: '%s'" % x), self.envFiles)
-        return Try.sequence(map(Try.attemptDeferred(readDotEnv), self.envFiles))  \
+        list(map(lambda x: logger.info("Loading dotenv file: '%s'" % x), self.envFiles))
+        return Try.sequence(list(map(Try.attemptDeferred(readDotEnv), self.envFiles)))  \
             .map(lambda envs: reduce(lambda acc, x: dict(acc, **x), envs, {}))
 
     def __repr__(self):

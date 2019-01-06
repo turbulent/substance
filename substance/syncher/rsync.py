@@ -2,7 +2,7 @@ import os
 import time
 import platform
 import logging
-import Queue
+import queue
 import fnmatch
 from collections import OrderedDict
 
@@ -19,6 +19,7 @@ from subwatch.events import WatchEventHandler
 from subwatch.events import (WatchEvent, EVENT_TYPE_MODIFIED)
 
 from tornado import ioloop
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ class SubwatchSyncher(BaseSyncher):
 
     def expungeSynching(self, direction):
         dirs = self.synching[direction]
-        for dir in dirs.keys():
+        for dir in list(dirs.keys()):
             t = self.synching[direction][dir]
             if (time.time() - t) > 0:
                 logger.debug("Expiring ignore of (%s)%s" % (direction, dir))
@@ -256,7 +257,7 @@ class SubwatchSyncher(BaseSyncher):
                 if part == parts[-1]:
                     inc[p] = os.sep + "***"
 
-        for path, opt in inc.iteritems():
+        for path, opt in inc.items():
             path = ''.join(path.rsplit(os.sep, 1)
                            ) if path.endswith(os.sep) else path
             filters.append("+ " + path + opt)
@@ -324,11 +325,11 @@ class Rsync(object):
         return "\n".join(self.filters)
 
     def getCommandOpt(self):
-        return ''.join(self.opt.keys())
+        return ''.join(list(self.opt.keys()))
 
     def getCommandLongOpt(self):
         opts = ""
-        for k, v in self.longopt.iteritems():
+        for k, v in self.longopt.items():
             if v is True:
                 opts += " --%s" % k
             elif v:
@@ -371,6 +372,6 @@ class Rsync(object):
     def sync(self):
         op = Shell.call(self.getCommand())
         if op.isFail():
-            print("%s" % op)
+            print(("%s" % op))
             return op
         return OK(self)

@@ -4,7 +4,7 @@ import platform
 with open('README.rst') as f:
     readme = f.read()
 
-execfile('substance/_version.py')
+exec(compile(open('substance/_version.py', "rb").read(), 'substance/_version.py', 'exec'))
 
 install_requires = [
     'setuptools>=1.1.3',

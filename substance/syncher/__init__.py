@@ -11,7 +11,7 @@ class BaseSyncher(object):
     def ensureKeyPerms(self):
         try:
             # XXX Hack for perms on insecure file. Temporary until distribution is sorted out.
-            os.chmod(self.keyfile, 0600)
+            os.chmod(self.keyfile, 0o600)
         except Exception as err:
             pass
         return OK(None)

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import sys
 import os
@@ -31,13 +31,13 @@ class PassThroughParser(Parser):
     def _process_long_opt(self, rargs, values):
         try:
             optparse.OptionParser._process_long_opt(self, rargs, values)
-        except optparse.BadOptionError, err:
+        except optparse.BadOptionError as err:
             self.largs.append(err.opt_str)
 
     def _process_short_opts(self, rargs, values):
         try:
             optparse.OptionParser._process_short_opts(self, rargs, values)
-        except optparse.BadOptionError, err:
+        except optparse.BadOptionError as err:
             self.largs.append(err.opt_str)
 
 
@@ -126,10 +126,10 @@ class CLI(object):
         return None
 
     def read(self, msg=""):
-        return raw_input(msg)
+        return input(msg)
 
     def readln(self, msg=""):
-        return raw_input(msg + "\n")
+        return input(msg + "\n")
 
     def readpwd(self, msg=""):
         return getpass(msg)
@@ -171,9 +171,9 @@ class Program(CLI):
         pass
 
     def getCommands(self):
-        k = self.commands.keys()
-        v = map(lambda x: self.getCommand(x), k)
-        return OrderedDict(zip(k, v))
+        k = list(self.commands.keys())
+        v = [self.getCommand(x) for x in k]
+        return OrderedDict(list(zip(k, v)))
 
     def getCommand(self, commandName):
         if commandName in self.commands:
@@ -203,7 +203,7 @@ class Program(CLI):
 
     def getHelpDetails(self):
         helpUsage = "Commands:\n\n"
-        for name, command in self.getCommands().iteritems():
+        for name, command in self.getCommands().items():
             helpUsage += "  %-20s%s\n" % (name, command.getHelpTitle())
         return helpUsage
 
