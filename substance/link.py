@@ -182,25 +182,24 @@ class Link(object):
                     isAlive = False
                     break
 
-                if channel in r:
-                    if channel.recv_ready():
-                        d = channel.recv(bufsize)
-                        if len(d) == 0:
-                            isAlive = False
-                        else:
-                            if stream:
-                                sys.stdout.write(d.decode())
-                                sys.stdout.flush()
-                            if capture:
-                                stdout += d
-
-                    if channel.recv_stderr_ready():
-                        d = channel.recv_stderr(bufsize)
+                if channel in r and channel.recv_ready():
+                    d = channel.recv(bufsize)
+                    if len(d) == 0:
+                        isAlive = False
+                    else:
                         if stream:
-                            sys.stderr.write(d.decode())
-                            sys.stderr.flush()
+                            sys.stdout.write(d.decode())
+                            sys.stdout.flush()
                         if capture:
-                            stderr += d
+                            stdout += d
+
+                if channel in r and channel.recv_stderr_ready():
+                    d = channel.recv_stderr(bufsize)
+                    if stream:
+                        sys.stderr.write(d.decode())
+                        sys.stderr.flush()
+                    if capture:
+                        stderr += d
 
                 if sys.stdin in r and isAlive and interactive:
                     x = os.read(sys.stdin.fileno(), bufsize)
