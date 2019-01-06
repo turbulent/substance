@@ -6,7 +6,18 @@ with open('README.rst') as f:
 
 execfile('substance/_version.py')
 
-install_requires = ['setuptools>=1.1.3', 'PyYAML', 'tabulate', 'paramiko>=2.3.1', 'netaddr', 'requests', 'tinydb', 'python_hosts==0.3.3', 'jinja2']
+install_requires = [
+    'setuptools>=1.1.3',
+    'PyYAML',
+    'tabulate',
+    'paramiko>=2.3.1',
+    'netaddr',
+    'requests',
+    'tinydb',
+    'python_hosts==0.3.3',
+    'jinja2',
+    'macfsevents >= 0.8.1; sys_platform == darwin"'
+]
 
 if 'Darwin' in platform.system():
     install_requires.append('macfsevents')
