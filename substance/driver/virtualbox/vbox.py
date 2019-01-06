@@ -52,11 +52,7 @@ def parseVersion(vstring):
     if vstring is None or vstring == "":
         return fail
 
-    logger.info("VSTR %s " % vstring)
-
     parts = vstring.split('_')
-
-    logger.info("PARTS %s " % parts)
 
     if len(parts) == 0:
         return fail

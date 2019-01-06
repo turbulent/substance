@@ -96,14 +96,12 @@ class Shell(object):
                 d = proc.stdout.read(1)
                 if d != '':
                     stdout += d
-                    logger.info("STREAM STDOUT READ %s" % d)
                     sys.stdout.write(d)
                     sys.stdout.flush()
 
                 de = proc.stderr.read(1)
                 if de != '':
                     stderr += de
-                    logger.info("STREAM STDERR READ %s" % de)
                     sys.stderr.write(de)
                     sys.stderr.flush()
 
