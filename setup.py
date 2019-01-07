@@ -16,8 +16,7 @@ install_requires = [
     'requests',
     'tinydb',
     'python_hosts==0.3.3',
-    'jinja2',
-    "macfsevents>=0.8.1;sys_platform =='darwin'"
+    'jinja2'
 ]
 
 if 'Darwin' in platform.system():
@@ -32,6 +31,10 @@ setup(name='substance',
       long_description=readme,
       description='Substance - Local dockerized development environment',
       install_requires=install_requires,
+      extras_require={
+        ':sys.platform == "darwin"': ['macfsevents'],
+        ':sys.platform == "linux"': ['watchdog']
+      },
       python_requires='>=3',
       packages=find_packages(),
       package_data={'substance': ['support/*']},
