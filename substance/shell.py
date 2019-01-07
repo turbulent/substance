@@ -85,28 +85,31 @@ class Shell(object):
             return Fail(UserInterruptError())
 
     @staticmethod
+    def readAppendFlush(stream, buffer=b'', amount=1):
+        the_bytes = stream.read(amount)
+        if the_bytes:
+            the_bytes += byte
+            sys.stdout.write(the_bytes.encode())
+            sys.stdout.flush()
+        return buffer
+
+    @staticmethod
     def streamCommand(cmd, cwd=None, shell=False):
         try:
             logger.debug("STREAM COMMAND: %s", cmd)
             proc = Popen(shlex.split(cmd), shell=shell,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
-            stdout = ''
-            stderr = ''
+            stdout = b''
+            stderr = b''
             while True:
-                d = proc.stdout.read(1)
-                if d != '':
-                    stdout += d
-                    sys.stdout.write(d.encode())
-                    sys.stdout.flush()
+                stdout = readAppendFlush(sys.stdout, stdout, 1)
+                stderr = readAppendFlush(sys.stderr, stderr, 1)
 
-                de = proc.stderr.read(1)
-                if de != '':
-                    stderr += de
-                    sys.stderr.write(de.encode())
-                    sys.stderr.flush()
-
-                if d == '' and de == '' and proc.poll() is not None:
+                if not d  and not de and proc.poll() is not None:
                     break
+
+            stdout = stdout.encode()
+            stderr = stderr.encode()
 
             if proc.returncode == 0:
                 return OK({"stdout": stdout, "stderr": stderr})
