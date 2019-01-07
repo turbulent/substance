@@ -296,7 +296,7 @@ class Link(object):
                         if len(x) == 0:
                             isAlive = False
                         else:
-                            sys.stdout.write(x)
+                            sys.stdout.write(x.decode())
                             sys.stdout.flush()
                     except socket.timeout:
                         pass
@@ -325,11 +325,12 @@ class Link(object):
                     sys.stdout.write('\r\n*** EOF ***\r\n\r\n')
                     sys.stdout.flush()
                     break
-                sys.stdout.write(data)
+                sys.stdout.write(data.decode())
                 sys.stdout.flush()
 
         writer = threading.Thread(target=writeall, args=(chan,))
         writer.start()
+
         try:
             while True:
                 d = sys.stdin.read(1)
