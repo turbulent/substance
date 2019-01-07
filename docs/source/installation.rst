@@ -23,7 +23,7 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
 #. Install Homebrew's Python distribution::
 
-    $ brew install python@2
+    $ brew install python
 
 #. Make sure that running the command ``python`` executes the one under
    ``/usr/local/bin``::
@@ -50,11 +50,6 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 #. Install ``substance``::
 
     $ sudo pip install substance
-
-#. Finally, install ``watchdog``, which is required for ``substance sync``
-   under macOS::
-
-    $ sudo pip install watchdog
 
 On Windows
 ----------

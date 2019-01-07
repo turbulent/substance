@@ -74,11 +74,11 @@ Known Issues
 
     This happens when the number of files being watched on the local system exceeds the
     maximum amount of files permitted to be watched by a single user at the same time.
-  
+
     To increase this limit, modify the value inside: ``/proc/sys/fs/inotify/max_user_watches``.
 
 * ``Fatal error: Server: End_of_file exception raised in loading archive (this indicates a bug!)``
-  
+
     This error can happen if some unison cache files are corrupted. to fix this, delete the contents of
     ``~/.substance/unison/`` and ``/substance/.unison/`` inside your substance engine.
 
