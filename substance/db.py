@@ -1,3 +1,5 @@
+import logging
+
 from substance.monads import *
 from substance.logs import *
 from substance.constants import Tables
@@ -7,6 +9,7 @@ from tinydb import (
     where
 )
 
+logger = logging.getLogger(__name__)
 
 class DB(object):
 
@@ -27,19 +30,23 @@ class DB(object):
             .bind(self._updateBoxRecord, record=record)
 
     def removeBoxRecord(self, box):
+        logger.debug("Removing box record: %s" % (box))
         return self.getBoxRecord(box).bind(lambda r: self.remove(Tables.BOXES, eids=[r.eid]) if r else OK(None))
 
     def _updateBoxRecord(self, element, record):
         if element:
+            logger.debug("Updating box record: %s : %s" % (element, record))
             return self.update(Tables.BOXES, record, eids=[element.eid])
         else:
+            logger.info("Inserting box record: %s : %s" % (element, record))
             return self.insert(Tables.BOXES, record)
 
     def getBoxRecord(self, box):
         q = Query()
-        q = (q.name == box.name) & (q.registry == box.registry) & (
+        q = (q.name == box.name) & (q.version == box.version) & (
             q.namespace == box.namespace)
-        return self.get(Tables.BOXES, q)
+        ret = self.get(Tables.BOXES, q)
+        return ret
 
     def getBoxRecords(self):
         return self.all(Tables.BOXES)
