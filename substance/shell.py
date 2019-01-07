@@ -96,13 +96,13 @@ class Shell(object):
                 d = proc.stdout.read(1)
                 if d != '':
                     stdout += d
-                    sys.stdout.write(d)
+                    sys.stdout.write(d.encode())
                     sys.stdout.flush()
 
                 de = proc.stderr.read(1)
                 if de != '':
                     stderr += de
-                    sys.stderr.write(de)
+                    sys.stderr.write(de.encode())
                     sys.stderr.flush()
 
                 if d == '' and de == '' and proc.poll() is not None:

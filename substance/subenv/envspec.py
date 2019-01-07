@@ -119,7 +119,7 @@ class SubenvSpec(object):
         })
 
         env = "\n".join(["%s=\"%s\"" % (k, v) for k, v in envVars.items()])
-        return Try.attempt(writeToFile, dotenv, env)
+        return Try.attempt(writeToFile, dotenv, env.encode())
 
     def assertConfig(self):
         if not os.path.isfile(self.config.configFile):
@@ -188,7 +188,7 @@ class SubenvSpec(object):
             tplVars.update({'SUBENV_VARS': self.getEnvVars()})
 
             with open(dest, 'wb') as fh:
-                fh.write(tpl.render(**tplVars))
+                fh.write(tpl.render(**tplVars).encode())
             return OK(None)
         except Exception as err:
             return Fail(err)

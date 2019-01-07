@@ -78,10 +78,11 @@ class TestVirtualBox(tests.TestBase):
         self.assertIsInstance(op, OK)
         self.assertIsInstance(hoif, network.HostOnlyInterface)
         self.assertEqual(hoif.name, iface)
-        self.assertEqual(hoif.network.v4ip.format(), options['ip'])
-        self.assertEqual(hoif.network.v4mask.format(), options['netmask'])
 
-        dhcpOptions = {'gateway': '10.0.123.1', 'netmask': '255.255.255.0', 'lowerIP': '10.0.123.1', 'upperIP': '10.0.123.100'}
+        self.assertEqual(hoif.network.ip.format(), options['ip'])
+        self.assertEqual(hoif.network.netmask.format(), options['netmask'])
+
+        dhcpOptions = {'gateway': '10.0.123.1', 'netmask': '255.255.255.0', 'lowerIP': '10.0.123.5', 'upperIP': '10.0.123.100'}
         op = network.addDHCP(iface, **dhcpOptions)
         self.assertIsInstance(op, OK)
 

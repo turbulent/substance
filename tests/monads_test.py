@@ -208,14 +208,14 @@ class TestMonads(unittest.TestCase):
         self.assertEqual([2, 4, 6, 8], testList)
 
     def testSequence(self):
-        self.assertEquals(sequence(Try, [OK(1), OK(2), OK(3), OK(4)]), OK([1, 2, 3, 4]))
+        self.assertEqual(sequence(Try, [OK(1), OK(2), OK(3), OK(4)]), OK([1, 2, 3, 4]))
         self.assertIsInstance(sequence(Try, [OK(1), OK(2), OK(3), Fail(ValueError())]), Fail)
 
-        self.assertEquals(Try.sequence([OK(1), OK(2), OK(3)]), OK([1, 2, 3]))
+        self.assertEqual(Try.sequence([OK(1), OK(2), OK(3)]), OK([1, 2, 3]))
         self.assertIsInstance(Try.sequence([OK(1), Fail(ValueError()), OK(3)]), Fail)
 
     def testUnshiftM(self):
-        self.assertEquals(unshiftM(Try, OK([2, 3]), OK(1)), OK([1, 2, 3]))
+        self.assertEqual(unshiftM(Try, OK([2, 3]), OK(1)), OK([1, 2, 3]))
 
     def testFlatten(self):
         self.assertEqual(['a', 'b', 'c', 'd', 'e', 'f'], flatten([['a', 'b'], ['c', 'd'], ['e', 'f']]))

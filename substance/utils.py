@@ -35,10 +35,10 @@ yaml.add_representer(collections.OrderedDict, _dict_representer)
 yaml.add_constructor(_yaml_mapping_tag, _dict_constructor)
 
 
-def writeToFile(filename, data):
+def writeToFile(filename, the_bytes):
     try:
         with open(filename, "wb") as fh:
-            fh.write(data)
+            fh.write(the_bytes)
     except Exception as err:
         raise FileSystemError("Failed to write to %s : %s" % (filename, err))
 
@@ -53,9 +53,9 @@ def writeYAML(filename, data):
 
 def readYAML(filename):
     try:
-        stream = open(filename, "r")
-        contents = yaml.load(stream)
-        return contents
+        with open(filename, "r") as stream:
+            contents = yaml.load(stream)
+            return contents
     except yaml.YAMLError as exc:
         msg = "Syntax error in file %s"
         if hasattr(exc, 'problem_mark'):
