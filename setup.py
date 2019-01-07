@@ -17,7 +17,7 @@ install_requires = [
     'tinydb',
     'python_hosts==0.3.3',
     'jinja2',
-    "macfsevents >= 0.8.1 : sys_platform == 'darwin'"
+    "macfsevents>=0.8.1;sys_platform =='darwin'"
 ]
 
 if 'Darwin' in platform.system():
