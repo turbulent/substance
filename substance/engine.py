@@ -13,7 +13,7 @@ from substance.box import Box
 from substance.utils import mergeDict, mergeDictOverwrite, parseDotEnv
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
-from substance.constants import (EngineStates)
+from substance.constants import (EngineStates, DefaultEngineBox)
 from substance.exceptions import (
     FileSystemError,
     ConfigValidationError,
@@ -85,7 +85,7 @@ class Engine(object):
         defaults['name'] = 'default'
         defaults['driver'] = 'virtualbox'
         defaults['id'] = None
-        defaults['box'] = 'turbulent/substance-box:0.6'
+        defaults['box'] = DefaultEngineBox
         defaults['profile'] = EngineProfile().__dict__
         defaults['docker'] = OrderedDict()
         defaults['docker']['port'] = 2375
