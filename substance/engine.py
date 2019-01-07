@@ -519,7 +519,7 @@ class Engine(object):
         hostsCmd = "sed -i \"s/127.0.1.1.*/127.0.1.1\t%s/g\" /etc/hosts" % self.name
         # hostsCmd = "hostnamectl set-hostname %s" % dns
         serviceCmd = "service hostname restart"
-        cmd = "sudo -- bash -c '%s && %s && %s && %s'" % (
+        cmd = "sudo -- /bin/sh -c '%s && %s && %s && %s'" % (
             echoCmd, hostsCmd, hostCmd, serviceCmd)
         cmds = list(map(defer(self.link.runCommand, stream=True, sudo=False), [cmd]))
         return Try.sequence(cmds)
@@ -662,7 +662,7 @@ class Engine(object):
             'initCommands': ' && '.join(initCommands)
         }
 
-        cmd = "subenv run dockwrkr exec -t -i %(opts)s %(container)s 'bash -c \"%(initCommands)s\"'" % tpl
+        cmd = "subenv run dockwrkr exec -t -i %(opts)s %(container)s '/bin/sh -c \"%(initCommands)s\"'" % tpl
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
     def envRun(self, task, args):
