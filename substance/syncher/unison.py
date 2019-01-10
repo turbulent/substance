@@ -2,12 +2,14 @@ import os
 import logging
 import platform
 
-from substance.utils import pathComponents, getSupportFile
+from substance.utils import getSupportFile
 from substance.constants import Syncher
 from substance.shell import Shell
 from substance.syncher import BaseSyncher
 from substance.monads import Try
 from substance.link import Link
+from substance.path import (getHomeDirectory, inner, outer)
+from substance.platform import (isWithinWindowsSubsystem)
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class UnisonSyncher(BaseSyncher):
 
     def getUnisonArgs(self, direction, path=''):
         folder = self.engine.getEngineFolders()[0]
-        localRoot = Shell.normalizePath(os.path.join(folder.hostPath, path))
+        localRoot = inner(os.path.join(folder.hostPath, path))
         remoteRoot = 'ssh://substance@%s/%s/%s' % (
             self.engine.getSSHIP(), folder.guestPath.rstrip('/'), path.lstrip('/'))
 
@@ -59,6 +61,10 @@ class UnisonSyncher(BaseSyncher):
         else:
             directionArgs = ['-prefer', 'newer', '-copyonconflict']
 
+        optArgs = []
+        if isWithinWindowsSubsystem():
+            optArgs = ['-perms', '0']
+
         # User args
         userArgs = folder.syncArgs
 
@@ -70,23 +76,27 @@ class UnisonSyncher(BaseSyncher):
         # SSH config
         transport = "-p %s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" % self.engine.getSSHPort()
         if self.keyfile is not None:
-            transport += " -i %s" % Shell.normalizePath(self.keyfile)
+            transport += " -i %s" % inner(self.keyfile)
 
         # Assemble everything
         args = ['-batch', '-repeat', 'watch', '-sshargs', transport] + \
-            userArgs + directionArgs + ignoreArgs + rootArgs
+            optArgs + userArgs + directionArgs + ignoreArgs + rootArgs
         if self.ignoreArchives and '-ignorearchives' not in args:
             args.insert(0, '-ignorearchives')
         return args
 
     def getUnisonEnv(self):
         # Add the unison-fsmonitor binary to PATH
-        path = self.getUnisonSupportDirectory() + os.pathsep + os.environ.get('PATH', '')
+        path = inner(self.getUnisonSupportDirectory(), os.environ.get('PATH', ''))
         # Tell unison to save all replica state to ~/.substance/unison
-        unisonDir = Shell.normalizePath(os.path.join(
-            self.engine.core.getBasePath(), 'unison'))
-        homeDir = os.environ.get('HOME', os.path.expanduser('~'))
-        return {'UNISON': unisonDir, 'PATH': path, 'HOME': homeDir, 'SSH_AUTH_SOCK': os.environ.get('SSH_AUTH_SOCK', '')}
+        unisonDir = inner(os.path.join(self.engine.core.getBasePath(), 'unison'))
+        homeDir = getHomeDirectory()
+        return {
+            'UNISON': unisonDir, 
+            'PATH': path, 
+            'HOME': homeDir, 
+            'SSH_AUTH_SOCK': os.environ.get('SSH_AUTH_SOCK', '')
+        }
 
     def getUnisonSupportDirectory(self):
         osTarget = None

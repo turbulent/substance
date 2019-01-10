@@ -18,9 +18,9 @@ from substance.utils import (
     getSupportFile,
     streamDownload,
     makeXHRRequest,
-    sha1sum,
-    expandLocalPath
+    sha1sum
 )
+from substance.path import (getHomeDirectory)
 from substance.config import (Config)
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.exceptions import (
@@ -34,12 +34,10 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-
 class Core(object):
 
     def __init__(self, configFile=None, basePath=None):
-        self.basePath = os.path.abspath(basePath) if basePath else os.path.expanduser(
-            os.path.join('~', '.substance'))
+        self.basePath = os.path.abspath(basePath) if basePath else getHomeDirectory('.substance')
         self.enginesPath = os.path.join(self.basePath, "engines")
         self.boxesPath = os.path.join(self.basePath, "boxes")
         self.dbFile = os.path.join(self.basePath, "db.json")
@@ -86,7 +84,7 @@ class Core(object):
         defaults['assumeYes'] = False
         defaults['drivers'] = ['virtualbox']
         defaults['tld'] = '.dev'
-        defaults['devroot'] = os.path.join('~', 'substance')
+        defaults['devroot'] = getHomeDirectory('substance')
         defaults['current'] = OrderedDict()
         defaults['engine'] = None
         defaults['subenv'] = None

@@ -10,7 +10,8 @@ from substance.monads import *
 from substance.logs import *
 from substance.shell import Shell
 from substance.exceptions import (SubstanceError)
-from substance.utils import pathComponents, getSupportFile
+from substance.utils import getSupportFile
+from substance.path import pathComponents
 from substance.constants import Syncher
 from substance.syncher import BaseSyncher
 

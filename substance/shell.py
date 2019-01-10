@@ -11,6 +11,7 @@ from substance.exceptions import (
     FileSystemError, ShellCommandError, UserInterruptError)
 from substance.monads import *
 from threading import Thread
+from substance.platform import (isCygwin)
 
 # pylint: disable=W0232
 
@@ -18,10 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 class Shell(object):
-
-    @staticmethod
-    def isCygwin():
-        return platform.system().startswith("CYGWIN")
 
     @staticmethod
     def printConfirm(msg, assumeYes=False):
@@ -43,7 +40,7 @@ class Shell(object):
         try:
             mustSleep = False
             if sudo and not shell:
-                if Shell.isCygwin():
+                if isCygwin():
                     mustSleep = True
                     cmd = ["cygstart", "--action=runas"] + cmd
                 else:
@@ -63,7 +60,7 @@ class Shell(object):
         logger.debug("COMMAND: %s", cmd)
         try:
             out = check_output(cmd, shell=True)
-            return OK(out.strip())
+            return OK(out.decode().strip())
         except CalledProcessError as err:
             return Fail(ShellCommandError(code=err.returncode, message=err.output, stdout=err.output))
 
@@ -166,12 +163,6 @@ class Shell(object):
     @staticmethod
     def pathExists(path):
         return OK(path) if os.path.exists(path) else Fail(FileSystemError("Path %s does not exist." % path))
-
-    @staticmethod
-    def normalizePath(path):
-        if Shell.isCygwin():
-            path = check_output(["cygpath", "-w", path]).strip()
-        return path
 
     @staticmethod
     def rmFile(path):

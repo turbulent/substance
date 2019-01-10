@@ -34,7 +34,6 @@ def _dict_constructor(loader, node):
 yaml.add_representer(collections.OrderedDict, _dict_representer)
 yaml.add_constructor(_yaml_mapping_tag, _dict_constructor)
 
-
 def writeToFile(filename, the_bytes):
     try:
         with open(filename, "wb") as fh:
@@ -70,7 +69,6 @@ def readYAML(filename):
 
 def getSupportFile(filename):
     return resource_filename(Requirement.parse('substance'), filename)
-
 
 def getPackageVersion():
     return require('substance')[0].version
@@ -162,24 +160,6 @@ def untar(filename, destination=None):
     tar.close()
     return filename
 
-
-def pathComponents(path):
-    folders = []
-    path = os.path.normpath(path)
-    while 1:
-        path, folder = os.path.split(path)
-
-        if folder != "":
-            folders.append(folder)
-        else:
-            if path != "":
-                folders.append(path)
-            break
-
-    folders.reverse()
-    return folders
-
-
 def mergeDict(a, b, path=None):
     if path is None:
         path = []
@@ -232,11 +212,3 @@ def makeSymlink(source, link, force=False):
 
 def readSymlink(link):
     return os.readlink(link)
-
-
-def expandLocalPath(path, basePath=None):
-    path = os.path.expanduser(path)
-    if not os.path.isabs(path) and basePath:
-        path = os.path.normpath(path)
-        path = os.path.join(basePath, path)
-    return os.path.abspath(os.path.realpath(path))

@@ -1,4 +1,5 @@
 import re
+import os
 from collections import OrderedDict
 from substance.monads import *
 from substance.logs import *
@@ -7,6 +8,7 @@ from substance.exceptions import (MachineDoesNotExist, SubstanceDriverError)
 from .vbox import (vboxManager, _vboxLineEnding)
 from .exceptions import *
 from substance.shell import Shell
+from substance.path import (inner, outer)
 from functools import reduce
 
 logger = logging.getLogger(__name__)
@@ -86,7 +88,7 @@ def inspectOVF(ovfFile):
     '''
     Inspect an OVF file to extract it's examined output
     '''
-    return vboxManager("import", '-n "%s"' % Shell.normalizePath(ovfFile))
+    return vboxManager("import", '-n "%s"' % outer(ovfFile))
 
 
 def makeImportParams(inspection, name, engineProfile=None):
@@ -99,7 +101,14 @@ def makeImportParams(inspection, name, engineProfile=None):
     else:
         suggestedName = suggestedName.group(1)
 
-    ddebug("OVF Suggested VM Name \"%s\"", name)
+    suggestedPath = re.search(r'Suggested VM base folder "(.+?)"', inspection)
+    if not suggestedPath:
+        return Fail(SubstanceDriverError("Invalid OVF: File contains no VM Suggested Path"))
+    else:
+        suggestedPath = suggestedPath.group(1)
+
+    logger.debug("OVF Suggested VM Name \"%s\"", suggestedName)
+    logger.debug("OVF Suggested VM base folder \"%s\"", suggestedPath)
 
     importParams = ["--vsys 0 --vmname \"%s\"" % name]
     if engineProfile:
@@ -109,9 +118,8 @@ def makeImportParams(inspection, name, engineProfile=None):
     diskScan = re.compile(
         r'(\d+): Hard disk image: source image=.+, target path=(.+),')
     for disk in diskScan.findall(inspection):
-        diskPath = disk[1]
-        diskPath = diskPath.rsplit(suggestedName, 1)
-        diskPath = name.join(diskPath)
+        diskType = os.path.splitext(disk[1])[1]
+        diskPath = outer(os.path.join(suggestedPath, '%s%s' % (name, diskType)))
         importParams.append("--unit %s --disk \"%s\"" % (disk[0], diskPath))
 
     return OK(importParams)
@@ -121,7 +129,7 @@ def importOVF(importParams, name, ovfFile):
     '''
     Import the OVF file as a virtual box vm.
     '''
-    ovfFile = Shell.normalizePath(ovfFile)
+    ovfFile = outer(ovfFile)
     importParams.insert(0, '"' + ovfFile + '"')
     return vboxManager("import", " ".join(importParams)) \
         .then(defer(readMachineID, name))

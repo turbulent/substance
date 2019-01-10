@@ -11,9 +11,12 @@ from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
 from substance.utils import mergeDict, mergeDictOverwrite, parseDotEnv
+from substance.path import (getHomeDirectory, inner)
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates, DefaultEngineBox)
+from substance.platform import (isWithinWindowsSubsystem)
+
 from substance.exceptions import (
     FileSystemError,
     ConfigValidationError,
@@ -97,7 +100,7 @@ class Engine(object):
         defaults['network']['sshIP'] = None
         defaults['network']['sshPort'] = 4500
         defaults['devroot'] = OrderedDict()
-        defaults['devroot']['path'] = os.path.join('~', 'devroot')
+        defaults['devroot']['path'] = getHomeDirectory('devroot')
         defaults['devroot']['mode'] = 'unison'
         defaults['devroot']['syncArgs'] = [
             '-ignore', 'Path */var',
@@ -526,7 +529,7 @@ class Engine(object):
 
     def exposePort(self, local_port, public_port, scheme):
         keyfile = self.core.getInsecureKeyFile()
-        keyfile = Shell.normalizePath(keyfile)
+        keyfile = inner(keyfile)
         forward_descr = "0.0.0.0:%s:127.0.0.1:%s" % (public_port, local_port)
         engineIP = self.getSSHIP()
         enginePort = str(self.getSSHPort())
@@ -534,7 +537,7 @@ class Engine(object):
         cmdArgs = ["ssh", "-N", "-L", forward_descr, engineIP, "-l", "substance", "-p", enginePort,
                    "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-i", keyfile]
         sudo = False
-        if public_port < 1024 and not Shell.isCygwin():
+        if public_port < 1024 and not isWithinWindowsSubsystem():
             sudo = True
         self.logAdapter.info(
             "Exposing port %s as %s; kill the process (CTRL-C) to un-expose.", local_port, public_port)

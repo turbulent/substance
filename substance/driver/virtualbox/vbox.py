@@ -8,10 +8,11 @@ from substance.monads import *
 from substance.logs import *
 from .exceptions import *
 from substance.exceptions import *
+from substance.path import (inner, outer)
+from substance.platform import (isWSL, isWithinWindowsSubsystem)
 
-VBOX_VERSION_MIN = (5, 0, 0)
+VBOX_VERSION_MIN = (6, 0, 0)
 VBOX_VERSION_CHECKED = None
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,11 @@ def vboxManager(cmd, params=""):
     '''
     return assertVirtualBoxVersion().then(defer(vboxExec, cmd, params))
 
+def getVBoxManageBin():
+    return "VBoxManage.exe" if isWSL() else "VBoxManage"
 
 def vboxExec(cmd, params=""):
-    return Shell.procCommand("%s %s %s" % ("VBoxManage", cmd, params)) \
+    return Shell.procCommand("%s %s %s" % (getVBoxManageBin(), cmd, params)) \
         .bind(onVboxCommand) \
         .catch(onVboxError)
 
@@ -87,7 +90,7 @@ def checkVersion(vstring):
 
 
 def _vboxLineEnding():
-    if platform.system().startswith("CYGWIN"):
-        # Special case: os.linesep reports LF because of Cygwin but VBoxManage will output CRLF because of Windows
+    if isWithinWindowsSubsystem():
+        # Special case: os.linesep reports LF because of Cygwin/WSL but VBoxManage.exe will output CRLF because of Windows
         return "\r\n"
     return os.linesep
