@@ -100,13 +100,27 @@ class VirtualBoxDriver(Driver):
 
         return OK(hoif)
 
+    def findInterface(self, netconfig, interfaces):
+        matches = list(filter(lambda x: x.v4ip == netconfig['gateway'], interfaces))
+        return OK(None) if len(matches) <= 0 else OK(matches[0])
+
     def provisionNetworking(self, netconfig):
         self.logAdapter.info(
             "Provisioning VirtualBox networking for substance")
-        ifm = network.addHostOnlyInterface()
-        if ifm.isFail():
-            return ifm
-        iface = ifm.getOK()
+
+        hoif = network.readHostOnlyInterfaces() \
+            .bind(defer(self.findInterface, netconfig))
+        if hoif.isFail():
+            return hoif
+        hoif = hoif.getOK()
+
+        if not hoif:
+            ifm = network.addHostOnlyInterface()
+            if ifm.isFail():
+                return ifm
+            iface = ifm.getOK()
+        else:
+            iface = hoif.name
 
         return network.configureHostOnlyInterface(iface, ip=netconfig['gateway'], netmask=netconfig['netmask']) \
             .then(defer(self.provisionDHCP, interface=iface, netconfig=netconfig)) \
@@ -117,7 +131,7 @@ class VirtualBoxDriver(Driver):
         self.logAdapter.info(
             "Provisioning DHCP service for host only interface")
         network.removeDHCP(interface).catch(lambda x: OK(interface)) \
-            .bind(defer(network.addDHCP, **netconfig))
+            .then(defer(network.addDHCP, interface, **netconfig))
 
     def saveInterface(self, iface):
         self.config.set('interface', iface)

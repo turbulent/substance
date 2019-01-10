@@ -22,7 +22,11 @@ class PortForward(object):
         self.guestPort = int(guestPort)
 
     def getCreateArg(self):
-        return "--natpf%(nic)s \"%(name)s\",%(proto)s,%(hostIP)s,%(hostPort)s,%(guestIP)s,%(guestPort)s" % self.__dict__
+
+        def prune(some_dict):
+            return { k: ('' if v is None else v) for k, v in some_dict.items() }
+
+        return "--natpf{nic} \"{name}\",{proto},{hostIP},{hostPort},{guestIP},{guestPort}".format_map(prune(self.__dict__))
 
     def getDeleteArg(self):
         return "--natpf%(nic)s delete \"%(name)s\"" % self.__dict__
