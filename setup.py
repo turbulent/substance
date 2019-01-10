@@ -19,9 +19,6 @@ install_requires = [
     'jinja2'
 ]
 
-if 'Darwin' in platform.system():
-    install_requires.append('macfsevents')
-
 setup(name='substance',
       version=__version__,
       author='Turbulent',
