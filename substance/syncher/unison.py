@@ -87,7 +87,7 @@ class UnisonSyncher(BaseSyncher):
 
     def getUnisonEnv(self):
         # Add the unison-fsmonitor binary to PATH
-        path = inner(self.getUnisonSupportDirectory(), os.environ.get('PATH', ''))
+        path = inner(os.path.join(self.getUnisonSupportDirectory(), os.environ.get('PATH', '')))
         # Tell unison to save all replica state to ~/.substance/unison
         unisonDir = inner(os.path.join(self.engine.core.getBasePath(), 'unison'))
         homeDir = getHomeDirectory()
