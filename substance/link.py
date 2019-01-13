@@ -9,20 +9,18 @@ from collections import namedtuple
 from substance.monads import *
 from substance.exceptions import *
 from subprocess import check_output
-from substance.termutils import getTerminalSize
+from substance.termutils import (
+    hasTermios,
+    saveTerminalAttrs,
+    restoreTerminalAttrs,
+    setTerminalInteractive,
+    getTerminalSize
+)
 
 logger = logging.getLogger(__name__)
 
 LinkResponse = namedtuple(
     'LinkResponse', ['link', 'stdin', 'stdout', 'stderr', 'code', 'cmd'])
-
-try:
-    import termios
-    import tty
-    hasTermios = True
-except ImportError:
-    hasTermios = False
-
 
 class Link(object):
 
@@ -139,7 +137,7 @@ class Link(object):
         logger.debug("LINKCOMMAND: %s" % cmd)
 
         try:
-            oldtty = termios.tcgetattr(sys.stdin)
+            saveTerminalAttrs(sys.stdin)
 
             # Setup our connection channel with forwarding
             channel = None
@@ -152,8 +150,7 @@ class Link(object):
 
             if interactive:
                 channel.settimeout(0.0)
-                tty.setraw(sys.stdin.fileno())
-                tty.setcbreak(sys.stdin.fileno())
+                setTerminalInteractive(sys.stdin)
 
             forward = paramiko.agent.AgentRequestHandler(channel)
 
@@ -214,16 +211,17 @@ class Link(object):
             stderr = stderr.decode()
 
             if code != 0:
+                logger.debug("code %s, stdout: %s, stderr: %s" % (code, stdout, stderr))
                 return Fail(LinkCommandError(cmd=cmd, message="An error occured when running command.", stdout=stdout, stderr=stderr, code=code, link=self))
 
             return OK(LinkResponse(link=self, cmd=cmd, stdin=stdin, stdout=stdout, stderr=stderr, code=code))
-        except Exception as err:
-            logger.debug("%s" % err)
-            return Fail(err)
+        # except Exception as err:
+        #     logger.debug("%s" % err.stdout)
+        #     return Fail(err)
         except KeyboardInterrupt as err:
             return Fail(LinkCommandError(cmd=cmd, message="User Interrupted.", stdout=stdout, stderr=stderr, code=1, link=self))
         finally:
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
+            restoreTerminalAttrs(sys.stdin)
 
     def resizePTY(self, channel):
         tty_width, tty_height = getTerminalSize()
@@ -268,7 +266,7 @@ class Link(object):
 
         logger.debug("Opening interactive POSIX shell")
         sys.stdout.write('\r\n*** Begin interactive session.\r\n')
-        oldtty = termios.tcgetattr(sys.stdin)
+        saveTerminalAttrs(sys.stdin)
 
         channel = self.client.get_transport().open_session()
         forward = paramiko.agent.AgentRequestHandler(channel)
@@ -281,8 +279,7 @@ class Link(object):
             channel.send("\n")
 
         try:
-            tty.setraw(sys.stdin.fileno())
-            tty.setcbreak(sys.stdin.fileno())
+            setTerminalInteractive(sys.stdin)
             channel.settimeout(0.0)
 
             isAlive = True
@@ -309,7 +306,7 @@ class Link(object):
             channel.shutdown(2)
 
         finally:
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
+            restoreTerminalAttrs(sys.stdin)
             sys.stdout.write('\r\n*** End of interactive session.\r\n')
 
     def _windowsShell(self, cmd=None):

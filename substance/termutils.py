@@ -4,9 +4,40 @@ import struct
 import platform
 import subprocess
 
+hasTermios = False
+oldtty = None
+
+try:
+    import termios
+    import tty
+    hasTermios = True
+except ImportError:
+    hasTermios = False
+
+def hasTermios():
+    return hasTermios
+
+def isTerminal(stream):
+    return stream.isatty()
+
+def saveTerminalAttrs(stream):
+    if stream.isatty():
+        oldtty = termios.tcgetattr(stream)
+
+def getSavedTerminalAttrs():
+    return oldtty
+
+def restoreTerminalAttrs(stream):
+    restoreAttrs = getSavedTerminalAttrs()
+    if isTerminal(stream) and restoreAttrs:
+        termios.tcsetattr(stream, termios.TCSADRAIN, restoreAttrs)
+
+def setTerminalInteractive(stream):
+    if stream.isatty():
+        tty.setraw(stream.fileno())
+        tty.setcbreak(stream.fileno())
+
 # from jtriley/terminalsize.py
-
-
 def getTerminalSize():
     """ getTerminalSize()
      - get width and height of console
@@ -24,7 +55,6 @@ def getTerminalSize():
     if current_os in ['Linux', 'Darwin'] or current_os.startswith('CYGWIN'):
         tuple_xy = _getTerminalSizeLinux()
     if tuple_xy is None:
-        print("default")
         tuple_xy = (80, 25)      # default value
     return tuple_xy
 
@@ -65,8 +95,7 @@ def _getTerminalSizeLinux():
         try:
             import fcntl
             import termios
-            cr = struct.unpack('hh',
-                               fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
             return cr
         except:
             pass
