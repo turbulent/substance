@@ -1,0 +1,66 @@
+Upgrade from substance 0 to 1
+============
+
+Upgrading from substance 0 to 1 requires moving your dependencies from Python 2 to Python 3 and VirtualBox 6.0.
+
+Upgrading on macOS
+--------
+
+#. Stop all your engines::
+
+    $ substance engine ls
+    $ substance engine halt <ENGINENAME> # Do this for every running engine
+
+#. Uninstall substance::
+
+    $ sudo pip uninstall substance
+
+#. Upgrade VirtualBox to 6.x::
+
+    - Visit https://www.virtualbox.org/wiki/Downloads
+    - Install the package on your computer.
+    - Your existing machines and engines should remain intact.
+
+#. Upgrade Python to Python 3::
+
+    $ brew uninstall python
+    $ brew unstall python@2
+    $ brew install python
+
+#. Install ``substance``::
+
+    $ sudo pip3 install substance
+
+#. Upgrade your engine by either creating a new engine.
+
+
+Upgrading on Windows
+--------
+\
+#. Stop all your engines::
+
+    $ substance engine ls
+    $ substance engine halt <ENGINENAME> # Do this for every running engine
+
+#. Uninstall substance via cygwin::
+
+    $ sudo pip uninstall substance
+
+#. Upgrade VirtualBox to 6.x::
+
+    - Visit https://www.virtualbox.org/wiki/Downloads
+    - Install the package on your computer.
+    - Your existing machines and engines should remain intact.
+
+
+#. Upgrade Python to Python 3::
+
+  - Run the Cygwin setup (setup-x86_64.exe)
+  - Remove python, python-devel and python-pip
+  - Add python3, python3-devel, python3-pip
+
+#. Install ``substance`` using the Cygwin terminal::
+
+    $ sudo pip3 install substance
+
+#. Upgrade your engine by either creating a new engine.
