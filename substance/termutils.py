@@ -21,6 +21,7 @@ def isTerminal(stream):
     return stream.isatty()
 
 def saveTerminalAttrs(stream):
+    global oldtty
     if stream.isatty():
         oldtty = termios.tcgetattr(stream)
 
@@ -28,6 +29,7 @@ def getSavedTerminalAttrs():
     return oldtty
 
 def restoreTerminalAttrs(stream):
+    global oldtty
     restoreAttrs = getSavedTerminalAttrs()
     if isTerminal(stream) and restoreAttrs:
         termios.tcsetattr(stream, termios.TCSADRAIN, restoreAttrs)
