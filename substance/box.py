@@ -116,8 +116,8 @@ class Box(object):
     def delete(self):
         logger.info("Removing box %s from box cache", self.getShortBoxString())
         return Try.sequence([
-            Shell.nukeDirectory(self.getPath()),
-            self.core.getDB().removeBoxRecord(self)
+            self.core.getDB().removeBoxRecord(self),
+            Shell.nukeDirectory(self.getPath())
         ])
 
     def download(self, boxResult):
