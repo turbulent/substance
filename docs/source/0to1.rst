@@ -3,6 +3,33 @@ Upgrade from substance 0 to 1
 
 Upgrading from substance 0 to 1 requires moving your dependencies from Python 2 to Python 3 and VirtualBox 6.0.
 
+Pre-Install steps
+--------
+
+#. Before upgrading to substance 1.0.0, make sure you update your jinja templates to use Python 3 syntax. ::
+    
+    # example:
+    # dockwrkr.yml.jinja  
+    
+      [...]
+      
+      VAR_NMAILER_REMOTE_PORT: "587"
+      VAR_NMAILER_REMOTE_USER: ""
+      VAR_NMAILER_REMOTE_PASS: ""
+      {%- for k, v in SUBENV_VARS.iteritems() %}
+      
+    # becomes
+    
+      [...]
+   
+      VAR_NMAILER_REMOTE_PORT: "587"
+      VAR_NMAILER_REMOTE_USER: ""
+      VAR_NMAILER_REMOTE_PASS: ""
+      {%- for k, v in SUBENV_VARS.items() %}
+
+      
+
+
 Upgrading on macOS
 --------
 
