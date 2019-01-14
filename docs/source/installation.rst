@@ -21,7 +21,7 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
     $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-#. Install Homebrew's Python distribution::
+#. Install Homebrew's Python (Version 3 and up) distribution::
 
     $ brew install python
 
@@ -51,7 +51,49 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
     $ sudo pip install substance
 
-On Windows
+On Windows (WSL)
+----------
+
+Disclaimer: Substance has only been tested on Windows 10 Pro 64-bit edition.
+
+#. Install `Oracle VirtualBox`_. Make sure VBoxManage is in your ``PATH``
+   environment variable (System -> Advanced System Settings -> Environment
+   Variables -> Path -> add path to your VirtualBox installation directory).
+
+#. Open PowerShell (or cmd) as Administrator and run::
+
+    Copy
+    Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+
+#. Restart the computer
+
+#. Download and install your distribution of choice. We recommend Debian/stretch from the Microsoft Store.
+
+  1. Open the Microsoft Store and choose your favorite Linux distribution.
+  2. Debian GNU/Linux (Stretch)
+
+#. Install python3 on your linux distribution::
+
+    $ apt-get update
+    $ apt-get install -y python3 python3-dev python3-pip
+
+#. Install substance with `pip`::
+
+    $ pip3 install substance
+
+#. Install ``substance``::
+
+     $ pip install substance
+
+
+.. NOTES ABOUT WSL AND PATHS::
+
+The home directory used by substance in WSL will be your Windows user's home directory (for example: C:\Users\USERNAME)
+This is to allow your projects and code can be edited and modified from both programs inside WSL and outside.
+
+For simplicity, the sync process (unison) within WSL will run the linux version.
+
+On Windows (Cygwin)
 ----------
 
 Due to poor support for command-line utilities on Windows, Cygwin is required
