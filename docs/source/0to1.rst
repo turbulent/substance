@@ -24,7 +24,7 @@ Upgrading on macOS
 #. Upgrade Python to Python 3::
 
     $ brew uninstall python
-    $ brew unstall python@2
+    $ brew uninstall python@2
     $ brew install python
 
 #. Install ``substance``::
@@ -36,7 +36,7 @@ Upgrading on macOS
 
 Upgrading on Windows
 --------
-\
+
 #. Stop all your engines::
 
     $ substance engine ls
@@ -62,5 +62,39 @@ Upgrading on Windows
 #. Install ``substance`` using the Cygwin terminal::
 
     $ sudo pip3 install substance
+    
+Upgrading on Linux
+--------
 
-#. Upgrade your engine by either creating a new engine.
+#. Update your system.::
+
+    # Debian/Ubuntu  
+    $ sudo apt-get update && sudo apt-get upgrade
+  
+    # Arch
+    $ sudo pacman -Syu
+    
+#. Reboot::
+
+    - needed in case the virtualbox kernel modules were updated.
+
+#. Stop all your engines::
+
+    $ substance engine ls
+    $ substance engine halt <ENGINENAME> # Do this for every running engine
+    
+#. Install python3::
+
+    # Debian/Ubuntu
+    $ sudo apt-get install -y python3.7 python3-pip
+    
+    # Arch
+    $ sudo pacman -S python python-pip
+    
+#. Update substance::
+
+    $ sudo pip3 install substance
+  
+#. You will need to create a new engine so that it can use the newest docker image and virtualbox version::
+  
+    $ substance engine create <ENGINENAME>
