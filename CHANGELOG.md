@@ -4,11 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2019-01-12
 
-### Changed
-- Substance now runs only on Python 3. Migrate your systems.
+# Features
+- Substance now requires Python3.
+- Added proper support for subsystem paths for Windows Subsystem for Linux (WSL)
+- Upgrade unison integration to use v2.51.2 (OCaml 4.07.1)
 
+# Changes
+
+- Downgraded unox (unison-fsmonitor) to use macfsevents instead of watchdog for performance
+- Virtualbox driver will now use an existing host interface if one that is configured properly exists
+
+# Fixed
+- Fixed a bug where running without a TTY (headless) would cause fatal errors
+- Fixed a bug under Virtualbox 6.0 where host-only interfaces would not be detected right
+- Fixed a bug where box records in the local substance database would be duplicate
+- Fixed a bug where box records were not properly removed
 
 ## [0.14.1] - 2017-11-09
 
