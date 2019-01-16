@@ -3,6 +3,7 @@ import socket
 import logging
 from contextlib import closing
 from collections import (OrderedDict, namedtuple)
+
 import substance.core
 from substance.monads import *
 from substance.config import (Config)
@@ -16,6 +17,7 @@ from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
 from substance.constants import (EngineStates, DefaultEngineBox)
 from substance.platform import (isWithinWindowsSubsystem)
+from substance.orchestrator import (Dockwrkr)
 
 from substance.exceptions import (
     FileSystemError,
@@ -552,6 +554,31 @@ class Engine(object):
                     "Others can now connect to port %s via IP %s.", public_port, ip)
         Shell.execvp(cmdPath, cmdArgs, {}, sudo=sudo)
 
+    def getOrchestrator(self):
+        return self._getOrchestrator({})
+        # return self.envLoadCurrent() \
+        #     .then(self.loadSubenvConfigFile) \
+        #     .bind(Engine._getOrchestrator)
+
+    def _getOrchestrator(self, envConfig):
+        return OK(Dockwrkr(self))
+
+    def getOrchestratorCommand(self, command, *args):
+        orch = self.getOrchestrator()
+        if orch.isFail():
+            raise orch.value
+        else:
+            orch = orch.getOK()
+
+        if orch:
+            return getattr(orch, command)(*args)
+        else:
+            return ''
+
+    def orchestrate(self, command, *args):
+        command = self.getOrchestratorCommand(command, *args)
+        return "subenv run %s" % command
+
     def envSwitch(self, subenvName, restart=False):
         self.logAdapter.info(
             "Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
@@ -561,9 +588,9 @@ class Engine(object):
         ]
 
         if restart:
-            cmds.append("dockwrkr -y reset")
-            cmds.append("subenv run dockwrkr login")
-            cmds.append("subenv run dockwrkr start -a")
+            cmds.append(self.getOrchestratorCommand('resetAll'))
+            cmds.append(self.orchestrate('login'))
+            cmds.append(self.orchestrate('startAll'))
 
         return self.readLink() \
             .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) \
@@ -595,16 +622,17 @@ class Engine(object):
 
     def envStart(self, reset=False, containers=[]):
         cmds = []
+
         if reset:
-            cmds.append("dockwrkr -y reset")
+            cmds.append(self.getOrchestratorCommand('resetAll'))
 
         if len(containers) > 0:
             self.logAdapter.info("Starting %s container(s)" %
                                  (' '.join(containers)))
-            cmds.append('subenv run dockwrkr start %s' % ' '.join(containers))
+            cmds.append(self.orchestrate('start', containers))
         else:
             self.logAdapter.info("Starting all containers...")
-            cmds.append('subenv run dockwrkr start -a')
+            cmds.append(self.orchestrate('startAll'))
 
         return self.readLink() \
             .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
@@ -615,11 +643,10 @@ class Engine(object):
         if len(containers) > 0:
             self.logAdapter.info("Restarting %s containers" %
                                  (' '.join(containers)))
-            cmds.append('subenv run dockwrkr restart -t %s %s' %
-                        (time, ' '.join(containers)))
+            cmds.append(self.orchestrate('restart', containers, time))
         else:
             self.logAdapter.info("Restarting all containers...")
-            cmds.append('subenv run dockwrkr restart -a -t %s' % time)
+            cmds.append(self.orchestrate('restartAll', time))
 
         return self.readLink() \
             .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
@@ -630,11 +657,10 @@ class Engine(object):
         if len(containers) > 0:
             self.logAdapter.info("Recreating %s containers" %
                                  (' '.join(containers)))
-            cmds.append('subenv run dockwrkr recreate -t %s %s' %
-                        (time, ' '.join(containers)))
+            cmds.append(self.orchestrate('recreate', containers, time))
         else:
             self.logAdapter.info("Recreating all containers...")
-            cmds.append('subenv run dockwrkr recreate -a -t %s' % time)
+            cmds.append(self.orchestrate('recreateAll', time))
 
         return self.readLink() \
             .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
@@ -650,26 +676,11 @@ class Engine(object):
         return self.envExec(container, ["exec /bin/bash"], cwd, user)
 
     def envExec(self, container, cmd, cwd=None, user=None):
-        opts = []
-        cmdline = ' '.join(cmd)
-
-        initCommands = ['export TERM=xterm', cmdline]
-        if user:
-            opts.append('--user %s' % user)
-        if cwd:
-            initCommands.insert(0, 'cd %s' % cwd)
-
-        tpl = {
-            'opts': ' '.join(opts),
-            'container': container,
-            'initCommands': ' && '.join(initCommands)
-        }
-
-        cmd = "subenv run dockwrkr exec -t -i %(opts)s %(container)s '/bin/sh -c \"%(initCommands)s\"'" % tpl
+        cmd = "subenv run %s" % self.orchestrate('exec', container, cmd, cwd, user)
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
     def envRun(self, task, args):
-        cmd = "subenv run dockwrkr run %s %s" % (task, ' '.join(args))
+        cmd = "subenv run %s" % self.orchestrate('run', task, args)
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
     def envExecAlias(self, alias, args):
@@ -686,14 +697,15 @@ class Engine(object):
 
     def envStop(self, time=10, containers=[]):
         cmds = []
+
         if len(containers) > 0:
             self.logAdapter.info("Stopping %s container(s)" %
                                  (' '.join(containers)))
-            cmds.append('subenv run dockwrkr stop -t %s %s' %
-                        (time, ' '.join(containers)))
+
+            cmds.append(self.orchestrate('stop', containers, time))
         else:
             self.logAdapter.info("Stopping containers...")
-            cmds.append('subenv run dockwrkr stop -a -t %s' % time)
+            cmds.append(self.orchestrate('stopAll', time))
 
         return self.readLink() \
             .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
@@ -701,7 +713,7 @@ class Engine(object):
     def envStatus(self, full=False):
         if full:
             cmds = []
-            cmds.append('subenv run dockwrkr status')
+            cmds.append(self.orchestrate('status'))
             return self.readLink() \
                 .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False, capture=True) \
                 .map(self.__envStatus)

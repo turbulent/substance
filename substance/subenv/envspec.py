@@ -44,8 +44,13 @@ class SubenvSpec(object):
             return envVars
         envVars = envVars.getOK()
 
-        reserved = ['SUBENV_NAME', 'SUBENV_LASTAPPLIED',
-                    'SUBENV_ENVPATH', 'SUBENV_SPECPATH', 'SUBENV_BASEPATH']
+        reserved = [
+            'SUBENV_NAME',
+            'SUBENV_LASTAPPLIED',
+            'SUBENV_ENVPATH',
+            'SUBENV_SPECPATH',
+            'SUBENV_BASEPATH'
+        ]
         vars = envVars.copy()
         for k in list(vars.keys()):
             if k in reserved:
