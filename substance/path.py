@@ -9,6 +9,7 @@ from pathlib import (PureWindowsPath, PurePosixPath)
 
 from substance.platform import (isWSL, isCygwin)
 
+
 @lru_cache(maxsize=None)
 def inner(path):
     if isCygwin():
@@ -16,7 +17,8 @@ def inner(path):
     if isWSL() and PureWindowsPath(path).drive:
         path = check_output(["wslpath", "-u", path]).decode().strip()
     return path
-       
+
+
 @lru_cache(maxsize=None)
 def outer(posixPath):
     if isCygwin():
@@ -38,14 +40,17 @@ def getHomeDirectory(subpath=None):
     path = homePath.joinpath(subpath) if subpath else homePath
     return inner(str(path))
 
+
 @lru_cache(maxsize=None)
 def getUnixHomeDirectory():
     return PurePosixPath(os.path.expanduser('~'))
+
 
 @lru_cache(maxsize=None)
 def getWindowsHomeDirectory():
     winPath = PureWindowsPath(check_output(["cmd.exe", "/C", 'echo %USERPROFILE%']).decode().strip())
     return PurePosixPath(winPath.as_posix())
+
 
 def pathComponents(path):
     folders = []
@@ -62,6 +67,7 @@ def pathComponents(path):
 
     folders.reverse()
     return folders
+
 
 def expandLocalPath(path, basePath=None):
     path = os.path.expanduser(path)
