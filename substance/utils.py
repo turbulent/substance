@@ -229,7 +229,6 @@ def flatten(l):
 class CommandList(list):
     def commands(self):
         cmds = list(filter(lambda x: x is not None, self))
-        logger.info("CMDS: %s" % cmds)
         return flatten(cmds)
 
     def joined(self, by=' '):
