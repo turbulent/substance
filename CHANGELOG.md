@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.0] - 2019-01-16
+
+# Feature
+- Add the ability to use other orchestrators within the your subenv
+- Add the dockwrkr orchestrator as the default one
+- Add docker-compose as a new generation orchestrator
+
+# Bug fix
+- Fixed bug with lru_cache and lists preventing proper memoization of list args
+
 ## [1.0.0] - 2019-01-12
 
 # Features
