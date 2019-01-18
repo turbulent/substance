@@ -38,3 +38,8 @@ Syncher = Constants(
     DOWN="<<",
     BOTH="<>"
 )
+
+Orchestrators = Constants(
+    DOCKWRKR="dockwrkr",
+    COMPOSE="docker-compose"
+)

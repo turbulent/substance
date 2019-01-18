@@ -123,6 +123,12 @@ class EnvNotDefinedError(EngineError):
     '''
 
 
+class InvalidOrchestrator(EngineError):
+    '''
+    Raised when a subenv configures an unknown orchestrator
+    '''
+
+
 class EnvNotFoundError(EngineError):
     '''
     Raised when an env is not found

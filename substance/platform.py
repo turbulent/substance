@@ -1,15 +1,15 @@
 
 from platform import (system, uname)
-from functools import lru_cache
+from substance.utils import Memoized
 
-@lru_cache(maxsize=None)
+@Memoized
 def isCygwin():
     return system().startswith("CYGWIN")
 
-@lru_cache(maxsize=None)
+@Memoized
 def isWSL():
     return "microsoft" in uname()[3].lower()
 
-@lru_cache(maxsize=None)
+@Memoized
 def isWithinWindowsSubsystem():
     return (isCygwin() or isWSL())

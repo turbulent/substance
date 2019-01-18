@@ -4,13 +4,13 @@ import os
 import re
 from substance.shell import (Shell)
 from subprocess import check_output
-from functools import lru_cache
+from substance.utils import Memoized
 from pathlib import (PureWindowsPath, PurePosixPath)
 
 from substance.platform import (isWSL, isCygwin)
 
 
-@lru_cache(maxsize=None)
+@Memoized
 def inner(path):
     if isCygwin():
         path = check_output(["cygpath", "-u", path]).decode().strip()
@@ -19,7 +19,7 @@ def inner(path):
     return path
 
 
-@lru_cache(maxsize=None)
+@Memoized
 def outer(posixPath):
     if isCygwin():
         path = check_output(["cygpath", "-w", posixPath]).decode().strip()
@@ -30,7 +30,7 @@ def outer(posixPath):
     return path
 
 
-@lru_cache(maxsize=None)
+@Memoized
 def getHomeDirectory(subpath=None):
     if isWSL():
         homePath = getWindowsHomeDirectory()
@@ -41,12 +41,12 @@ def getHomeDirectory(subpath=None):
     return inner(str(path))
 
 
-@lru_cache(maxsize=None)
+@Memoized
 def getUnixHomeDirectory():
     return PurePosixPath(os.path.expanduser('~'))
 
 
-@lru_cache(maxsize=None)
+@Memoized
 def getWindowsHomeDirectory():
     winPath = PureWindowsPath(check_output(["cmd.exe", "/C", 'echo %USERPROFILE%']).decode().strip())
     return PurePosixPath(winPath.as_posix())

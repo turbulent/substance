@@ -11,13 +11,13 @@ from substance.logs import *
 from substance.shell import Shell
 from substance.link import Link
 from substance.box import Box
-from substance.utils import mergeDict, mergeDictOverwrite, parseDotEnv
+from substance.utils import mergeDict, mergeDictOverwrite, parseDotEnv, CommandList, Memoized
 from substance.path import (getHomeDirectory, inner)
 from substance.hosts import SubHosts
 from substance.driver.virtualbox import VirtualBoxDriver
-from substance.constants import (EngineStates, DefaultEngineBox)
+from substance.constants import (EngineStates, DefaultEngineBox, Orchestrators)
 from substance.platform import (isWithinWindowsSubsystem)
-from substance.orchestrator import (Dockwrkr)
+from substance.orchestrator import (Dockwrkr, Compose)
 
 from substance.exceptions import (
     FileSystemError,
@@ -28,7 +28,8 @@ from substance.exceptions import (
     EngineNotProvisioned,
     EngineProvisioned,
     EnvNotDefinedError,
-    InvalidCommandError
+    InvalidCommandError,
+    InvalidOrchestrator
 )
 from substance.syncher.unison import UnisonSyncher
 
@@ -555,13 +556,23 @@ class Engine(object):
         Shell.execvp(cmdPath, cmdArgs, {}, sudo=sudo)
 
     def getOrchestrator(self):
-        return self._getOrchestrator({})
-        # return self.envLoadCurrent() \
-        #     .then(self.loadSubenvConfigFile) \
-        #     .bind(Engine._getOrchestrator)
+        if self.subenvConfig:
+            return self._getOrchestrator()
 
-    def _getOrchestrator(self, envConfig):
-        return OK(Dockwrkr(self))
+        return self.envLoadCurrent() \
+            .then(self.loadSubenvConfigFile) \
+            .catch(lambda err: OK(None)) \
+            .then(self._getOrchestrator)
+
+    def _getOrchestrator(self):
+        orchestrator = self.subenvConfig.get('orchestrator') if self.subenvConfig else None
+        logger.debug("Orchestrator: %s" % orchestrator)
+        if orchestrator and orchestrator == Orchestrators.COMPOSE:
+            return OK(Compose(self))
+        elif orchestrator and orchestrator != Orchestrators.DOCKWRKR:
+            return Fail(InvalidOrchestrator('%s is not a known orchestrator' % orchestrator))
+        else:
+            return OK(Dockwrkr(self))
 
     def getOrchestratorCommand(self, command, *args):
         orch = self.getOrchestrator()
@@ -576,24 +587,29 @@ class Engine(object):
             return ''
 
     def orchestrate(self, command, *args):
-        command = self.getOrchestratorCommand(command, *args)
-        return "subenv run %s" % command
+        commands = self.getOrchestratorCommand(command, *args)
+        if len(commands) > 0:
+            return list(map(lambda x: "(subenv run %s)" % x, commands))
 
     def envSwitch(self, subenvName, restart=False):
         self.logAdapter.info(
             "Switch engine '%s' to subenv '%s'" % (self.name, subenvName))
-        cmds = [
+
+        self.currentEnv = subenvName
+        self.loadSubenvConfigFile()
+
+        cmds = CommandList([
             "subenv init '/substance/devroot/%s'" % (subenvName),
             "subenv use '%s'" % (subenvName),
-        ]
+        ])
 
         if restart:
-            cmds.append(self.getOrchestratorCommand('resetAll'))
+            cmds.append(self.orchestrate('resetAll'))
             cmds.append(self.orchestrate('login'))
             cmds.append(self.orchestrate('startAll'))
 
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False) \
+            .bind(Link.runCommand, cmds.logicAnd(), stream=True, sudo=False) \
             .then(self.envRegister)
 
     def envRegister(self):
@@ -613,15 +629,15 @@ class Engine(object):
             return SubHosts.register(env['SUBENV_NAME'] + self.core.config.get('tld'), self.getPublicIP())
 
     def envLoadCurrent(self):
-        cmds = ["subenv current"]
+        cmds = CommandList(["subenv current"])
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False, capture=True) \
+            .bind(Link.runCommand, cmds.logicAnd(), stream=False, sudo=False, capture=True) \
             .map(self.__cacheCurrentEnv) \
             .catch(lambda err: Fail(EnvNotDefinedError("No current subenv is set. Check 'switch' for detais."))) \
             .then(lambda: self)
 
     def envStart(self, reset=False, containers=[]):
-        cmds = []
+        cmds = CommandList()
 
         if reset:
             cmds.append(self.getOrchestratorCommand('resetAll'))
@@ -635,10 +651,10 @@ class Engine(object):
             cmds.append(self.orchestrate('startAll'))
 
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
+            .bind(Link.runCommand, cmds.logicAnd(), stream=True, sudo=False)
 
     def envRestart(self, time=10, containers=[]):
-        cmds = []
+        cmds = CommandList()
 
         if len(containers) > 0:
             self.logAdapter.info("Restarting %s containers" %
@@ -649,10 +665,10 @@ class Engine(object):
             cmds.append(self.orchestrate('restartAll', time))
 
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
+            .bind(Link.runCommand, cmds.logicAnd(), stream=True, sudo=False)
 
     def envRecreate(self, time=10, containers=[]):
-        cmds = []
+        cmds = CommandList()
 
         if len(containers) > 0:
             self.logAdapter.info("Recreating %s containers" %
@@ -663,7 +679,7 @@ class Engine(object):
             cmds.append(self.orchestrate('recreateAll', time))
 
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
+            .bind(Link.runCommand, cmds.logicAnd(), stream=True, sudo=False)
 
     def envShell(self, container=None, user=None, cwd=None):
         if container:
@@ -676,11 +692,11 @@ class Engine(object):
         return self.envExec(container, ["exec /bin/bash"], cwd, user)
 
     def envExec(self, container, cmd, cwd=None, user=None):
-        cmd = "subenv run %s" % self.orchestrate('exec', container, cmd, cwd, user)
+        cmd = self.orchestrate('exec', container, cmd, cwd, user)
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
     def envRun(self, task, args):
-        cmd = "subenv run %s" % self.orchestrate('run', task, args)
+        cmd = self.orchestrate('run', task, args)
         return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
 
     def envExecAlias(self, alias, args):
@@ -696,7 +712,7 @@ class Engine(object):
         return Fail(InvalidCommandError("Invalid command '%s' specified for '%s'.\n\nUse 'substance help' for available commands." % (alias, 'substance')))
 
     def envStop(self, time=10, containers=[]):
-        cmds = []
+        cmds = CommandList()
 
         if len(containers) > 0:
             self.logAdapter.info("Stopping %s container(s)" %
@@ -708,30 +724,29 @@ class Engine(object):
             cmds.append(self.orchestrate('stopAll', time))
 
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=True, sudo=False)
+            .bind(Link.runCommand, cmds.logicAnd(), stream=True, sudo=False)
 
     def envStatus(self, full=False):
         if full:
-            cmds = []
-            cmds.append(self.orchestrate('status'))
+            cmds = CommandList([self.orchestrate('status')])
             return self.readLink() \
-                .bind(Link.runCommand, ' && '.join(cmds), stream=False, sudo=False, capture=True) \
+                .bind(Link.runCommand, cmds.logicAnd(), stream=False, sudo=False, capture=True) \
                 .map(self.__envStatus)
         else:
             return OK(self.__envStatus())
 
     def envCleanup(self):
-        cmds = []
+        cmds = CommandList()
         cmds.append('docker system prune -a')
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), interactive=True, stream=True, shell=False, capture=False)
+            .bind(Link.runCommand, cmds.logicAnd(), interactive=True, stream=True, shell=False, capture=False)
 
     def envLogs(self, parts=[], pattern=None, follow=True, lines=None):
 
         if not pattern:
             pattern = "%s*.log" % ('-'.join(parts))
 
-        cmds = []
+        cmds = CommandList()
         cmd = "tail"
         if follow:
             cmd += " -f"
@@ -742,19 +757,19 @@ class Engine(object):
 
         cmds.append('subenv run %s' % cmd)
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=True, capture=False, sudo=False)
+            .bind(Link.runCommand, cmds.logicAnd(), stream=True, capture=False, sudo=False)
 
     def envListLogs(self, parts=[], pattern=None):
 
         if not pattern:
             pattern = "%s*.log" % ('-'.join(parts))
 
-        cmds = []
+        cmds = CommandList()
         cmd = "ls -1 \"logs/%s\" | xargs -n1 basename" % pattern
 
         cmds.append('subenv run %s' % cmd)
         return self.readLink() \
-            .bind(Link.runCommand, ' && '.join(cmds), stream=True, capture=False, sudo=False)
+            .bind(Link.runCommand, cmds.logicAnd(), stream=True, capture=False, sudo=False)
 
     def __envStatus(self, containers=None):
         return {
