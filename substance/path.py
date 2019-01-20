@@ -9,6 +9,7 @@ from pathlib import (PureWindowsPath, PurePosixPath)
 
 from substance.platform import (isWSL, isCygwin)
 
+
 @lru_cache(maxsize=None)
 def inner(path):
     if isCygwin():
@@ -16,9 +17,14 @@ def inner(path):
     if isWSL() and PureWindowsPath(path).drive:
         path = check_output(["wslpath", "-u", path]).decode().strip()
     return path
-       
+
+
 @lru_cache(maxsize=None)
 def outer(posixPath):
+
+    if PureWindowsPath(path).drive:
+        return path
+
     if isCygwin():
         path = check_output(["cygpath", "-w", posixPath]).decode().strip()
     elif isWSL():
