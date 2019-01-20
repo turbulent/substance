@@ -270,3 +270,7 @@ class Memoized(object):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
 
+
+class DictCompat(dict):
+    def iteritems():
+        return self.items()

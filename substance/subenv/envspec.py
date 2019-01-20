@@ -3,7 +3,7 @@ import time
 from collections import OrderedDict
 from substance.monads import *
 from substance.constants import *
-from substance.utils import readDotEnv, writeToFile, makeSymlink
+from substance.utils import readDotEnv, writeToFile, makeSymlink, DictCompat
 from substance.exceptions import (InvalidEnvError, InvalidOptionError)
 from substance.config import (Config)
 from substance import Shell
@@ -190,7 +190,7 @@ class SubenvSpec(object):
 
             tplVars = self.getEnvVars()
             tplVars.update({'subenv': self})
-            tplVars.update({'SUBENV_VARS': self.getEnvVars()})
+            tplVars.update({'SUBENV_VARS': DictCompat({**self.getEnvVars()})})
 
             with open(dest, 'wb') as fh:
                 fh.write(tpl.render(**tplVars).encode())
