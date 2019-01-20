@@ -272,5 +272,5 @@ class Memoized(object):
 
 
 class DictCompat(dict):
-    def iteritems():
+    def iteritems(self):
         return self.items()
