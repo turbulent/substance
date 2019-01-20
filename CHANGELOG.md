@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.1.0] - 2019-01-16
+## [1.1.0] - Unrelease
 
 # Feature
 - Add the ability to use other orchestrators within the your subenv
@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # Bug fix
 - Fixed bug with lru_cache and lists preventing proper memoization of list args
+- Fixed bug with legacy < 1.0 env template that referred to iteritems()
+- Fixed bug with dockwrkr where specifying an 'email' for a registry caused a deprecation error.
 
 ## [1.0.0] - 2019-01-12
 
