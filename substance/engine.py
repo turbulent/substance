@@ -692,12 +692,12 @@ class Engine(object):
         return self.envExec(container, ["exec /bin/bash"], cwd, user)
 
     def envExec(self, container, cmd, cwd=None, user=None):
-        cmd = self.orchestrate('exec', container, cmd, cwd, user)
-        return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
+        cmd = CommandList(self.orchestrate('exec', container, cmd, cwd, user))
+        return self.readLink().bind(Link.runCommand, cmd=cmd.logicAnd(), interactive=True, stream=True, shell=False, capture=False)
 
     def envRun(self, task, args):
-        cmd = self.orchestrate('run', task, args)
-        return self.readLink().bind(Link.runCommand, cmd=cmd, interactive=True, stream=True, shell=False, capture=False)
+        cmd = CommandList(self.orchestrate('run', task, args))
+        return self.readLink().bind(Link.runCommand, cmd=cmd.logicAnd(), interactive=True, stream=True, shell=False, capture=False)
 
     def envExecAlias(self, alias, args):
         aliases = self.config.get('aliases')

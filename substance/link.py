@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 LinkResponse = namedtuple(
     'LinkResponse', ['link', 'stdin', 'stdout', 'stderr', 'code', 'cmd'])
 
+
 class Link(object):
 
     def __init__(self, keyFile, keyFormat="RSA", useAgent=False):

@@ -1,4 +1,5 @@
 from abc import (ABC, abstractmethod)
+from substance.utils import (CommandList)
 
 
 class Orchestrator(ABC):
@@ -95,7 +96,7 @@ class Dockwrkr(Orchestrator):
     def exec(self, container, cmd, cwd=None, user=None):
         opts = []
         cmdline = ' '.join(cmd)
-        initCommands = ['export TERM=xterm', cmdline]
+        initCommands = CommandList(['export TERM=xterm', cmdline])
         if user:
             opts.append('--user %s' % user)
         if cwd:
@@ -104,7 +105,7 @@ class Dockwrkr(Orchestrator):
         tpl = {
             'opts': ' '.join(opts),
             'container': container,
-            'initCommands': ' && '.join(initCommands)
+            'initCommands': initCommands.logicAnd()
         }
 
         return ["dockwrkr exec -t -i %(opts)s %(container)s '/bin/sh -c \"%(initCommands)s\"'" % tpl]
