@@ -3,33 +3,6 @@ Upgrade from substance 0 to 1
 
 Upgrading from substance 0 to 1 requires moving your dependencies from Python 2 to Python 3 and VirtualBox 6.0.
 
-Pre-Install steps
---------
-
-#. Before upgrading to substance 1.0.0, make sure you update your jinja templates to use Python 3 syntax. ::
-    
-    # example:
-    # dockwrkr.yml.jinja  
-    
-      [...]
-      
-      VAR_NMAILER_REMOTE_PORT: "587"
-      VAR_NMAILER_REMOTE_USER: ""
-      VAR_NMAILER_REMOTE_PASS: ""
-      {%- for k, v in SUBENV_VARS.iteritems() %}
-      
-    # becomes
-    
-      [...]
-   
-      VAR_NMAILER_REMOTE_PORT: "587"
-      VAR_NMAILER_REMOTE_USER: ""
-      VAR_NMAILER_REMOTE_PASS: ""
-      {%- for k, v in SUBENV_VARS.items() %}
-
-      
-
-
 Upgrading on macOS
 --------
 
@@ -89,18 +62,18 @@ Upgrading on Windows
 #. Install ``substance`` using the Cygwin terminal::
 
     $ sudo pip3 install substance
-    
+
 Upgrading on Linux
 --------
 
 #. Update your system.::
 
-    # Debian/Ubuntu  
+    # Debian/Ubuntu
     $ sudo apt-get update && sudo apt-get upgrade
-  
+
     # Arch
     $ sudo pacman -Syu
-    
+
 #. Reboot::
 
     - needed in case the virtualbox kernel modules were updated.
@@ -109,19 +82,45 @@ Upgrading on Linux
 
     $ substance engine ls
     $ substance engine halt <ENGINENAME> # Do this for every running engine
-    
+
 #. Install python3::
 
     # Debian/Ubuntu
     $ sudo apt-get install -y python3.7 python3-pip
-    
+
     # Arch
     $ sudo pacman -S python python-pip
-    
+
 #. Update substance::
 
     $ sudo pip3 install substance
-  
+
 #. You will need to create a new engine so that it can use the newest docker image and virtualbox version::
-  
+
     $ substance engine create <ENGINENAME>
+
+Pre-Install steps
+--------
+
+#. After upgrading to substance 1.x, you should take a moment to update your jinja templates to use Python 3 syntax. ::
+
+    # example:
+    # dockwrkr.yml.jinja
+
+      [...]
+
+      VAR_NMAILER_REMOTE_PORT: "587"
+      VAR_NMAILER_REMOTE_USER: ""
+      VAR_NMAILER_REMOTE_PASS: ""
+      {%- for k, v in SUBENV_VARS.iteritems() %}
+
+    # becomes
+
+      [...]
+
+      VAR_NMAILER_REMOTE_PORT: "587"
+      VAR_NMAILER_REMOTE_USER: ""
+      VAR_NMAILER_REMOTE_PASS: ""
+      {%- for k, v in SUBENV_VARS.items() %}
+
+
