@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.1.0] - Unrelease
+## [1.1.0] - 2019-01-20
 
 # Feature
 - Add the ability to use other orchestrators within the your subenv
@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed bug with lru_cache and lists preventing proper memoization of list args
 - Fixed bug with legacy < 1.0 env template that referred to iteritems()
 - Fixed bug with dockwrkr where specifying an 'email' for a registry caused a deprecation error.
+- Fixed bug within WSL when non-memoize paths were resolved as outer paths but were already proper windows paths.
 
 ## [1.0.0] - 2019-01-12
 
