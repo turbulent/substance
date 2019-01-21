@@ -14,7 +14,8 @@ from substance.termutils import (
     saveTerminalAttrs,
     restoreTerminalAttrs,
     setTerminalInteractive,
-    getTerminalSize
+    getTerminalSize,
+    decodeTerminalBytes
 )
 
 logger = logging.getLogger(__name__)
@@ -186,7 +187,7 @@ class Link(object):
                         isAlive = False
                     else:
                         if stream:
-                            sys.stdout.write(d.decode())
+                            sys.stdout.write(decodeTerminalBytes(d))
                             sys.stdout.flush()
                         if capture:
                             stdout += d
@@ -194,7 +195,7 @@ class Link(object):
                 if channel in r and channel.recv_stderr_ready():
                     d = channel.recv_stderr(bufsize)
                     if stream:
-                        sys.stderr.write(d.decode())
+                        sys.stderr.write(decodeTerminalBytes(d))
                         sys.stderr.flush()
                     if capture:
                         stderr += d
@@ -204,12 +205,12 @@ class Link(object):
                     if len(x) == 0:
                         isAlive = False
                     else:
-                        channel.send(x.decode())
+                        channel.send(decodeTerminalBytes(x))
 
             code = channel.recv_exit_status()
-            stdout = stdout.decode()
-            stdin = stdin.decode()
-            stderr = stderr.decode()
+            stdout = decodeTerminalBytes(stdout)
+            stdin = decodeTerminalBytes(stdin)
+            stderr = decodeTerminalBytes(stderr)
 
             if code != 0:
                 logger.debug("code %s, stdout: %s, stderr: %s" % (code, stdout, stderr))
@@ -294,7 +295,7 @@ class Link(object):
                         if len(x) == 0:
                             isAlive = False
                         else:
-                            sys.stdout.write(x.decode())
+                            sys.stdout.write(decodeTerminalBytes(x))
                             sys.stdout.flush()
                     except socket.timeout:
                         pass
@@ -323,7 +324,7 @@ class Link(object):
                     sys.stdout.write('\r\n*** EOF ***\r\n\r\n')
                     sys.stdout.flush()
                     break
-                sys.stdout.write(data.decode())
+                sys.stdout.write(decodeTerminalBytes(data))
                 sys.stdout.flush()
 
         writer = threading.Thread(target=writeall, args=(chan,))

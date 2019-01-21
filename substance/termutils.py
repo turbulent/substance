@@ -14,19 +14,24 @@ try:
 except ImportError:
     hasTermios = False
 
+
 def hasTermios():
     return hasTermios
 
+
 def isTerminal(stream):
     return stream.isatty()
+
 
 def saveTerminalAttrs(stream):
     global oldtty
     if stream.isatty():
         oldtty = termios.tcgetattr(stream)
 
+
 def getSavedTerminalAttrs():
     return oldtty
+
 
 def restoreTerminalAttrs(stream):
     global oldtty
@@ -34,10 +39,12 @@ def restoreTerminalAttrs(stream):
     if isTerminal(stream) and restoreAttrs:
         termios.tcsetattr(stream, termios.TCSADRAIN, restoreAttrs)
 
+
 def setTerminalInteractive(stream):
     if stream.isatty():
         tty.setraw(stream.fileno())
         tty.setcbreak(stream.fileno())
+
 
 # from jtriley/terminalsize.py
 def getTerminalSize():
@@ -115,6 +122,10 @@ def _getTerminalSizeLinux():
         except:
             return None
     return int(cr[1]), int(cr[0])
+
+
+def decodeTerminalBytes(bytes):
+    return bytes.decode(errors='ignore')
 
 
 if __name__ == "__main__":
