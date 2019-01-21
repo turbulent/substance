@@ -21,11 +21,9 @@ def inner(path):
 
 @Memoized
 def outer(posixPath):
-
-    if PureWindowsPath(path).drive:
-        return path
-
-    if isCygwin():
+    if PureWindowsPath(posixPath).drive:
+        path = posixPath
+    elif isCygwin():
         path = check_output(["cygpath", "-w", posixPath]).decode().strip()
     elif isWSL():
         path = check_output(["wslpath", "-w", posixPath]).decode().strip()
