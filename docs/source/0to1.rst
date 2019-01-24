@@ -99,7 +99,7 @@ Upgrading on Linux
 
     $ substance engine create <ENGINENAME>
 
-Pre-Install steps
+Post-Install steps
 --------
 
 #. After upgrading to substance 1.x, you should take a moment to update your jinja templates to use Python 3 syntax. ::
@@ -122,5 +122,10 @@ Pre-Install steps
       VAR_NMAILER_REMOTE_USER: ""
       VAR_NMAILER_REMOTE_PASS: ""
       {%- for k, v in SUBENV_VARS.items() %}
+
+Known issues
+--------
+
+#. If you get a ``CryptographyDeprecationWarning`` when running substance commands, it's because of `this issue <https://github.com/paramiko/paramiko/issues/1369#>`_. As noted, a workaround is running ``sudo pip install cryptography==2.4.2`` until the problem is fixed in paramiko.
 
 
