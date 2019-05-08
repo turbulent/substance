@@ -700,10 +700,10 @@ class Engine(object):
         return self.readLink().bind(Link.runCommand, cmd=cmd.logicAnd(), interactive=True, stream=True, shell=False, capture=False)
 
     def envExecAlias(self, alias, args):
-        aliases = self.config.get('aliases')
-        if self.subenvConfig.get('aliases'):
-            aliases = mergeDictOverwrite(self.config.get('aliases'),
-                                         self.subenvConfig.get('aliases'))
+        aliases = self.config.get('aliases') if self.config.get('aliases') else {}
+        subenvAliases = self.subenvConfig.get('aliases') if self.subenvConfig.get('aliases') else {}
+        if subenvAliases:
+            aliases = mergeDictOverwrite(aliases, subenvAliases)
 
         if aliases and alias in aliases:
             cmd = aliases[alias]

@@ -135,10 +135,10 @@ class Compose(Orchestrator):
         return ["docker-compose rm -f -s"]
 
     def start(self, containers):
-        return ["dockwrkr start %s -d" % (' '.join(containers))]
+        return ["docker-compose up -d %s" % (' '.join(containers))]
 
     def stop(self, containers, time=10):
-        return ["docker-compose stop %s -t %s" % (' '.join(containers), time)]
+        return ["docker-compose stop -t %s %s" % (time, ' '.join(containers))]
 
     def remove(self, container, time=10):
         return ["docker-compose rm -s -f %s" % (' '.join(containers))]
@@ -147,7 +147,10 @@ class Compose(Orchestrator):
         return ["docker-compose restart %s -t %s" % (' '.join(containers), time)]
 
     def recreate(self, containers, time=10):
-        return ["(docker-compose rm -f -s %s && docker-compose start %s)" % (' '.join(containers), ' '.join(containers))]
+        return [
+            "docker-compose rm -f -s %s" % ' '.join(containers),
+            "docker-compose up -d %s" % ' '.join(containers)
+            ]
 
     def exec(self, container, cmd, cwd=None, user=None):
         opts = []
