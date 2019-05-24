@@ -11,7 +11,7 @@ install_requires = [
     'setuptools>=1.1.3',
     'PyYAML',
     'tabulate',
-    'paramiko>=2.3.1',
+    'paramiko>=2.4.1',
     'netaddr',
     'requests',
     'tinydb',
