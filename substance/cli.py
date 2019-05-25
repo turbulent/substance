@@ -8,6 +8,9 @@ import substance.command
 import substance.logs
 
 
+import warnings
+warnings.filterwarnings(action='ignore',module='.*paramiko.*')
+
 class SubstanceCLI(Program):
     """Substance CLI command"""
 
