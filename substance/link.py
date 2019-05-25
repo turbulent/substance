@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import paramiko
+import re
 from paramiko.py3compat import u
 import socket
 from time import time, sleep
@@ -202,10 +203,12 @@ class Link(object):
 
                 if sys.stdin in r and isAlive and interactive:
                     x = os.read(sys.stdin.fileno(), bufsize)
+                    logger.debug("TERMSEND: %s" % x)
+
                     if len(x) == 0:
                         isAlive = False
                     else:
-                        channel.send(decodeTerminalBytes(x))
+                        channel.send(x)
 
             code = channel.recv_exit_status()
             stdout = decodeTerminalBytes(stdout)
@@ -295,12 +298,18 @@ class Link(object):
                         if len(x) == 0:
                             isAlive = False
                         else:
-                            sys.stdout.write(decodeTerminalBytes(x))
+                            logger.debug("TERMRECV: '%s'\r\n" % x)
+                            decodedInput = decodeTerminalBytes(x)
+                            ansi_escape = re.compile(r'\x1b\[[0-?]*[ -/]*[@-~]')
+                            decodedInput = ansi_escape.sub('', decodedInput)
+                            logger.debug("CLEANRECV: '%s'\r\n" % decodedInput.encode())
+                            sys.stdout.write(decodedInput)
                             sys.stdout.flush()
                     except socket.timeout:
                         pass
                 if sys.stdin in r and isAlive:
-                    x = os.read(sys.stdin.fileno(), 1)
+                    x = os.read(sys.stdin.fileno(),  1)
+                    logger.debug("TERMSEND: '%s' : %s\r\n" % (x.decode(), ord(x)))
                     if len(x) == 0:
                         isAlive = False
                     else:
