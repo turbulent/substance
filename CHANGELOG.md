@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.4] - 2019-05-25
+
+# Fix
+- Unison sync will now use an archive per engine
+- Suppress paramiko crypo warnings
+- Fix warnings related to YAML.load deprecation
+
 ## [1.1.0] - 2019-01-20
 
 # Feature
