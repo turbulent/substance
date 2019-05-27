@@ -84,7 +84,7 @@ Disclaimer: Substance has only been tested on Windows 10 Pro 64-bit edition.
 
 .. NOTES ABOUT WSL AND PATHS::
 
-The home directory used by substance in WSL will be your Windows user's home directory (for example: C:\Users\USERNAME)
+The home directory used by substance in WSL will be your Windows user's home directory (for example: C:\\Users\\USERNAME)
 This is to allow your projects and code can be edited and modified from both programs inside WSL and outside.
 
 For simplicity, the sync process (unison) within WSL will run the linux version.
