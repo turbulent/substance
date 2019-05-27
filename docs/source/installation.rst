@@ -69,8 +69,8 @@ Disclaimer: Substance has only been tested on Windows 10 Pro 64-bit edition.
 
 #. Download and install your distribution of choice. We recommend Debian/stretch from the Microsoft Store.
 
-  1. Open the Microsoft Store and choose your favorite Linux distribution.
-  2. Debian GNU/Linux (Stretch)
+   1. Open the Microsoft Store and choose your favorite Linux distribution.
+   2. Debian GNU/Linux (Stretch)
 
 #. Install python3 on your linux distribution::
 
@@ -80,10 +80,6 @@ Disclaimer: Substance has only been tested on Windows 10 Pro 64-bit edition.
 #. Install substance with `pip`::
 
     $ pip3 install substance
-
-#. Install ``substance``::
-
-     $ pip install substance
 
 
 .. NOTES ABOUT WSL AND PATHS::
