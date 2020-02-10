@@ -41,16 +41,16 @@ class PortForward(object):
 
 
 class DHCP(object):
-    def __init__(self, interface, networkName, gateway, netmask, lowerIP, upperIP, enabled):
+    def __init__(self, interface, networkName, dhcpIP, netmask, lowerIP, upperIP, enabled):
         self.interface = interface
         self.networkName = networkName
-        self.gateway = gateway
+        self.dhcpIP = dhcpIP
         self.netmask = netmask
         self.lowerIP = lowerIP
         self.upperIP = upperIP
         self.enabled = True if enabled is True or enabled == "Yes" else False
 
-        self.network = IPNetwork(gateway + "/" + netmask)
+        self.network = IPNetwork(dhcpIP + "/" + netmask)
 
     def __repr__(self):
         rep = "DHCP(%(interface)s gateway: %(gateway)s netmask %(netmask)s (%(lowerIP)s to %(upperIP)s))" % self.__dict__
