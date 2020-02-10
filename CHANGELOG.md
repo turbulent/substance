@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.1] - 2020-02-10
+
+# Fix
+- VirtualBox 6.1 bug fix with dhcp servers
+- Hanging network issues related to ARP poisoning should now be fixed
+
 ## [1.1.4] - 2019-05-25
 
 # Fix
