@@ -41,16 +41,16 @@ class PortForward(object):
 
 
 class DHCP(object):
-    def __init__(self, interface, networkName, gateway, netmask, lowerIP, upperIP, enabled):
+    def __init__(self, interface, networkName, dhcpIP, netmask, lowerIP, upperIP, enabled):
         self.interface = interface
         self.networkName = networkName
-        self.gateway = gateway
+        self.dhcpIP = dhcpIP
         self.netmask = netmask
         self.lowerIP = lowerIP
         self.upperIP = upperIP
         self.enabled = True if enabled is True or enabled == "Yes" else False
 
-        self.network = IPNetwork(gateway + "/" + netmask)
+        self.network = IPNetwork(dhcpIP + "/" + netmask)
 
     def __repr__(self):
         rep = "DHCP(%(interface)s gateway: %(gateway)s netmask %(netmask)s (%(lowerIP)s to %(upperIP)s))" % self.__dict__
@@ -138,19 +138,33 @@ def filterDHCPs(dhcps, interface):
 
 # -- Parse funcs
 
+# NetworkName:    HostInterfaceNetworking-vboxnet11
+# Dhcpd IP:       172.21.21.1
+# LowerIPAddress: 172.21.21.5
+# UpperIPAddress: 172.21.21.251
+# NetworkMask:    255.255.255.0
+# Enabled:        Yes
+# Global Configuration:
+#     minLeaseTime:     default
+#     defaultLeaseTime: default
+#     maxLeaseTime:     default
+#     Forced options:   None
+#     Suppressed opts.: None
+#         1/legacy: 255.255.255.0
+# Groups:               None
+# Individual Configs:   None
 
 def parseDHCPBlock(block):
     actions = (
         (r'^NetworkName:\s+HostInterfaceNetworking-(.+?)$', 'interface'),
         (r'^NetworkName:\s+(HostInterfaceNetworking-(.+?))$', 'networkName'),
-        (r'^IP:\s+(.+?)$', 'gateway'),
+        (r'^(?:Dhcpd\s)?IP:\s+(.+?)$', 'dhcpIP'),
         (r'^NetworkMask:\s+(.+?)$', 'netmask'),
-        (r'^lowerIPAddress:\s+(.+?)$', 'lowerIP'),
-        (r'^upperIPAddress:\s+(.+?)$', 'upperIP'),
+        (r'^LowerIPAddress:\s+(.+?)$', 'lowerIP'),
+        (r'^UpperIPAddress:\s+(.+?)$', 'upperIP'),
         (r'Enabled:\s+(.+?)$', 'enabled')
     )
     return _extractClassFromBlock(block, actions, DHCP)
-
 
 def parseHostOnlyInterfaceBlock(block):
     actions = (
@@ -225,9 +239,9 @@ def addPortForwards(ports, uuid):
         return OK(None)
 
 
-def addDHCP(hoif_name, gateway, netmask, lowerIP, upperIP):
+def addDHCP(hoif_name, gateway, dhcpIP, netmask, lowerIP, upperIP):
     arg = "--ifname \"%s\" --ip \"%s\" --netmask \"%s\" --lowerip \"%s\" --upperip \"%s\" --enable" % (
-        hoif_name, gateway, netmask, lowerIP, upperIP)
+        hoif_name, dhcpIP, netmask, lowerIP, upperIP)
     return vboxManager("dhcpserver", "add %s" % arg) \
         .then(defer(enableDHCP, hoif_name=hoif_name))
 
@@ -298,6 +312,7 @@ def _mapAsBlocks(data, func):
 
 
 def _extractClassFromBlock(block, actions, cls):
+
     lines = block.split(_vboxLineEnding())
 
     info = OrderedDict()
@@ -307,7 +322,7 @@ def _extractClassFromBlock(block, actions, cls):
     for line in lines:
         line = line.strip()
         for expr, field in actions:
-            match = re.match(expr, line)
+            match = re.match(expr, line, re.IGNORECASE)
             if match:
                 info[field] = match.group(1)
                 break
