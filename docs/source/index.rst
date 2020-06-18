@@ -21,6 +21,7 @@ Table of Contents
    environment-setup
    internals
    0to1
+   troubleshooting
 
 Indices and tables
 ==================
