@@ -25,31 +25,20 @@ You must use `Homebrew`_ to install the latest Python 2.x release.
 
     $ brew install python
 
-#. Make sure that running the command ``python`` executes the one under
-   ``/usr/local/bin``::
+#. Make sure that you are running python 3.x when installing substance. If there is 2 versions of python installed `python`/`pip` will probably be 2.7, and `python3`/`pip3` 3.x
 
-    $ which python
-    /usr/local/bin/python
-    $ which pip
-    /usr/local/bin/pip
+#. The ``python3`` installed by homebrew should be located under ``/usr/local/bin``. The ``python`` version under ``/usr/bin`` is the one installed by default in MacOS. You can verify python version with ``--version`` argument and locate executable with ``which`` command.
 
-   If this command outputs some other path like ``/usr/bin/python``, you're in
-   trouble. You should add the following line to your ``.profile`` or
-   ``.bash_profile`` file::
+   If homebrew's version is not found that's probably because it is not in your PATH.
+   Use the command ``brew doctor``, copy the command to add it to your PATH and restart your terminal.
 
-     export PATH=/usr/local/bin:$PATH
+#. Ensure pip3 is up to date::
 
-   Start a new terminal, and that should fix the issue (test it with the
-   ``which`` commands above). The command ``brew doctor`` can also help with
-   ``PATH``-related problems.
-
-#. Ensure pip is up to date::
-
-    $ sudo pip install -U pip
+    $ sudo pip3 install -U pip
 
 #. Install ``substance``::
 
-    $ sudo pip install substance
+    $ sudo pip3 install substance
 
 On Windows (WSL)
 ----------
