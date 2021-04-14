@@ -32,10 +32,10 @@ class Box(object):
         self.archiveSHA1 = archiveSHA1
 
     def getRegistryURL(self):
-        return "https://%(registry)s/%(namespace)s/%(name)s/%(version)s.json" % self.__dict__
+        return "https://%(registry)s/%(namespace)s/%(name)s/releases/download/%(version)s/%(name)s-%(version)s.json" % self.__dict__
 
     def getArchiveURL(self):
-        return "https://%(registry)s/%(namespace)s/%(name)s/%(version)s.box" % self.__dict__
+        return "https://%(registry)s/%(namespace)s/%(name)s/releases/download/%(name)s-%(version)s.box" % self.__dict__
 
     def getDescriptor(self):
         return {'name': self.name, 'registry': self.registry, 'namespace': self.namespace}
@@ -79,14 +79,13 @@ class Box(object):
         if len(parts) > 1:
             box['registry'] = parts[1]
         else:
-            box['registry'] = "dl.bintray.com/turbulent/substance-images"
+            box['registry'] = "github.com"
 
         parts = boxstring.split("/", 1)
         if len(parts) <= 1:
             return Fail(InvalidBoxName("Name \"%s\" does not reference a valid box name: Missing namespace." % name))
 
         (box['namespace'], imagestring) = parts
-        # substance-box:0.1
 
         imageparts = imagestring.split(":", 1)
         if len(imageparts) > 1:
