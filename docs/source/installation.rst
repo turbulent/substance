@@ -5,6 +5,9 @@ Substance supports all three main desktop operating systems: macOS, Windows,
 and Linux. Its main prerequisite is `Oracle VirtualBox`_, which also supports
 these platforms.
 
+If an existing substance project is going to be used, make sure to check how much
+RAM and disk space will be required before procceding with the installation.
+
 On macOS
 --------
 
@@ -154,6 +157,25 @@ Substance has been tested on Mint, Ubuntu, and Arch Linux.
 #. Install ``substance``::
 
      $ sudo pip install substance
+
+Ubuntu 20.04 LTS
+^^^^^^^^^^^^^^^^
+
+This version of Ubuntu already comes with the development libraries required for
+substance.
+
+#. Install `Oracle VirtualBox`_.
+
+#. Substance requires Python 3 and pip 3. Python 3 will be already installed and
+   it is accessible with ``python3``. Install pip 3 with::
+
+     $ sudo apt install pip3
+
+#. Install ``substance``::
+
+     $ sudo pip3 install substance
+
+Make sure you use Python 3 and pip 3, and not the Python 2 counterpart.
 
 Upgrading Substance to a new version
 ------------------------------------
